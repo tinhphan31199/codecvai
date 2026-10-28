@@ -1,0 +1,1551 @@
+{
+ "url": "http://localhost:3000/#repository/minh",
+ "at": "2026-10-27T03:17:24.755Z",
+ "allow": [],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 1,
+   "filled": [
+    0.84
+   ],
+   "motion": {
+    "elements": 3,
+    "css": 0,
+    "transitions": 2,
+    "scripted": 1,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 900,
+     "screens": 1,
+     "words": 285,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 46,
+     "sections": 2,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Repository Analysis",
+     "words": 2,
+     "chars": 19,
+     "lines": 1,
+     "size": 25,
+     "vw": 1.7,
+     "font": "Inter",
+     "weight": 600,
+     "tracking": -0.02,
+     "leading": 1.2,
+     "top": 73,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": {
+     "text": "Repository Analysis",
+     "words": 2,
+     "lines": 1,
+     "size": 25,
+     "font": "Inter"
+    },
+    "headings": [],
+    "headingSummary": {
+     "count": 0,
+     "maxLines": 0,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": null,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Inter",
+       "share": 0.83,
+       "mono": false
+      },
+      {
+       "family": "IBM Plex Mono",
+       "share": 0.17,
+       "mono": true
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      25
+     ],
+     "sizeCount": 7,
+     "notLoaded": [],
+     "body": {
+      "font": "Inter",
+      "size": 10.5,
+      "leading": 1.5,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 4.8
+     },
+     "measureChars": 78,
+     "max": {
+      "size": 25,
+      "vw": 1.7,
+      "font": "Inter",
+      "text": "Repository Analysis"
+     },
+     "monoShare": 0.17,
+     "monoProseShare": 0.17,
+     "monoFamilies": [
+      "IBM Plex Mono"
+     ],
+     "monoSamples": [
+      "minhle/payment-gateway",
+      "main@b47e0d1",
+      "minhle/payment-gateway",
+      "main",
+      "b47e0d1",
+      "OrdersController"
+     ],
+     "microLabels": 5,
+     "microLabelShare": 0.027,
+     "microSamples": [
+      "Ngôn ngữ",
+      "Kiểm thử",
+      "Phát hiện",
+      "Trạng thái",
+      "Cây thư mục"
+     ],
+     "upperShare": 0.04,
+     "centerShare": 0.04,
+     "smallText": 55
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f1f5f9",
+     "bodyBgHsl": {
+      "h": 210,
+      "s": 0.4,
+      "l": 0.96
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f1f5f9",
+       "top": 0,
+       "hsl": {
+        "h": 210,
+        "s": 0.4,
+        "l": 0.96
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 48,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#64748b",
+       "share": 0.48
+      },
+      {
+       "color": "#475569",
+       "share": 0.33
+      },
+      {
+       "color": "#0f172a",
+       "share": 0.15
+      },
+      {
+       "color": "#3f3bc0",
+       "share": 0.02
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.01
+      }
+     ],
+     "button": {
+      "bg": "#ffffff",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 1
+      },
+      "fg": "#0f172a"
+     },
+     "lowContrast": [
+      {
+       "text": "WebhookController.cs:22",
+       "ratio": 4.2,
+       "need": 4.5,
+       "size": 9,
+       "fg": "#64748b",
+       "bg": "#eef0ff"
+      },
+      {
+       "text": "Cao · Cần kiểm tra",
+       "ratio": 4.2,
+       "need": 4.5,
+       "size": 9,
+       "fg": "#64748b",
+       "bg": "#eef0ff"
+      },
+      {
+       "text": "Recruitment intelligence",
+       "ratio": 4.3,
+       "need": 4.5,
+       "size": 10,
+       "fg": "#64748b",
+       "bg": "#f1f5f9"
+      },
+      {
+       "text": "8 vị trí đang mở",
+       "ratio": 4.3,
+       "need": 4.5,
+       "size": 10,
+       "fg": "#64748b",
+       "bg": "#f1f5f9"
+      },
+      {
+       "text": "Workspace",
+       "ratio": 4.3,
+       "need": 4.5,
+       "size": 9.5,
+       "fg": "#64748b",
+       "bg": "#f1f5f9"
+      },
+      {
+       "text": "Recruiter · Owner",
+       "ratio": 4.3,
+       "need": 4.5,
+       "size": 10,
+       "fg": "#64748b",
+       "bg": "#f1f5f9"
+      }
+     ]
+    },
+    "buttons": {
+     "count": 9,
+     "inHero": 9,
+     "radius": 9,
+     "height": 81,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Product Engineering 8 vị trí đang mở",
+      "Repository Analysis",
+      "Mở hồ sơ",
+      "Dùng trong phỏng vấn",
+      "API 6 bằng chứng ASP.NET Core · 6 endpoi"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 7,
+     "hairlineSamples": [
+      "div.viewer-tabs-bar 596px",
+      "div.finding-rail-list 318px",
+      "button.finding-item.is-on 318px",
+      "button.finding-item 318px",
+      "button.finding-item 318px"
+     ],
+     "outlinedBoxes": 8,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 8,
+     "boxRadius": 9,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 0,
+     "fixed": false,
+     "height": 274,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "inter",
+     "ibm plex mono"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 900,
+    "margins": {
+     "left": 26,
+     "right": 38
+    },
+    "sections": [],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Repository Analysis",
+      "size": 25,
+      "top": 73,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 265,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 1,
+    "bodySize": 11,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0.13,
+    "voidBox": {
+     "x": 480,
+     "y": 720,
+     "w": 960,
+     "h": 180
+    }
+   },
+   "app": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "dark": false,
+    "ground": "#f1f5f9",
+    "sidebar": {
+     "w": 236,
+     "tag": "aside",
+     "links": 11,
+     "share": 0.16
+    },
+    "topbar": {
+     "h": 48
+    },
+    "canvas": {
+     "left": 37,
+     "right": 38
+    },
+    "hero": {
+     "text": "Repository Analysis",
+     "words": 2,
+     "chars": 19,
+     "lines": 1,
+     "size": 25,
+     "vw": 1.7,
+     "font": "Inter",
+     "weight": 600,
+     "tracking": -0.02,
+     "leading": 1.2,
+     "top": 73,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 1,
+     "firstScreen": 1,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 9,
+     "radii": [
+      [
+       9,
+       4
+      ],
+      [
+       12,
+       3
+      ],
+      [
+       16,
+       1
+      ],
+      [
+       0,
+       1
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 0,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 1,
+     "tabularShare": 1,
+     "kpiMax": 10
+    },
+    "rows": null,
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0.88,
+     "tiny": 49,
+     "tinySamples": [
+      "Recruitment intelligence 10px",
+      "vị trí đang mở 10px",
+      "Workspace 10px",
+      "Recruiter · Owner 10px"
+     ],
+     "sizes": [
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      25
+     ]
+    },
+    "title": {
+     "text": "Repository Analysis",
+     "size": 25,
+     "top": 73
+    },
+    "colourShare": 0.005
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 1,
+   "filled": [
+    0.95
+   ],
+   "motion": {
+    "elements": 3,
+    "css": 0,
+    "transitions": 2,
+    "scripted": 1,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 1024,
+     "screens": 1,
+     "words": 247,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 46,
+     "sections": 2,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Repository Analysis",
+     "words": 2,
+     "chars": 19,
+     "lines": 1,
+     "size": 25,
+     "vw": 3.3,
+     "font": "Inter",
+     "weight": 600,
+     "tracking": -0.02,
+     "leading": 1.2,
+     "top": 71,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": {
+     "text": "Repository Analysis",
+     "words": 2,
+     "lines": 1,
+     "size": 25,
+     "font": "Inter"
+    },
+    "headings": [],
+    "headingSummary": {
+     "count": 0,
+     "maxLines": 0,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": null,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Inter",
+       "share": 0.81,
+       "mono": false
+      },
+      {
+       "family": "IBM Plex Mono",
+       "share": 0.19,
+       "mono": true
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      25
+     ],
+     "sizeCount": 7,
+     "notLoaded": [],
+     "body": {
+      "font": "Inter",
+      "size": 10.5,
+      "leading": 1.5,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 4.8
+     },
+     "measureChars": 78,
+     "max": {
+      "size": 25,
+      "vw": 3.3,
+      "font": "Inter",
+      "text": "Repository Analysis"
+     },
+     "monoShare": 0.19,
+     "monoProseShare": 0.19,
+     "monoFamilies": [
+      "IBM Plex Mono"
+     ],
+     "monoSamples": [
+      "minhle/payment-gateway",
+      "main@b47e0d1",
+      "minhle/payment-gateway",
+      "main",
+      "b47e0d1",
+      "OrdersController"
+     ],
+     "microLabels": 5,
+     "microLabelShare": 0.031,
+     "microSamples": [
+      "Ngôn ngữ",
+      "Kiểm thử",
+      "Phát hiện",
+      "Trạng thái",
+      "Cây thư mục"
+     ],
+     "upperShare": 0.04,
+     "centerShare": 0.05,
+     "smallText": 47
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f1f5f9",
+     "bodyBgHsl": {
+      "h": 210,
+      "s": 0.4,
+      "l": 0.96
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f1f5f9",
+       "top": 0,
+       "hsl": {
+        "h": 210,
+        "s": 0.4,
+        "l": 0.96
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 0,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#64748b",
+       "share": 0.5
+      },
+      {
+       "color": "#475569",
+       "share": 0.31
+      },
+      {
+       "color": "#0f172a",
+       "share": 0.15
+      },
+      {
+       "color": "#3f3bc0",
+       "share": 0.02
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.01
+      }
+     ],
+     "button": {
+      "bg": "#ffffff",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 1
+      },
+      "fg": "#0f172a"
+     },
+     "lowContrast": [
+      {
+       "text": "WebhookController.cs:22",
+       "ratio": 4.2,
+       "need": 4.5,
+       "size": 9,
+       "fg": "#64748b",
+       "bg": "#eef0ff"
+      },
+      {
+       "text": "Cao · Cần kiểm tra",
+       "ratio": 4.2,
+       "need": 4.5,
+       "size": 9,
+       "fg": "#64748b",
+       "bg": "#eef0ff"
+      }
+     ]
+    },
+    "buttons": {
+     "count": 9,
+     "inHero": 8,
+     "radius": 9,
+     "height": 81,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Mở hồ sơ",
+      "Dùng trong phỏng vấn",
+      "API 6 bằng chứng ASP.NET Core · 6 endpoi",
+      "Application 9 bằng chứng Use case · 9 ha",
+      "Domain 4 bằng chứng Aggregate · 4 entity"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 10,
+     "hairlineSamples": [
+      "header.mobilebar 768px",
+      "div.tree-head 734px",
+      "div.tree-foot 734px",
+      "div.viewer-tabs-bar 734px",
+      "div.finding-rail-list 734px"
+     ],
+     "outlinedBoxes": 7,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 7,
+     "boxRadius": 9,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 0,
+     "fixed": true,
+     "height": 1024,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "inter",
+     "ibm plex mono"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 1024,
+    "margins": {
+     "left": 16,
+     "right": 16
+    },
+    "sections": [
+     {
+      "sel": "aside.repo-tree.card",
+      "tag": "aside",
+      "top": 239,
+      "height": 220,
+      "words": 14,
+      "media": 0,
+      "middle": 509,
+      "heading": null,
+      "left": 29,
+      "right": 29,
+      "textLeft": 29,
+      "textRight": 29,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.repo-viewer.card",
+      "tag": "section",
+      "top": 475,
+      "height": 502,
+      "words": 79,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": 29,
+      "right": 30,
+      "textLeft": 30,
+      "textRight": 42,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "aside.repo-findings.card",
+      "tag": "aside",
+      "top": 993,
+      "height": 373,
+      "words": 68,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Phát hiện",
+       "size": 14,
+       "tag": "h2"
+      },
+      "left": 17,
+      "right": 17,
+      "textLeft": 29,
+      "textRight": 422,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Repository Analysis",
+      "size": 25,
+      "top": 71,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 16,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 1,
+    "bodySize": 11,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "dark": false,
+    "ground": "#f1f5f9",
+    "sidebar": null,
+    "topbar": {
+     "h": 48
+    },
+    "canvas": {
+     "left": 16,
+     "right": 17
+    },
+    "hero": {
+     "text": "Repository Analysis",
+     "words": 2,
+     "chars": 19,
+     "lines": 1,
+     "size": 25,
+     "vw": 3.3,
+     "font": "Inter",
+     "weight": 600,
+     "tracking": -0.02,
+     "leading": 1.2,
+     "top": 71,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 3,
+     "firstScreen": 2,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 8,
+     "radii": [
+      [
+       9,
+       4
+      ],
+      [
+       12,
+       3
+      ],
+      [
+       0,
+       1
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 0,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 0,
+     "tabularShare": null,
+     "kpiMax": null
+    },
+    "rows": null,
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0.95,
+     "tiny": 45,
+     "tinySamples": [
+      "main · 318 commit · 42 t 10px",
+      "Ngôn ngữ 9px",
+      "Kiểm thử 9px",
+      "Phát hiện 9px"
+     ],
+     "sizes": [
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      25
+     ]
+    },
+    "title": {
+     "text": "Repository Analysis",
+     "size": 25,
+     "top": 71
+    },
+    "colourShare": 0.007
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 1,
+   "filled": [
+    0.95
+   ],
+   "motion": {
+    "elements": 3,
+    "css": 0,
+    "transitions": 2,
+    "scripted": 1,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 844,
+     "screens": 1,
+     "words": 247,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 46,
+     "sections": 2,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Repository Analysis",
+     "words": 2,
+     "chars": 19,
+     "lines": 1,
+     "size": 22,
+     "vw": 5.6,
+     "font": "Inter",
+     "weight": 600,
+     "tracking": -0.02,
+     "leading": 1.2,
+     "top": 62,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": {
+     "text": "Repository Analysis",
+     "words": 2,
+     "lines": 1,
+     "size": 22,
+     "font": "Inter"
+    },
+    "headings": [
+     {
+      "text": "Repository Analysis",
+      "words": 2,
+      "chars": 19,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": -0.022,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.94,
+      "top": 62,
+      "tag": "h1",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 1,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": null,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Inter",
+       "share": 0.81,
+       "mono": false
+      },
+      {
+       "family": "IBM Plex Mono",
+       "share": 0.19,
+       "mono": true
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      22
+     ],
+     "sizeCount": 7,
+     "notLoaded": [],
+     "body": {
+      "font": "Inter",
+      "size": 10.5,
+      "leading": 1.5,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 4.8
+     },
+     "measureChars": 59,
+     "max": {
+      "size": 22,
+      "vw": 5.6,
+      "font": "Inter",
+      "text": "Repository Analysis"
+     },
+     "monoShare": 0.19,
+     "monoProseShare": 0.19,
+     "monoFamilies": [
+      "IBM Plex Mono"
+     ],
+     "monoSamples": [
+      "minhle/payment-gateway",
+      "main@b47e0d1",
+      "minhle/payment-gateway",
+      "main",
+      "b47e0d1",
+      "OrdersController"
+     ],
+     "microLabels": 5,
+     "microLabelShare": 0.031,
+     "microSamples": [
+      "Ngôn ngữ",
+      "Kiểm thử",
+      "Phát hiện",
+      "Trạng thái",
+      "Cây thư mục"
+     ],
+     "upperShare": 0.04,
+     "centerShare": 0.05,
+     "smallText": 47
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f1f5f9",
+     "bodyBgHsl": {
+      "h": 210,
+      "s": 0.4,
+      "l": 0.96
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f1f5f9",
+       "top": 0,
+       "hsl": {
+        "h": 210,
+        "s": 0.4,
+        "l": 0.96
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 0,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#64748b",
+       "share": 0.5
+      },
+      {
+       "color": "#475569",
+       "share": 0.31
+      },
+      {
+       "color": "#0f172a",
+       "share": 0.15
+      },
+      {
+       "color": "#3f3bc0",
+       "share": 0.02
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.01
+      }
+     ],
+     "button": {
+      "bg": "#ffffff",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 1
+      },
+      "fg": "#0f172a"
+     },
+     "lowContrast": [
+      {
+       "text": "WebhookController.cs:22",
+       "ratio": 4.2,
+       "need": 4.5,
+       "size": 9,
+       "fg": "#64748b",
+       "bg": "#eef0ff"
+      },
+      {
+       "text": "Cao · Cần kiểm tra",
+       "ratio": 4.2,
+       "need": 4.5,
+       "size": 9,
+       "fg": "#64748b",
+       "bg": "#eef0ff"
+      }
+     ]
+    },
+    "buttons": {
+     "count": 9,
+     "inHero": 6,
+     "radius": 9,
+     "height": 81,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Mở hồ sơ",
+      "Dùng trong phỏng vấn",
+      "API 6 bằng chứng ASP.NET Core · 6 endpoi",
+      "Application 9 bằng chứng Use case · 9 ha"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 10,
+     "hairlineSamples": [
+      "header.mobilebar 390px",
+      "div.tree-head 336px",
+      "div.tree-foot 336px",
+      "div.viewer-tabs-bar 336px",
+      "div.finding-rail-list 336px"
+     ],
+     "outlinedBoxes": 8,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 8,
+     "boxRadius": 12,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 0,
+     "fixed": true,
+     "height": 844,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "inter",
+     "ibm plex mono"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 844,
+    "margins": {
+     "left": 12,
+     "right": 27
+    },
+    "sections": [
+     {
+      "sel": "aside.repo-tree.card",
+      "tag": "aside",
+      "top": 321,
+      "height": 220,
+      "words": 14,
+      "media": 0,
+      "middle": 111,
+      "heading": null,
+      "left": 39,
+      "right": 39,
+      "textLeft": 39,
+      "textRight": 39,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.repo-viewer.card",
+      "tag": "section",
+      "top": 557,
+      "height": 557,
+      "words": 79,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": 39,
+      "right": 40,
+      "textLeft": 40,
+      "textRight": 47,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "aside.repo-findings.card",
+      "tag": "aside",
+      "top": 1131,
+      "height": 416,
+      "words": 68,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Phát hiện",
+       "size": 14,
+       "tag": "h2"
+      },
+      "left": 27,
+      "right": 27,
+      "textLeft": 39,
+      "textRight": 66,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Repository Analysis",
+      "size": 22,
+      "top": 62,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [
+     {
+      "text": "Repository Analysis",
+      "side": "left",
+      "px": 12
+     },
+     {
+      "text": "Lê Hoàng Minh",
+      "side": "left",
+      "px": 12
+     },
+     {
+      "text": "· phân tích lúc 26/10 · 14:10",
+      "side": "left",
+      "px": 12
+     }
+    ],
+    "edges": [
+     {
+      "x": 12,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 1,
+    "bodySize": 11,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "dark": false,
+    "ground": "#f1f5f9",
+    "sidebar": null,
+    "topbar": {
+     "h": 48
+    },
+    "canvas": {
+     "left": 12,
+     "right": 27
+    },
+    "hero": {
+     "text": "Repository Analysis",
+     "words": 2,
+     "chars": 19,
+     "lines": 1,
+     "size": 22,
+     "vw": 5.6,
+     "font": "Inter",
+     "weight": 600,
+     "tracking": -0.02,
+     "leading": 1.2,
+     "top": 62,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 4,
+     "firstScreen": 3,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 9,
+     "radii": [
+      [
+       12,
+       4
+      ],
+      [
+       9,
+       4
+      ],
+      [
+       0,
+       1
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 0,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 0,
+     "tabularShare": null,
+     "kpiMax": null
+    },
+    "rows": null,
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0.97,
+     "tiny": 45,
+     "tinySamples": [
+      "main · 318 commit · 42 t 10px",
+      "Ngôn ngữ 9px",
+      "Kiểm thử 9px",
+      "Phát hiện 9px"
+     ],
+     "sizes": [
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      22
+     ]
+    },
+    "title": {
+     "text": "Repository Analysis",
+     "size": 22,
+     "top": 62
+    },
+    "colourShare": 0.016
+   },
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "FAIL",
+   "id": "micro-label",
+   "width": 1440,
+   "message": "5 tiny uppercase letter-spaced labels (e.g. \"Ngôn ngữ\", \"Kiểm thử\", \"Phát hiện\", \"Trạng thái\").",
+   "fix": "Use sentence-case text at a readable size, or delete the label.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "contrast",
+   "width": 1440,
+   "message": "Low-contrast text: \"WebhookController.cs:22\" 4.2:1 needs 4.5:1; \"Cao · Cần kiểm tra\" 4.2:1 needs 4.5:1; \"Recruitment intelligence\" 4.3:1 needs 4.5:1; \"8 vị trí đang mở\" 4.3:1 needs 4.5:1",
+   "fix": "Darken or lighten the text colour.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "tiny-text",
+   "width": 1440,
+   "message": "49 text blocks under 11px: Recruitment intelligence 10px, vị trí đang mở 10px, Workspace 10px, Recruiter · Owner 10px.",
+   "fix": "Nothing below 11px; secondary text 12px, data 13–14px.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "edge-text",
+   "width": 390,
+   "message": "3 text block(s) sit 12–15px from the phone's edge: \"Repository Analysis\" (12px); \"Lê Hoàng Minh\" (12px); \"· phân tích lúc 26/10 · 14:10\" (12px)",
+   "fix": "The page margin is 16–20px on a phone; the header and the corner labels sit on it too."
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/repository-minh/desktop-fold.jpg",
+   "pages": [
+    "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/repository-minh/desktop-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/repository-minh/tablet-fold.jpg",
+   "pages": [
+    "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/repository-minh/tablet-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/repository-minh/mobile-fold.jpg",
+   "pages": [
+    "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/repository-minh/mobile-page-01.jpg"
+   ],
+   "film": []
+  }
+ ]
+}

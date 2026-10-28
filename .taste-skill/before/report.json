@@ -1,0 +1,1799 @@
+{
+  "url": "http://localhost:3000",
+  "at": "2026-10-27T03:15:07.403Z",
+  "allow": [],
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 900,
+      "load": "load",
+      "screens": 1,
+      "filled": [0.85],
+      "motion": {
+        "elements": 1,
+        "css": 0,
+        "transitions": 0,
+        "scripted": 1,
+        "videos": 0,
+        "playingVideos": 0
+      },
+      "metrics": {
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "page": {
+          "height": 900,
+          "screens": 1,
+          "words": 483,
+          "img": 0,
+          "video": 0,
+          "canvas": 0,
+          "svg": 28,
+          "sections": 5,
+          "horizontalOverflow": 0,
+          "overflowCulprits": [],
+          "uiFragments": 0,
+          "uiAbuse": false,
+          "realPictures": 0,
+          "videoCount": 0,
+          "uiPictures": 0,
+          "pictureSamples": [],
+          "blendText": 0,
+          "sideScrollers": 0,
+          "brokenImages": [],
+          "emoji": [],
+          "videosNoPoster": 0
+        },
+        "hero": {
+          "text": "Dashboard",
+          "words": 1,
+          "chars": 9,
+          "lines": 1,
+          "size": 25,
+          "vw": 1.7,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 73,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "h1": {
+          "text": "Dashboard",
+          "words": 1,
+          "lines": 1,
+          "size": 25,
+          "font": "Inter"
+        },
+        "headings": [
+          {
+            "text": "128",
+            "words": 1,
+            "chars": 3,
+            "lines": 1,
+            "size": 28,
+            "vw": 1.9,
+            "font": "Inter",
+            "weight": 600,
+            "tracking": -0.03,
+            "leading": 1.1,
+            "upper": false,
+            "italic": false,
+            "mono": false,
+            "align": "left",
+            "position": "left",
+            "widthRatio": 0.17,
+            "top": 179,
+            "tag": "span",
+            "kind": "heading"
+          },
+          {
+            "text": "4",
+            "words": 1,
+            "chars": 1,
+            "lines": 1,
+            "size": 28,
+            "vw": 1.9,
+            "font": "Inter",
+            "weight": 600,
+            "tracking": -0.03,
+            "leading": 1.1,
+            "upper": false,
+            "italic": false,
+            "mono": false,
+            "align": "left",
+            "position": "center",
+            "widthRatio": 0.17,
+            "top": 179,
+            "tag": "span",
+            "kind": "heading"
+          },
+          {
+            "text": "96",
+            "words": 1,
+            "chars": 2,
+            "lines": 1,
+            "size": 28,
+            "vw": 1.9,
+            "font": "Inter",
+            "weight": 600,
+            "tracking": -0.03,
+            "leading": 1.1,
+            "upper": false,
+            "italic": false,
+            "mono": false,
+            "align": "left",
+            "position": "right",
+            "widthRatio": 0.17,
+            "top": 179,
+            "tag": "span",
+            "kind": "heading"
+          },
+          {
+            "text": "12",
+            "words": 1,
+            "chars": 2,
+            "lines": 1,
+            "size": 28,
+            "vw": 1.9,
+            "font": "Inter",
+            "weight": 600,
+            "tracking": -0.03,
+            "leading": 1.1,
+            "upper": false,
+            "italic": false,
+            "mono": false,
+            "align": "left",
+            "position": "right",
+            "widthRatio": 0.18,
+            "top": 179,
+            "tag": "span",
+            "kind": "heading"
+          }
+        ],
+        "headingSummary": {
+          "count": 4,
+          "maxLines": 1,
+          "over2Lines": 0,
+          "statements": 0,
+          "centered": 0,
+          "medianWords": null,
+          "mixedFontHeadings": 0
+        },
+        "type": {
+          "families": [
+            {
+              "family": "Inter",
+              "share": 1,
+              "mono": false
+            },
+            {
+              "family": "IBM Plex Mono",
+              "share": 0,
+              "mono": true
+            }
+          ],
+          "familyCount": 2,
+          "sizes": [10, 11, 12, 13, 14, 25, 28],
+          "sizeCount": 7,
+          "notLoaded": [],
+          "body": {
+            "font": "Inter",
+            "size": 12,
+            "leading": 1.5,
+            "weight": 400,
+            "tracking": 0,
+            "contrast": 4.8
+          },
+          "measureChars": 198,
+          "max": {
+            "size": 28,
+            "vw": 1.9,
+            "font": "Inter",
+            "text": "128"
+          },
+          "monoShare": 0,
+          "monoProseShare": 0,
+          "monoFamilies": ["IBM Plex Mono"],
+          "monoSamples": [],
+          "microLabels": 9,
+          "microLabelShare": 0.042,
+          "microSamples": [
+            "Tổng ứng viên",
+            "Đang phân tích",
+            "Báo cáo hoàn tất",
+            "Chờ review",
+            "Ứng viên",
+            "Vị trí"
+          ],
+          "upperShare": 0.05,
+          "centerShare": 0.03,
+          "smallText": 78
+        },
+        "eyebrows": [
+          {
+            "text": "Tổng ứng viên",
+            "above": "128",
+            "upper": true,
+            "tracked": true,
+            "mono": false,
+            "pill": false,
+            "size": 9.5,
+            "top": 160
+          },
+          {
+            "text": "Đang phân tích",
+            "above": "4",
+            "upper": true,
+            "tracked": true,
+            "mono": false,
+            "pill": false,
+            "size": 9.5,
+            "top": 160
+          },
+          {
+            "text": "Báo cáo hoàn tất",
+            "above": "96",
+            "upper": true,
+            "tracked": true,
+            "mono": false,
+            "pill": false,
+            "size": 9.5,
+            "top": 160
+          },
+          {
+            "text": "Chờ review",
+            "above": "12",
+            "upper": true,
+            "tracked": true,
+            "mono": false,
+            "pill": false,
+            "size": 9.5,
+            "top": 160
+          }
+        ],
+        "numbered": [],
+        "color": {
+          "bodyBg": "#f1f5f9",
+          "bodyBgHsl": {
+            "h": 210,
+            "s": 0.4,
+            "l": 0.96
+          },
+          "dark": false,
+          "sectionBgs": [
+            {
+              "color": "#f1f5f9",
+              "top": 0,
+              "hsl": {
+                "h": 210,
+                "s": 0.4,
+                "l": 0.96
+              }
+            },
+            {
+              "color": "#ffffff",
+              "top": 48,
+              "hsl": {
+                "h": 0,
+                "s": 0,
+                "l": 1
+              }
+            }
+          ],
+          "textColors": [
+            {
+              "color": "#64748b",
+              "share": 0.61
+            },
+            {
+              "color": "#475569",
+              "share": 0.18
+            },
+            {
+              "color": "#0f172a",
+              "share": 0.15
+            },
+            {
+              "color": "#b54708",
+              "share": 0.02
+            },
+            {
+              "color": "#3f3bc0",
+              "share": 0.01
+            }
+          ],
+          "button": {
+            "bg": "#ffffff",
+            "hsl": {
+              "h": 0,
+              "s": 0,
+              "l": 1
+            },
+            "fg": "#0f172a"
+          },
+          "lowContrast": [
+            {
+              "text": "Recruitment intelligence",
+              "ratio": 4.3,
+              "need": 4.5,
+              "size": 10,
+              "fg": "#64748b",
+              "bg": "#f1f5f9"
+            },
+            {
+              "text": "8 vị trí đang mở",
+              "ratio": 4.3,
+              "need": 4.5,
+              "size": 10,
+              "fg": "#64748b",
+              "bg": "#f1f5f9"
+            },
+            {
+              "text": "Workspace",
+              "ratio": 4.3,
+              "need": 4.5,
+              "size": 9.5,
+              "fg": "#64748b",
+              "bg": "#f1f5f9"
+            },
+            {
+              "text": "Recruiter · Owner",
+              "ratio": 4.3,
+              "need": 4.5,
+              "size": 10,
+              "fg": "#64748b",
+              "bg": "#f1f5f9"
+            },
+            {
+              "text": "Gemini 3.5 Flash Lite",
+              "ratio": 4.3,
+              "need": 4.5,
+              "size": 10.5,
+              "fg": "#64748b",
+              "bg": "#f1f5f9"
+            }
+          ]
+        },
+        "buttons": {
+          "count": 6,
+          "inHero": 6,
+          "radius": 7,
+          "height": 56,
+          "withShadow": 0,
+          "withGradient": 0,
+          "mono": 0,
+          "upper": 0,
+          "heroLabels": [
+            "Product Engineering 8 vị trí đang mở",
+            "Dashboard",
+            "Phân tích CV mới",
+            "ML Đặng Mai Linh Data Engineer · Sinh câ",
+            "GK Phạm Gia Khiêm Full-stack Developer ·"
+          ]
+        },
+        "surfaces": {
+          "shadowStatic": 0,
+          "shadowOverlay": 0,
+          "shadowSamples": [],
+          "gradients": 0,
+          "scrims": 0,
+          "gradientSamples": [],
+          "gradientText": 0,
+          "hairlines": 9,
+          "hairlineSamples": [
+            "div.queue-row 594px",
+            "div.queue-row 594px",
+            "div.queue-row 594px",
+            "div.card-foot 626px",
+            "button.progress-row 472px"
+          ],
+          "outlinedBoxes": 6,
+          "dashed": 0,
+          "blurred": 0,
+          "roundedBoxes": 6,
+          "boxRadius": 12,
+          "squareMedia": 0,
+          "roundedMedia": 0,
+          "mediaRadius": 0,
+          "textShadow": 0,
+          "cardRows": []
+        },
+        "heroMedia": [],
+        "nav": {
+          "links": 0,
+          "fixed": false,
+          "height": 274,
+          "floatingPill": false,
+          "blur": false
+        },
+        "fontsLoaded": ["inter", "ibm plex mono"]
+      },
+      "layout": {
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "pageH": 900,
+        "margins": {
+          "left": 26,
+          "right": 48
+        },
+        "sections": [
+          {
+            "sel": "div.overview-grid",
+            "tag": "div",
+            "top": 257,
+            "height": 438,
+            "words": 211,
+            "media": 0,
+            "middle": 241,
+            "heading": {
+              "text": "Chờ bạn review",
+              "size": 14,
+              "tag": "h2"
+            },
+            "left": 282,
+            "right": 48,
+            "textLeft": 282,
+            "textRight": 54,
+            "fullBleed": false,
+            "footer": false,
+            "hero": true,
+            "continues": false,
+            "pinned": false
+          },
+          {
+            "sel": "div.overview-grid.overview-grid-lower",
+            "tag": "div",
+            "top": 711,
+            "height": 358,
+            "words": 123,
+            "media": 0,
+            "middle": 260,
+            "heading": {
+              "text": "Ứng viên gần đây",
+              "size": 14,
+              "tag": "h2"
+            },
+            "left": 282,
+            "right": 54,
+            "textLeft": 282,
+            "textRight": 54,
+            "fullBleed": false,
+            "footer": true,
+            "hero": false,
+            "continues": false,
+            "pinned": false
+          }
+        ],
+        "gaps": [],
+        "h1s": [
+          {
+            "text": "Dashboard",
+            "size": 25,
+            "top": 73,
+            "firstScreen": true
+          }
+        ],
+        "edgeText": [],
+        "edges": [
+          {
+            "x": 265,
+            "n": 1
+          }
+        ],
+        "leftBlocks": 1,
+        "bodySize": 12,
+        "stage": false,
+        "explains": false,
+        "slivers": [],
+        "voidShare": 0.08,
+        "voidBox": {
+          "x": 600,
+          "y": 240,
+          "w": 180,
+          "h": 540
+        }
+      },
+      "app": {
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "dark": false,
+        "ground": "#f1f5f9",
+        "sidebar": {
+          "w": 236,
+          "tag": "aside",
+          "links": 11,
+          "share": 0.16
+        },
+        "topbar": {
+          "h": 48
+        },
+        "canvas": {
+          "left": 30,
+          "right": 48
+        },
+        "hero": {
+          "text": "Dashboard",
+          "words": 1,
+          "chars": 9,
+          "lines": 1,
+          "size": 25,
+          "vw": 1.7,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 73,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "charts": 1,
+        "layout": {
+          "panels": 1,
+          "firstScreen": 1,
+          "ragged": [],
+          "voids": []
+        },
+        "tiles": 0,
+        "panels": {
+          "count": 9,
+          "radii": [
+            [12, 5],
+            [0, 3],
+            [16, 1]
+          ],
+          "heavyBorders": 0,
+          "borderSamples": [],
+          "heavyShadows": 0,
+          "softShadows": 0,
+          "shadowSamples": [],
+          "glass": 0
+        },
+        "chips": {
+          "count": 0,
+          "hues": 0,
+          "samples": []
+        },
+        "numbers": {
+          "cells": 0,
+          "leftAligned": 0,
+          "figures": 9,
+          "tabularShare": 1,
+          "kpiMax": 28
+        },
+        "rows": {
+          "count": 5,
+          "median": 49
+        },
+        "chartHues": 0,
+        "placeholders": ["example.com"],
+        "type": {
+          "under13": 0.84,
+          "tiny": 47,
+          "tinySamples": [
+            "Recruitment intelligence 10px",
+            "vị trí đang mở 10px",
+            "Workspace 10px",
+            "Recruiter · Owner 10px"
+          ],
+          "sizes": [10, 11, 12, 13, 14, 25, 28]
+        },
+        "title": {
+          "text": "Dashboard",
+          "size": 25,
+          "top": 73
+        },
+        "colourShare": 0.013
+      },
+      "consoleErrors": []
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "load": "load",
+      "screens": 1,
+      "filled": [1],
+      "motion": {
+        "elements": 1,
+        "css": 0,
+        "transitions": 0,
+        "scripted": 1,
+        "videos": 0,
+        "playingVideos": 0
+      },
+      "metrics": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "page": {
+          "height": 1024,
+          "screens": 1,
+          "words": 444,
+          "img": 0,
+          "video": 0,
+          "canvas": 0,
+          "svg": 28,
+          "sections": 5,
+          "horizontalOverflow": 0,
+          "overflowCulprits": [],
+          "uiFragments": 0,
+          "uiAbuse": false,
+          "realPictures": 0,
+          "videoCount": 0,
+          "uiPictures": 0,
+          "pictureSamples": [],
+          "blendText": 0,
+          "sideScrollers": 0,
+          "brokenImages": [],
+          "emoji": [],
+          "videosNoPoster": 0
+        },
+        "hero": {
+          "text": "Dashboard",
+          "words": 1,
+          "chars": 9,
+          "lines": 1,
+          "size": 25,
+          "vw": 3.3,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 66,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "h1": {
+          "text": "Dashboard",
+          "words": 1,
+          "lines": 1,
+          "size": 25,
+          "font": "Inter"
+        },
+        "headings": [
+          {
+            "text": "128",
+            "words": 1,
+            "chars": 3,
+            "lines": 1,
+            "size": 28,
+            "vw": 3.6,
+            "font": "Inter",
+            "weight": 600,
+            "tracking": -0.03,
+            "leading": 1.1,
+            "upper": false,
+            "italic": false,
+            "mono": false,
+            "align": "left",
+            "position": "left",
+            "widthRatio": 0.2,
+            "top": 190,
+            "tag": "span",
+            "kind": "heading"
+          },
+          {
+            "text": "4",
+            "words": 1,
+            "chars": 1,
+            "lines": 1,
+            "size": 28,
+            "vw": 3.6,
+            "font": "Inter",
+            "weight": 600,
+            "tracking": -0.03,
+            "leading": 1.1,
+            "upper": false,
+            "italic": false,
+            "mono": false,
+            "align": "left",
+            "position": "left",
+            "widthRatio": 0.2,
+            "top": 190,
+            "tag": "span",
+            "kind": "heading"
+          },
+          {
+            "text": "96",
+            "words": 1,
+            "chars": 2,
+            "lines": 1,
+            "size": 28,
+            "vw": 3.6,
+            "font": "Inter",
+            "weight": 600,
+            "tracking": -0.03,
+            "leading": 1.1,
+            "upper": false,
+            "italic": false,
+            "mono": false,
+            "align": "left",
+            "position": "right",
+            "widthRatio": 0.2,
+            "top": 190,
+            "tag": "span",
+            "kind": "heading"
+          },
+          {
+            "text": "12",
+            "words": 1,
+            "chars": 2,
+            "lines": 1,
+            "size": 28,
+            "vw": 3.6,
+            "font": "Inter",
+            "weight": 600,
+            "tracking": -0.03,
+            "leading": 1.1,
+            "upper": false,
+            "italic": false,
+            "mono": false,
+            "align": "left",
+            "position": "right",
+            "widthRatio": 0.2,
+            "top": 190,
+            "tag": "span",
+            "kind": "heading"
+          }
+        ],
+        "headingSummary": {
+          "count": 4,
+          "maxLines": 1,
+          "over2Lines": 0,
+          "statements": 0,
+          "centered": 0,
+          "medianWords": null,
+          "mixedFontHeadings": 0
+        },
+        "type": {
+          "families": [
+            {
+              "family": "Inter",
+              "share": 1,
+              "mono": false
+            }
+          ],
+          "familyCount": 1,
+          "sizes": [10, 11, 12, 13, 14, 25, 28],
+          "sizeCount": 7,
+          "notLoaded": [],
+          "body": {
+            "font": "Inter",
+            "size": 12,
+            "leading": 1.5,
+            "weight": 400,
+            "tracking": 0,
+            "contrast": 4.8
+          },
+          "measureChars": 128,
+          "max": {
+            "size": 28,
+            "vw": 3.6,
+            "font": "Inter",
+            "text": "128"
+          },
+          "monoShare": 0,
+          "monoProseShare": 0,
+          "monoFamilies": [],
+          "monoSamples": [],
+          "microLabels": 9,
+          "microLabelShare": 0.047,
+          "microSamples": [
+            "Tổng ứng viên",
+            "Đang phân tích",
+            "Báo cáo hoàn tất",
+            "Chờ review",
+            "Ứng viên",
+            "Vị trí"
+          ],
+          "upperShare": 0.05,
+          "centerShare": 0.03,
+          "smallText": 69
+        },
+        "eyebrows": [
+          {
+            "text": "Tổng ứng viên",
+            "above": "128",
+            "upper": true,
+            "tracked": true,
+            "mono": false,
+            "pill": false,
+            "size": 9.5,
+            "top": 171
+          },
+          {
+            "text": "Đang phân tích",
+            "above": "4",
+            "upper": true,
+            "tracked": true,
+            "mono": false,
+            "pill": false,
+            "size": 9.5,
+            "top": 171
+          },
+          {
+            "text": "Báo cáo hoàn tất",
+            "above": "96",
+            "upper": true,
+            "tracked": true,
+            "mono": false,
+            "pill": false,
+            "size": 9.5,
+            "top": 171
+          },
+          {
+            "text": "Chờ review",
+            "above": "12",
+            "upper": true,
+            "tracked": true,
+            "mono": false,
+            "pill": false,
+            "size": 9.5,
+            "top": 171
+          }
+        ],
+        "numbered": [],
+        "color": {
+          "bodyBg": "#f1f5f9",
+          "bodyBgHsl": {
+            "h": 210,
+            "s": 0.4,
+            "l": 0.96
+          },
+          "dark": false,
+          "sectionBgs": [
+            {
+              "color": "#f1f5f9",
+              "top": 0,
+              "hsl": {
+                "h": 210,
+                "s": 0.4,
+                "l": 0.96
+              }
+            },
+            {
+              "color": "#ffffff",
+              "top": 0,
+              "hsl": {
+                "h": 0,
+                "s": 0,
+                "l": 1
+              }
+            }
+          ],
+          "textColors": [
+            {
+              "color": "#64748b",
+              "share": 0.63
+            },
+            {
+              "color": "#475569",
+              "share": 0.15
+            },
+            {
+              "color": "#0f172a",
+              "share": 0.15
+            },
+            {
+              "color": "#b54708",
+              "share": 0.02
+            },
+            {
+              "color": "#3f3bc0",
+              "share": 0.01
+            }
+          ],
+          "button": {
+            "bg": "#ffffff",
+            "hsl": {
+              "h": 0,
+              "s": 0,
+              "l": 1
+            },
+            "fg": "#0f172a"
+          },
+          "lowContrast": []
+        },
+        "buttons": {
+          "count": 6,
+          "inHero": 6,
+          "radius": 7,
+          "height": 56,
+          "withShadow": 0,
+          "withGradient": 0,
+          "mono": 0,
+          "upper": 0,
+          "heroLabels": [
+            "Phân tích CV mới",
+            "ML Đặng Mai Linh Data Engineer · Sinh câ",
+            "GK Phạm Gia Khiêm Full-stack Developer ·",
+            "BC Trần Bảo Châu Frontend Engineer · Phâ"
+          ]
+        },
+        "surfaces": {
+          "shadowStatic": 0,
+          "shadowOverlay": 0,
+          "shadowSamples": [],
+          "gradients": 0,
+          "scrims": 0,
+          "gradientSamples": [],
+          "gradientText": 0,
+          "hairlines": 10,
+          "hairlineSamples": [
+            "header.mobilebar 768px",
+            "div.queue-row 702px",
+            "div.queue-row 702px",
+            "div.queue-row 702px",
+            "div.card-foot 734px"
+          ],
+          "outlinedBoxes": 5,
+          "dashed": 0,
+          "blurred": 0,
+          "roundedBoxes": 5,
+          "boxRadius": 12,
+          "squareMedia": 0,
+          "roundedMedia": 0,
+          "mediaRadius": 0,
+          "textShadow": 0,
+          "cardRows": []
+        },
+        "heroMedia": [],
+        "nav": {
+          "links": 0,
+          "fixed": true,
+          "height": 1024,
+          "floatingPill": false,
+          "blur": false
+        },
+        "fontsLoaded": ["inter"]
+      },
+      "layout": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "pageH": 1024,
+        "margins": {
+          "left": 27,
+          "right": 27
+        },
+        "sections": [
+          {
+            "sel": "div.overview-grid",
+            "tag": "div",
+            "top": 268,
+            "height": 781,
+            "words": 211,
+            "media": 0,
+            "middle": 0,
+            "heading": {
+              "text": "Chờ bạn review",
+              "size": 14,
+              "tag": "h2"
+            },
+            "left": 27,
+            "right": 27,
+            "textLeft": 33,
+            "textRight": 33,
+            "fullBleed": false,
+            "footer": false,
+            "hero": true,
+            "continues": false,
+            "pinned": false
+          },
+          {
+            "sel": "div.overview-grid.overview-grid-lower",
+            "tag": "div",
+            "top": 1065,
+            "height": 650,
+            "words": 123,
+            "media": 0,
+            "middle": 53,
+            "heading": {
+              "text": "Ứng viên gần đây",
+              "size": 14,
+              "tag": "h2"
+            },
+            "left": 33,
+            "right": 33,
+            "textLeft": 33,
+            "textRight": 33,
+            "fullBleed": false,
+            "footer": true,
+            "hero": false,
+            "continues": false,
+            "pinned": false
+          }
+        ],
+        "gaps": [],
+        "h1s": [
+          {
+            "text": "Dashboard",
+            "size": 25,
+            "top": 66,
+            "firstScreen": true
+          }
+        ],
+        "edgeText": [],
+        "edges": [
+          {
+            "x": 16,
+            "n": 1
+          }
+        ],
+        "leftBlocks": 1,
+        "bodySize": 12,
+        "stage": false,
+        "explains": false,
+        "slivers": [],
+        "voidShare": 0,
+        "voidBox": null
+      },
+      "app": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "dark": false,
+        "ground": "#f1f5f9",
+        "sidebar": null,
+        "topbar": {
+          "h": 48
+        },
+        "canvas": {
+          "left": 17,
+          "right": 17
+        },
+        "hero": {
+          "text": "Dashboard",
+          "words": 1,
+          "chars": 9,
+          "lines": 1,
+          "size": 25,
+          "vw": 3.3,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 66,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "charts": 1,
+        "layout": {
+          "panels": 5,
+          "firstScreen": 3,
+          "ragged": [],
+          "voids": []
+        },
+        "tiles": 0,
+        "panels": {
+          "count": 8,
+          "radii": [
+            [12, 5],
+            [0, 3]
+          ],
+          "heavyBorders": 0,
+          "borderSamples": [],
+          "heavyShadows": 0,
+          "softShadows": 0,
+          "shadowSamples": [],
+          "glass": 0
+        },
+        "chips": {
+          "count": 0,
+          "hues": 0,
+          "samples": []
+        },
+        "numbers": {
+          "cells": 0,
+          "leftAligned": 0,
+          "figures": 8,
+          "tabularShare": 1,
+          "kpiMax": 28
+        },
+        "rows": {
+          "count": 5,
+          "median": 49
+        },
+        "chartHues": 0,
+        "placeholders": ["example.com"],
+        "type": {
+          "under13": 0.89,
+          "tiny": 43,
+          "tinySamples": [
+            "Tổng ứng viên 10px",
+            "Đang phân tích 10px",
+            "Báo cáo hoàn tất 10px",
+            "Chờ review 10px"
+          ],
+          "sizes": [10, 11, 12, 13, 14, 25, 28]
+        },
+        "title": {
+          "text": "Dashboard",
+          "size": 25,
+          "top": 66
+        },
+        "colourShare": 0.022
+      },
+      "consoleErrors": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "load": "load",
+      "screens": 1,
+      "filled": [1],
+      "motion": {
+        "elements": 1,
+        "css": 0,
+        "transitions": 0,
+        "scripted": 1,
+        "videos": 0,
+        "playingVideos": 0
+      },
+      "metrics": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "page": {
+          "height": 844,
+          "screens": 1,
+          "words": 434,
+          "img": 0,
+          "video": 0,
+          "canvas": 0,
+          "svg": 28,
+          "sections": 5,
+          "horizontalOverflow": 0,
+          "overflowCulprits": [],
+          "uiFragments": 0,
+          "uiAbuse": false,
+          "realPictures": 0,
+          "videoCount": 0,
+          "uiPictures": 0,
+          "pictureSamples": [],
+          "blendText": 0,
+          "sideScrollers": 0,
+          "brokenImages": [],
+          "emoji": [],
+          "videosNoPoster": 0
+        },
+        "hero": {
+          "text": "Dashboard",
+          "words": 1,
+          "chars": 9,
+          "lines": 1,
+          "size": 22,
+          "vw": 5.6,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 62,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "h1": {
+          "text": "Dashboard",
+          "words": 1,
+          "lines": 1,
+          "size": 22,
+          "font": "Inter"
+        },
+        "headings": [
+          {
+            "text": "Dashboard",
+            "words": 1,
+            "chars": 9,
+            "lines": 1,
+            "size": 22,
+            "vw": 5.6,
+            "font": "Inter",
+            "weight": 600,
+            "tracking": -0.022,
+            "leading": 1.2,
+            "upper": false,
+            "italic": false,
+            "mono": false,
+            "align": "left",
+            "position": "center",
+            "widthRatio": 0.94,
+            "top": 62,
+            "tag": "h1",
+            "kind": "heading"
+          },
+          {
+            "text": "128",
+            "words": 1,
+            "chars": 3,
+            "lines": 1,
+            "size": 27,
+            "vw": 6.9,
+            "font": "Inter",
+            "weight": 600,
+            "tracking": -0.03,
+            "leading": 1.1,
+            "upper": false,
+            "italic": false,
+            "mono": false,
+            "align": "left",
+            "position": "center",
+            "widthRatio": 0.87,
+            "top": 223,
+            "tag": "span",
+            "kind": "heading"
+          },
+          {
+            "text": "4",
+            "words": 1,
+            "chars": 1,
+            "lines": 1,
+            "size": 27,
+            "vw": 6.9,
+            "font": "Inter",
+            "weight": 600,
+            "tracking": -0.03,
+            "leading": 1.1,
+            "upper": false,
+            "italic": false,
+            "mono": false,
+            "align": "left",
+            "position": "center",
+            "widthRatio": 0.87,
+            "top": 312,
+            "tag": "span",
+            "kind": "heading"
+          },
+          {
+            "text": "96",
+            "words": 1,
+            "chars": 2,
+            "lines": 1,
+            "size": 27,
+            "vw": 6.9,
+            "font": "Inter",
+            "weight": 600,
+            "tracking": -0.03,
+            "leading": 1.1,
+            "upper": false,
+            "italic": false,
+            "mono": false,
+            "align": "left",
+            "position": "center",
+            "widthRatio": 0.87,
+            "top": 400,
+            "tag": "span",
+            "kind": "heading"
+          },
+          {
+            "text": "12",
+            "words": 1,
+            "chars": 2,
+            "lines": 1,
+            "size": 27,
+            "vw": 6.9,
+            "font": "Inter",
+            "weight": 600,
+            "tracking": -0.03,
+            "leading": 1.1,
+            "upper": false,
+            "italic": false,
+            "mono": false,
+            "align": "left",
+            "position": "center",
+            "widthRatio": 0.87,
+            "top": 489,
+            "tag": "span",
+            "kind": "heading"
+          }
+        ],
+        "headingSummary": {
+          "count": 5,
+          "maxLines": 1,
+          "over2Lines": 0,
+          "statements": 0,
+          "centered": 0,
+          "medianWords": 1,
+          "mixedFontHeadings": 0
+        },
+        "type": {
+          "families": [
+            {
+              "family": "Inter",
+              "share": 1,
+              "mono": false
+            }
+          ],
+          "familyCount": 1,
+          "sizes": [10, 11, 12, 13, 14, 22, 27],
+          "sizeCount": 7,
+          "notLoaded": [],
+          "body": {
+            "font": "Inter",
+            "size": 11.5,
+            "leading": 1.5,
+            "weight": 400,
+            "tracking": 0,
+            "contrast": 4.8
+          },
+          "measureChars": 64,
+          "max": {
+            "size": 27,
+            "vw": 6.9,
+            "font": "Inter",
+            "text": "128"
+          },
+          "monoShare": 0,
+          "monoProseShare": 0,
+          "monoFamilies": [],
+          "monoSamples": [],
+          "microLabels": 4,
+          "microLabelShare": 0.027,
+          "microSamples": [
+            "Tổng ứng viên",
+            "Đang phân tích",
+            "Báo cáo hoàn tất",
+            "Chờ review"
+          ],
+          "upperShare": 0.03,
+          "centerShare": 0.03,
+          "smallText": 69
+        },
+        "eyebrows": [
+          {
+            "text": "Tổng ứng viên",
+            "above": "128",
+            "upper": true,
+            "tracked": true,
+            "mono": false,
+            "pill": false,
+            "size": 9.5,
+            "top": 204
+          },
+          {
+            "text": "Đang phân tích",
+            "above": "4",
+            "upper": true,
+            "tracked": true,
+            "mono": false,
+            "pill": false,
+            "size": 9.5,
+            "top": 293
+          },
+          {
+            "text": "Báo cáo hoàn tất",
+            "above": "96",
+            "upper": true,
+            "tracked": true,
+            "mono": false,
+            "pill": false,
+            "size": 9.5,
+            "top": 381
+          },
+          {
+            "text": "Chờ review",
+            "above": "12",
+            "upper": true,
+            "tracked": true,
+            "mono": false,
+            "pill": false,
+            "size": 9.5,
+            "top": 470
+          }
+        ],
+        "numbered": [],
+        "color": {
+          "bodyBg": "#f1f5f9",
+          "bodyBgHsl": {
+            "h": 210,
+            "s": 0.4,
+            "l": 0.96
+          },
+          "dark": false,
+          "sectionBgs": [
+            {
+              "color": "#f1f5f9",
+              "top": 0,
+              "hsl": {
+                "h": 210,
+                "s": 0.4,
+                "l": 0.96
+              }
+            },
+            {
+              "color": "#ffffff",
+              "top": 0,
+              "hsl": {
+                "h": 0,
+                "s": 0,
+                "l": 1
+              }
+            }
+          ],
+          "textColors": [
+            {
+              "color": "#64748b",
+              "share": 0.63
+            },
+            {
+              "color": "#475569",
+              "share": 0.16
+            },
+            {
+              "color": "#0f172a",
+              "share": 0.15
+            },
+            {
+              "color": "#b54708",
+              "share": 0.03
+            },
+            {
+              "color": "#3f3bc0",
+              "share": 0.01
+            }
+          ],
+          "button": {
+            "bg": "#ffffff",
+            "hsl": {
+              "h": 0,
+              "s": 0,
+              "l": 1
+            },
+            "fg": "#0f172a"
+          },
+          "lowContrast": []
+        },
+        "buttons": {
+          "count": 6,
+          "inHero": 3,
+          "radius": 7,
+          "height": 56,
+          "withShadow": 0,
+          "withGradient": 0,
+          "mono": 0,
+          "upper": 0,
+          "heroLabels": ["Phân tích CV mới"]
+        },
+        "surfaces": {
+          "shadowStatic": 0,
+          "shadowOverlay": 0,
+          "shadowSamples": [],
+          "gradients": 0,
+          "scrims": 0,
+          "gradientSamples": [],
+          "gradientText": 0,
+          "hairlines": 13,
+          "hairlineSamples": [
+            "header.mobilebar 390px",
+            "div.kpi-cell 364px",
+            "div.kpi-cell 364px",
+            "div.kpi-cell 364px",
+            "div.queue-row 336px"
+          ],
+          "outlinedBoxes": 5,
+          "dashed": 0,
+          "blurred": 0,
+          "roundedBoxes": 10,
+          "boxRadius": 12,
+          "squareMedia": 0,
+          "roundedMedia": 0,
+          "mediaRadius": 0,
+          "textShadow": 0,
+          "cardRows": [
+            {
+              "count": 5,
+              "iconTopped": false,
+              "rounded": true,
+              "top": 1445
+            }
+          ]
+        },
+        "heroMedia": [],
+        "nav": {
+          "links": 0,
+          "fixed": true,
+          "height": 844,
+          "floatingPill": false,
+          "blur": false
+        },
+        "fontsLoaded": ["inter"]
+      },
+      "layout": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "pageH": 844,
+        "margins": {
+          "left": 12,
+          "right": 21
+        },
+        "sections": [
+          {
+            "sel": "section.kpi-strip",
+            "tag": "section",
+            "top": 192,
+            "height": 356,
+            "words": 39,
+            "media": 0,
+            "middle": 0,
+            "heading": {
+              "text": "128",
+              "size": 27,
+              "tag": "span"
+            },
+            "left": 25,
+            "right": 221,
+            "textLeft": 25,
+            "textRight": 221,
+            "fullBleed": false,
+            "footer": false,
+            "hero": true,
+            "continues": false,
+            "pinned": false
+          },
+          {
+            "sel": "div.overview-grid",
+            "tag": "div",
+            "top": 563,
+            "height": 805,
+            "words": 211,
+            "media": 0,
+            "middle": 0,
+            "heading": {
+              "text": "Chờ bạn review",
+              "size": 14,
+              "tag": "h2"
+            },
+            "left": 21,
+            "right": 21,
+            "textLeft": 27,
+            "textRight": 27,
+            "fullBleed": false,
+            "footer": false,
+            "hero": false,
+            "continues": false,
+            "pinned": false
+          },
+          {
+            "sel": "div.overview-grid.overview-grid-lower",
+            "tag": "div",
+            "top": 1384,
+            "height": 1181,
+            "words": 113,
+            "media": 0,
+            "middle": 19,
+            "heading": {
+              "text": "Ứng viên gần đây",
+              "size": 14,
+              "tag": "h2"
+            },
+            "left": 27,
+            "right": 27,
+            "textLeft": 27,
+            "textRight": 27,
+            "fullBleed": false,
+            "footer": true,
+            "hero": false,
+            "continues": false,
+            "pinned": false
+          }
+        ],
+        "gaps": [],
+        "h1s": [
+          {
+            "text": "Dashboard",
+            "size": 22,
+            "top": 62,
+            "firstScreen": true
+          }
+        ],
+        "edgeText": [
+          {
+            "text": "Dashboard",
+            "side": "left",
+            "px": 12
+          },
+          {
+            "text": "Product Engineering · Thứ Hai, 26/10/2026 · 128 hồ",
+            "side": "left",
+            "px": 12
+          }
+        ],
+        "edges": [
+          {
+            "x": 12,
+            "n": 1
+          }
+        ],
+        "leftBlocks": 1,
+        "bodySize": 12,
+        "stage": false,
+        "explains": false,
+        "slivers": [],
+        "voidShare": 0,
+        "voidBox": null
+      },
+      "app": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "dark": false,
+        "ground": "#f1f5f9",
+        "sidebar": null,
+        "topbar": {
+          "h": 48
+        },
+        "canvas": {
+          "left": 12,
+          "right": 21
+        },
+        "hero": {
+          "text": "Dashboard",
+          "words": 1,
+          "chars": 9,
+          "lines": 1,
+          "size": 22,
+          "vw": 5.6,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 62,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "charts": 1,
+        "layout": {
+          "panels": 6,
+          "firstScreen": 2,
+          "ragged": [],
+          "voids": []
+        },
+        "tiles": 0,
+        "panels": {
+          "count": 14,
+          "radii": [
+            [12, 5],
+            [10, 5],
+            [0, 3],
+            [9, 1]
+          ],
+          "heavyBorders": 0,
+          "borderSamples": [],
+          "heavyShadows": 0,
+          "softShadows": 0,
+          "shadowSamples": [],
+          "glass": 0
+        },
+        "chips": {
+          "count": 0,
+          "hues": 0,
+          "samples": []
+        },
+        "numbers": {
+          "cells": 0,
+          "leftAligned": 0,
+          "figures": 8,
+          "tabularShare": 1,
+          "kpiMax": 27
+        },
+        "rows": {
+          "count": 5,
+          "median": 155
+        },
+        "chartHues": 0,
+        "placeholders": ["example.com"],
+        "type": {
+          "under13": 0.9,
+          "tiny": 43,
+          "tinySamples": [
+            "Tổng ứng viên 10px",
+            "Đang phân tích 10px",
+            "Báo cáo hoàn tất 10px",
+            "Chờ review 10px"
+          ],
+          "sizes": [10, 11, 12, 13, 14, 22, 27]
+        },
+        "title": {
+          "text": "Dashboard",
+          "size": 22,
+          "top": 62
+        },
+        "colourShare": 0.023
+      },
+      "consoleErrors": []
+    }
+  ],
+  "findings": [
+    {
+      "level": "FAIL",
+      "id": "micro-label",
+      "width": 1440,
+      "message": "9 tiny uppercase letter-spaced labels (e.g. \"Tổng ứng viên\", \"Đang phân tích\", \"Báo cáo hoàn tất\", \"Chờ review\").",
+      "fix": "Use sentence-case text at a readable size, or delete the label.",
+      "alsoAt": [768, 390]
+    },
+    {
+      "level": "WARN",
+      "id": "contrast",
+      "width": 1440,
+      "message": "Low-contrast text: \"Recruitment intelligence\" 4.3:1 needs 4.5:1; \"8 vị trí đang mở\" 4.3:1 needs 4.5:1; \"Workspace\" 4.3:1 needs 4.5:1; \"Recruiter · Owner\" 4.3:1 needs 4.5:1",
+      "fix": "Darken or lighten the text colour."
+    },
+    {
+      "level": "FAIL",
+      "id": "placeholder-data",
+      "width": 1440,
+      "message": "Placeholder data on screen: example.com.",
+      "fix": "Use believable data for this product: real-looking names, amounts that add up, dates in order, units on every figure.",
+      "alsoAt": [768, 390]
+    },
+    {
+      "level": "FAIL",
+      "id": "tiny-text",
+      "width": 1440,
+      "message": "47 text blocks under 11px: Recruitment intelligence 10px, vị trí đang mở 10px, Workspace 10px, Recruiter · Owner 10px.",
+      "fix": "Nothing below 11px; secondary text 12px, data 13–14px.",
+      "alsoAt": [768, 390]
+    },
+    {
+      "level": "WARN",
+      "id": "edge-text",
+      "width": 390,
+      "message": "2 text block(s) sit 12–15px from the phone's edge: \"Dashboard\" (12px); \"Product Engineering · Thứ Hai,\" (12px)",
+      "fix": "The page margin is 16–20px on a phone; the header and the corner labels sit on it too."
+    }
+  ],
+  "images": [
+    {
+      "viewport": "desktop",
+      "width": 1440,
+      "fold": "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/desktop-fold.jpg",
+      "pages": [
+        "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/desktop-page-01.jpg"
+      ],
+      "film": []
+    },
+    {
+      "viewport": "tablet",
+      "width": 768,
+      "fold": "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/tablet-fold.jpg",
+      "pages": [
+        "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/tablet-page-01.jpg"
+      ],
+      "film": []
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "fold": "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/mobile-fold.jpg",
+      "pages": [
+        "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/mobile-page-01.jpg"
+      ],
+      "film": []
+    }
+  ]
+}

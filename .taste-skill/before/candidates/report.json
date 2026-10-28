@@ -1,0 +1,1399 @@
+{
+  "url": "http://localhost:3000/#candidates",
+  "at": "2026-10-27T03:17:15.401Z",
+  "allow": [],
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 900,
+      "load": "load",
+      "screens": 1,
+      "filled": [0.82],
+      "motion": {
+        "elements": 3,
+        "css": 0,
+        "transitions": 2,
+        "scripted": 1,
+        "videos": 0,
+        "playingVideos": 0
+      },
+      "metrics": {
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "page": {
+          "height": 900,
+          "screens": 1,
+          "words": 374,
+          "img": 0,
+          "video": 0,
+          "canvas": 0,
+          "svg": 29,
+          "sections": 1,
+          "horizontalOverflow": 0,
+          "overflowCulprits": [],
+          "uiFragments": 0,
+          "uiAbuse": false,
+          "realPictures": 0,
+          "videoCount": 0,
+          "uiPictures": 0,
+          "pictureSamples": [],
+          "blendText": 0,
+          "sideScrollers": 0,
+          "brokenImages": [],
+          "emoji": [],
+          "videosNoPoster": 0
+        },
+        "hero": {
+          "text": "Candidates",
+          "words": 1,
+          "chars": 10,
+          "lines": 1,
+          "size": 25,
+          "vw": 1.7,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 73,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "h1": {
+          "text": "Candidates",
+          "words": 1,
+          "lines": 1,
+          "size": 25,
+          "font": "Inter"
+        },
+        "headings": [],
+        "headingSummary": {
+          "count": 0,
+          "maxLines": 0,
+          "over2Lines": 0,
+          "statements": 0,
+          "centered": 0,
+          "medianWords": null,
+          "mixedFontHeadings": 0
+        },
+        "type": {
+          "families": [
+            {
+              "family": "Inter",
+              "share": 1,
+              "mono": false
+            },
+            {
+              "family": "IBM Plex Mono",
+              "share": 0,
+              "mono": true
+            }
+          ],
+          "familyCount": 2,
+          "sizes": [10, 11, 12, 13, 14, 25],
+          "sizeCount": 6,
+          "notLoaded": [],
+          "body": {
+            "font": "Inter",
+            "size": 10.5,
+            "leading": 1.45,
+            "weight": 400,
+            "tracking": 0,
+            "contrast": 4.8
+          },
+          "measureChars": 91,
+          "max": {
+            "size": 25,
+            "vw": 1.7,
+            "font": "Inter",
+            "text": "Candidates"
+          },
+          "monoShare": 0,
+          "monoProseShare": 0,
+          "monoFamilies": ["IBM Plex Mono"],
+          "monoSamples": [],
+          "microLabels": 6,
+          "microLabelShare": 0.034,
+          "microSamples": [
+            "Ứng viên",
+            "Vị trí",
+            "Kinh nghiệm",
+            "Bằng chứng",
+            "Trạng thái",
+            "Cập nhật"
+          ],
+          "upperShare": 0.04,
+          "centerShare": 0.04,
+          "smallText": 62
+        },
+        "eyebrows": [],
+        "numbered": [],
+        "color": {
+          "bodyBg": "#f1f5f9",
+          "bodyBgHsl": {
+            "h": 210,
+            "s": 0.4,
+            "l": 0.96
+          },
+          "dark": false,
+          "sectionBgs": [
+            {
+              "color": "#f1f5f9",
+              "top": 0,
+              "hsl": {
+                "h": 210,
+                "s": 0.4,
+                "l": 0.96
+              }
+            },
+            {
+              "color": "#ffffff",
+              "top": 48,
+              "hsl": {
+                "h": 0,
+                "s": 0,
+                "l": 1
+              }
+            }
+          ],
+          "textColors": [
+            {
+              "color": "#64748b",
+              "share": 0.59
+            },
+            {
+              "color": "#475569",
+              "share": 0.22
+            },
+            {
+              "color": "#0f172a",
+              "share": 0.12
+            },
+            {
+              "color": "#3f3bc0",
+              "share": 0.02
+            },
+            {
+              "color": "#067647",
+              "share": 0.02
+            }
+          ],
+          "button": {
+            "bg": "#ffffff",
+            "hsl": {
+              "h": 0,
+              "s": 0,
+              "l": 1
+            },
+            "fg": "#0f172a"
+          },
+          "lowContrast": [
+            {
+              "text": "Recruitment intelligence",
+              "ratio": 4.3,
+              "need": 4.5,
+              "size": 10,
+              "fg": "#64748b",
+              "bg": "#f1f5f9"
+            },
+            {
+              "text": "8 vị trí đang mở",
+              "ratio": 4.3,
+              "need": 4.5,
+              "size": 10,
+              "fg": "#64748b",
+              "bg": "#f1f5f9"
+            },
+            {
+              "text": "Workspace",
+              "ratio": 4.3,
+              "need": 4.5,
+              "size": 9.5,
+              "fg": "#64748b",
+              "bg": "#f1f5f9"
+            },
+            {
+              "text": "Recruiter · Owner",
+              "ratio": 4.3,
+              "need": 4.5,
+              "size": 10,
+              "fg": "#64748b",
+              "bg": "#f1f5f9"
+            },
+            {
+              "text": "Gemini 3.5 Flash Lite",
+              "ratio": 4.3,
+              "need": 4.5,
+              "size": 10.5,
+              "fg": "#64748b",
+              "bg": "#f1f5f9"
+            }
+          ]
+        },
+        "buttons": {
+          "count": 5,
+          "inHero": 5,
+          "radius": 8,
+          "height": 34,
+          "withShadow": 0,
+          "withGradient": 0,
+          "mono": 0,
+          "upper": 0,
+          "heroLabels": [
+            "Product Engineering 8 vị trí đang mở",
+            "Candidates 12",
+            "Phân tích CV mới",
+            "Trước",
+            "Sau"
+          ]
+        },
+        "surfaces": {
+          "shadowStatic": 0,
+          "shadowOverlay": 0,
+          "shadowSamples": [],
+          "gradients": 0,
+          "scrims": 0,
+          "gradientSamples": [],
+          "gradientText": 0,
+          "hairlines": 2,
+          "hairlineSamples": ["div.pagination 1104px", "div.card-foot 1136px"],
+          "outlinedBoxes": 2,
+          "dashed": 0,
+          "blurred": 0,
+          "roundedBoxes": 2,
+          "boxRadius": 16,
+          "squareMedia": 0,
+          "roundedMedia": 0,
+          "mediaRadius": 0,
+          "textShadow": 0,
+          "cardRows": []
+        },
+        "heroMedia": [],
+        "nav": {
+          "links": 0,
+          "fixed": false,
+          "height": 274,
+          "floatingPill": false,
+          "blur": false
+        },
+        "fontsLoaded": ["inter", "ibm plex mono"]
+      },
+      "layout": {
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "pageH": 900,
+        "margins": {
+          "left": 26,
+          "right": 51
+        },
+        "sections": [],
+        "gaps": [],
+        "h1s": [
+          {
+            "text": "Candidates",
+            "size": 25,
+            "top": 73,
+            "firstScreen": true
+          }
+        ],
+        "edgeText": [],
+        "edges": [
+          {
+            "x": 265,
+            "n": 1
+          }
+        ],
+        "leftBlocks": 1,
+        "bodySize": 11,
+        "stage": false,
+        "explains": false,
+        "slivers": [],
+        "voidShare": 0.12,
+        "voidBox": {
+          "x": 180,
+          "y": 780,
+          "w": 1260,
+          "h": 120
+        }
+      },
+      "app": {
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "dark": false,
+        "ground": "#f1f5f9",
+        "sidebar": {
+          "w": 236,
+          "tag": "aside",
+          "links": 11,
+          "share": 0.16
+        },
+        "topbar": {
+          "h": 48
+        },
+        "canvas": {
+          "left": 30,
+          "right": 38
+        },
+        "hero": {
+          "text": "Candidates",
+          "words": 1,
+          "chars": 10,
+          "lines": 1,
+          "size": 25,
+          "vw": 1.7,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 73,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "charts": 0,
+        "layout": {
+          "panels": 1,
+          "firstScreen": 1,
+          "ragged": [],
+          "voids": [
+            {
+              "gap": 115,
+              "at": 776,
+              "panel": "CandidatesMA"
+            }
+          ]
+        },
+        "tiles": 0,
+        "panels": {
+          "count": 2,
+          "radii": [
+            [16, 1],
+            [12, 1]
+          ],
+          "heavyBorders": 0,
+          "borderSamples": [],
+          "heavyShadows": 0,
+          "softShadows": 0,
+          "shadowSamples": [],
+          "glass": 0
+        },
+        "chips": {
+          "count": 0,
+          "hues": 0,
+          "samples": []
+        },
+        "numbers": {
+          "cells": 0,
+          "leftAligned": 0,
+          "figures": 6,
+          "tabularShare": 1,
+          "kpiMax": 10.5
+        },
+        "rows": {
+          "count": 8,
+          "median": 51
+        },
+        "chartHues": 0,
+        "placeholders": ["example.com"],
+        "type": {
+          "under13": 0.83,
+          "tiny": 42,
+          "tinySamples": [
+            "Recruitment intelligence 10px",
+            "vị trí đang mở 10px",
+            "Workspace 10px",
+            "Recruiter · Owner 10px"
+          ],
+          "sizes": [10, 11, 12, 13, 14, 25]
+        },
+        "title": {
+          "text": "Candidates",
+          "size": 25,
+          "top": 73
+        },
+        "colourShare": 0.006
+      },
+      "consoleErrors": []
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "load": "load",
+      "screens": 1,
+      "filled": [0.98],
+      "motion": {
+        "elements": 3,
+        "css": 0,
+        "transitions": 2,
+        "scripted": 1,
+        "videos": 0,
+        "playingVideos": 0
+      },
+      "metrics": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "page": {
+          "height": 1024,
+          "screens": 1,
+          "words": 335,
+          "img": 0,
+          "video": 0,
+          "canvas": 0,
+          "svg": 29,
+          "sections": 1,
+          "horizontalOverflow": 0,
+          "overflowCulprits": [],
+          "uiFragments": 0,
+          "uiAbuse": false,
+          "realPictures": 0,
+          "videoCount": 0,
+          "uiPictures": 0,
+          "pictureSamples": [],
+          "blendText": 0,
+          "sideScrollers": 1,
+          "brokenImages": [],
+          "emoji": [],
+          "videosNoPoster": 0
+        },
+        "hero": {
+          "text": "Candidates",
+          "words": 1,
+          "chars": 10,
+          "lines": 1,
+          "size": 25,
+          "vw": 3.3,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 66,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "h1": {
+          "text": "Candidates",
+          "words": 1,
+          "lines": 1,
+          "size": 25,
+          "font": "Inter"
+        },
+        "headings": [],
+        "headingSummary": {
+          "count": 0,
+          "maxLines": 0,
+          "over2Lines": 0,
+          "statements": 0,
+          "centered": 0,
+          "medianWords": null,
+          "mixedFontHeadings": 0
+        },
+        "type": {
+          "families": [
+            {
+              "family": "Inter",
+              "share": 1,
+              "mono": false
+            }
+          ],
+          "familyCount": 1,
+          "sizes": [10, 11, 12, 13, 25],
+          "sizeCount": 5,
+          "notLoaded": [],
+          "body": {
+            "font": "Inter",
+            "size": 10.5,
+            "leading": 1.45,
+            "weight": 400,
+            "tracking": 0,
+            "contrast": 4.8
+          },
+          "measureChars": 91,
+          "max": {
+            "size": 25,
+            "vw": 3.3,
+            "font": "Inter",
+            "text": "Candidates"
+          },
+          "monoShare": 0,
+          "monoProseShare": 0,
+          "monoFamilies": [],
+          "monoSamples": [],
+          "microLabels": 6,
+          "microLabelShare": 0.04,
+          "microSamples": [
+            "Ứng viên",
+            "Vị trí",
+            "Kinh nghiệm",
+            "Bằng chứng",
+            "Trạng thái",
+            "Cập nhật"
+          ],
+          "upperShare": 0.04,
+          "centerShare": 0.04,
+          "smallText": 53
+        },
+        "eyebrows": [],
+        "numbered": [],
+        "color": {
+          "bodyBg": "#f1f5f9",
+          "bodyBgHsl": {
+            "h": 210,
+            "s": 0.4,
+            "l": 0.96
+          },
+          "dark": false,
+          "sectionBgs": [
+            {
+              "color": "#f1f5f9",
+              "top": 0,
+              "hsl": {
+                "h": 210,
+                "s": 0.4,
+                "l": 0.96
+              }
+            },
+            {
+              "color": "#ffffff",
+              "top": 0,
+              "hsl": {
+                "h": 0,
+                "s": 0,
+                "l": 1
+              }
+            }
+          ],
+          "textColors": [
+            {
+              "color": "#64748b",
+              "share": 0.62
+            },
+            {
+              "color": "#475569",
+              "share": 0.17
+            },
+            {
+              "color": "#0f172a",
+              "share": 0.11
+            },
+            {
+              "color": "#3f3bc0",
+              "share": 0.03
+            },
+            {
+              "color": "#067647",
+              "share": 0.02
+            }
+          ],
+          "button": {
+            "bg": "#ffffff",
+            "hsl": {
+              "h": 0,
+              "s": 0,
+              "l": 1
+            },
+            "fg": "#0f172a"
+          },
+          "lowContrast": []
+        },
+        "buttons": {
+          "count": 5,
+          "inHero": 5,
+          "radius": 8,
+          "height": 34,
+          "withShadow": 0,
+          "withGradient": 0,
+          "mono": 0,
+          "upper": 0,
+          "heroLabels": ["Phân tích CV mới", "Trước", "Sau"]
+        },
+        "surfaces": {
+          "shadowStatic": 0,
+          "shadowOverlay": 0,
+          "shadowSamples": [],
+          "gradients": 0,
+          "scrims": 0,
+          "gradientSamples": [],
+          "gradientText": 0,
+          "hairlines": 3,
+          "hairlineSamples": [
+            "header.mobilebar 768px",
+            "div.pagination 702px",
+            "div.card-foot 734px"
+          ],
+          "outlinedBoxes": 1,
+          "dashed": 0,
+          "blurred": 0,
+          "roundedBoxes": 1,
+          "boxRadius": 12,
+          "squareMedia": 0,
+          "roundedMedia": 0,
+          "mediaRadius": 0,
+          "textShadow": 0,
+          "cardRows": []
+        },
+        "heroMedia": [],
+        "nav": {
+          "links": 0,
+          "fixed": true,
+          "height": 1024,
+          "floatingPill": false,
+          "blur": false
+        },
+        "fontsLoaded": ["inter"]
+      },
+      "layout": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "pageH": 1024,
+        "margins": {
+          "left": 16,
+          "right": 11
+        },
+        "sections": [],
+        "gaps": [],
+        "h1s": [
+          {
+            "text": "Candidates",
+            "size": 25,
+            "top": 66,
+            "firstScreen": true
+          }
+        ],
+        "edgeText": [],
+        "edges": [
+          {
+            "x": 16,
+            "n": 1
+          }
+        ],
+        "leftBlocks": 1,
+        "bodySize": 11,
+        "stage": false,
+        "explains": false,
+        "slivers": [],
+        "voidShare": 0,
+        "voidBox": null
+      },
+      "app": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "dark": false,
+        "ground": "#f1f5f9",
+        "sidebar": null,
+        "topbar": {
+          "h": 48
+        },
+        "canvas": {
+          "left": 16,
+          "right": -39
+        },
+        "hero": {
+          "text": "Candidates",
+          "words": 1,
+          "chars": 10,
+          "lines": 1,
+          "size": 25,
+          "vw": 3.3,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 66,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "charts": 0,
+        "layout": {
+          "panels": 1,
+          "firstScreen": 1,
+          "ragged": [],
+          "voids": []
+        },
+        "tiles": 0,
+        "panels": {
+          "count": 1,
+          "radii": [[12, 1]],
+          "heavyBorders": 0,
+          "borderSamples": [],
+          "heavyShadows": 0,
+          "softShadows": 0,
+          "shadowSamples": [],
+          "glass": 0
+        },
+        "chips": {
+          "count": 0,
+          "hues": 0,
+          "samples": []
+        },
+        "numbers": {
+          "cells": 0,
+          "leftAligned": 0,
+          "figures": 5,
+          "tabularShare": 1,
+          "kpiMax": 10.5
+        },
+        "rows": {
+          "count": 8,
+          "median": 95
+        },
+        "chartHues": 0,
+        "placeholders": ["example.com"],
+        "type": {
+          "under13": 0.88,
+          "tiny": 38,
+          "tinySamples": [
+            "Ứng viên 10px",
+            "Vị trí 10px",
+            "Kinh nghiệm 10px",
+            "Bằng chứng 10px"
+          ],
+          "sizes": [10, 11, 12, 13, 25]
+        },
+        "title": {
+          "text": "Candidates",
+          "size": 25,
+          "top": 66
+        },
+        "colourShare": 0.013
+      },
+      "consoleErrors": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "load": "load",
+      "screens": 1,
+      "filled": [0.99],
+      "motion": {
+        "elements": 3,
+        "css": 0,
+        "transitions": 2,
+        "scripted": 1,
+        "videos": 0,
+        "playingVideos": 0
+      },
+      "metrics": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "page": {
+          "height": 844,
+          "screens": 1,
+          "words": 323,
+          "img": 0,
+          "video": 0,
+          "canvas": 0,
+          "svg": 29,
+          "sections": 1,
+          "horizontalOverflow": 0,
+          "overflowCulprits": [],
+          "uiFragments": 0,
+          "uiAbuse": false,
+          "realPictures": 0,
+          "videoCount": 0,
+          "uiPictures": 0,
+          "pictureSamples": [],
+          "blendText": 0,
+          "sideScrollers": 0,
+          "brokenImages": [],
+          "emoji": [],
+          "videosNoPoster": 0
+        },
+        "hero": {
+          "text": "Candidates",
+          "words": 1,
+          "chars": 10,
+          "lines": 1,
+          "size": 22,
+          "vw": 5.6,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 62,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "h1": {
+          "text": "Candidates",
+          "words": 1,
+          "lines": 1,
+          "size": 22,
+          "font": "Inter"
+        },
+        "headings": [
+          {
+            "text": "Candidates",
+            "words": 1,
+            "chars": 10,
+            "lines": 1,
+            "size": 22,
+            "vw": 5.6,
+            "font": "Inter",
+            "weight": 600,
+            "tracking": -0.022,
+            "leading": 1.2,
+            "upper": false,
+            "italic": false,
+            "mono": false,
+            "align": "left",
+            "position": "center",
+            "widthRatio": 0.78,
+            "top": 62,
+            "tag": "h1",
+            "kind": "heading"
+          }
+        ],
+        "headingSummary": {
+          "count": 1,
+          "maxLines": 1,
+          "over2Lines": 0,
+          "statements": 0,
+          "centered": 0,
+          "medianWords": null,
+          "mixedFontHeadings": 0
+        },
+        "type": {
+          "families": [
+            {
+              "family": "Inter",
+              "share": 1,
+              "mono": false
+            }
+          ],
+          "familyCount": 1,
+          "sizes": [10, 11, 12, 13, 22],
+          "sizeCount": 5,
+          "notLoaded": [],
+          "body": {
+            "font": "Inter",
+            "size": 10.5,
+            "leading": 1.45,
+            "weight": 400,
+            "tracking": 0,
+            "contrast": 4.8
+          },
+          "measureChars": 64,
+          "max": {
+            "size": 22,
+            "vw": 5.6,
+            "font": "Inter",
+            "text": "Candidates"
+          },
+          "monoShare": 0,
+          "monoProseShare": 0,
+          "monoFamilies": [],
+          "monoSamples": [],
+          "microLabels": 0,
+          "microLabelShare": 0,
+          "microSamples": [],
+          "upperShare": 0,
+          "centerShare": 0.05,
+          "smallText": 53
+        },
+        "eyebrows": [],
+        "numbered": [],
+        "color": {
+          "bodyBg": "#f1f5f9",
+          "bodyBgHsl": {
+            "h": 210,
+            "s": 0.4,
+            "l": 0.96
+          },
+          "dark": false,
+          "sectionBgs": [
+            {
+              "color": "#f1f5f9",
+              "top": 0,
+              "hsl": {
+                "h": 210,
+                "s": 0.4,
+                "l": 0.96
+              }
+            },
+            {
+              "color": "#ffffff",
+              "top": 0,
+              "hsl": {
+                "h": 0,
+                "s": 0,
+                "l": 1
+              }
+            }
+          ],
+          "textColors": [
+            {
+              "color": "#64748b",
+              "share": 0.61
+            },
+            {
+              "color": "#475569",
+              "share": 0.18
+            },
+            {
+              "color": "#0f172a",
+              "share": 0.12
+            },
+            {
+              "color": "#3f3bc0",
+              "share": 0.03
+            },
+            {
+              "color": "#067647",
+              "share": 0.03
+            }
+          ],
+          "button": {
+            "bg": "#ffffff",
+            "hsl": {
+              "h": 0,
+              "s": 0,
+              "l": 1
+            },
+            "fg": "#0f172a"
+          },
+          "lowContrast": []
+        },
+        "buttons": {
+          "count": 5,
+          "inHero": 3,
+          "radius": 8,
+          "height": 34,
+          "withShadow": 0,
+          "withGradient": 0,
+          "mono": 0,
+          "upper": 0,
+          "heroLabels": ["Phân tích CV mới"]
+        },
+        "surfaces": {
+          "shadowStatic": 0,
+          "shadowOverlay": 0,
+          "shadowSamples": [],
+          "gradients": 0,
+          "scrims": 0,
+          "gradientSamples": [],
+          "gradientText": 0,
+          "hairlines": 3,
+          "hairlineSamples": [
+            "header.mobilebar 390px",
+            "div.pagination 336px",
+            "div.card-foot 364px"
+          ],
+          "outlinedBoxes": 1,
+          "dashed": 0,
+          "blurred": 0,
+          "roundedBoxes": 9,
+          "boxRadius": 10,
+          "squareMedia": 0,
+          "roundedMedia": 0,
+          "mediaRadius": 0,
+          "textShadow": 0,
+          "cardRows": [
+            {
+              "count": 8,
+              "iconTopped": true,
+              "rounded": true,
+              "top": 336
+            }
+          ]
+        },
+        "heroMedia": [],
+        "nav": {
+          "links": 0,
+          "fixed": true,
+          "height": 844,
+          "floatingPill": false,
+          "blur": false
+        },
+        "fontsLoaded": ["inter"]
+      },
+      "layout": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "pageH": 844,
+        "margins": {
+          "left": 12,
+          "right": 35
+        },
+        "sections": [
+          {
+            "sel": "tr",
+            "tag": "tr",
+            "top": 336,
+            "height": 225,
+            "words": 22,
+            "media": 0,
+            "middle": 74,
+            "heading": null,
+            "left": 40,
+            "right": 35,
+            "textLeft": 40,
+            "textRight": 135,
+            "fullBleed": false,
+            "footer": false,
+            "hero": true,
+            "continues": false,
+            "pinned": false
+          },
+          {
+            "sel": "tr",
+            "tag": "tr",
+            "top": 570,
+            "height": 211,
+            "words": 22,
+            "media": 0,
+            "middle": 74,
+            "heading": null,
+            "left": 40,
+            "right": 35,
+            "textLeft": 40,
+            "textRight": 135,
+            "fullBleed": false,
+            "footer": false,
+            "hero": false,
+            "continues": false,
+            "pinned": false
+          },
+          {
+            "sel": "tr",
+            "tag": "tr",
+            "top": 790,
+            "height": 225,
+            "words": 22,
+            "media": 0,
+            "middle": 74,
+            "heading": null,
+            "left": 40,
+            "right": 35,
+            "textLeft": 40,
+            "textRight": 135,
+            "fullBleed": false,
+            "footer": false,
+            "hero": false,
+            "continues": false,
+            "pinned": false
+          },
+          {
+            "sel": "tr",
+            "tag": "tr",
+            "top": 1023,
+            "height": 211,
+            "words": 22,
+            "media": 0,
+            "middle": 59,
+            "heading": null,
+            "left": 40,
+            "right": 35,
+            "textLeft": 40,
+            "textRight": 120,
+            "fullBleed": false,
+            "footer": false,
+            "hero": false,
+            "continues": false,
+            "pinned": false
+          },
+          {
+            "sel": "tr",
+            "tag": "tr",
+            "top": 1243,
+            "height": 225,
+            "words": 22,
+            "media": 0,
+            "middle": 74,
+            "heading": null,
+            "left": 40,
+            "right": 35,
+            "textLeft": 40,
+            "textRight": 135,
+            "fullBleed": false,
+            "footer": false,
+            "hero": false,
+            "continues": false,
+            "pinned": false
+          },
+          {
+            "sel": "tr",
+            "tag": "tr",
+            "top": 1476,
+            "height": 211,
+            "words": 23,
+            "media": 0,
+            "middle": 74,
+            "heading": null,
+            "left": 40,
+            "right": 35,
+            "textLeft": 40,
+            "textRight": 135,
+            "fullBleed": false,
+            "footer": false,
+            "hero": false,
+            "continues": false,
+            "pinned": false
+          },
+          {
+            "sel": "tr",
+            "tag": "tr",
+            "top": 1696,
+            "height": 225,
+            "words": 22,
+            "media": 0,
+            "middle": 74,
+            "heading": null,
+            "left": 40,
+            "right": 35,
+            "textLeft": 40,
+            "textRight": 135,
+            "fullBleed": false,
+            "footer": false,
+            "hero": false,
+            "continues": false,
+            "pinned": false
+          },
+          {
+            "sel": "tr",
+            "tag": "tr",
+            "top": 1930,
+            "height": 210,
+            "words": 22,
+            "media": 0,
+            "middle": 67,
+            "heading": null,
+            "left": 40,
+            "right": 35,
+            "textLeft": 40,
+            "textRight": 128,
+            "fullBleed": false,
+            "footer": true,
+            "hero": false,
+            "continues": false,
+            "pinned": false
+          }
+        ],
+        "gaps": [],
+        "h1s": [
+          {
+            "text": "Candidates",
+            "size": 22,
+            "top": 62,
+            "firstScreen": true
+          }
+        ],
+        "edgeText": [
+          {
+            "text": "Candidates",
+            "side": "left",
+            "px": 12
+          },
+          {
+            "text": "128 hồ sơ trong workspace · 14 hồ sơ mẫu đang hiển",
+            "side": "left",
+            "px": 12
+          }
+        ],
+        "edges": [
+          {
+            "x": 12,
+            "n": 1
+          }
+        ],
+        "leftBlocks": 1,
+        "bodySize": 11,
+        "stage": false,
+        "explains": false,
+        "slivers": [],
+        "voidShare": 0,
+        "voidBox": null
+      },
+      "app": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "dark": false,
+        "ground": "#f1f5f9",
+        "sidebar": null,
+        "topbar": {
+          "h": 48
+        },
+        "canvas": {
+          "left": 12,
+          "right": 27
+        },
+        "hero": {
+          "text": "Candidates",
+          "words": 1,
+          "chars": 10,
+          "lines": 1,
+          "size": 22,
+          "vw": 5.6,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 62,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "charts": 0,
+        "layout": {
+          "panels": 1,
+          "firstScreen": 1,
+          "ragged": [],
+          "voids": []
+        },
+        "tiles": 0,
+        "panels": {
+          "count": 11,
+          "radii": [
+            [10, 8],
+            [0, 2],
+            [12, 1]
+          ],
+          "heavyBorders": 0,
+          "borderSamples": [],
+          "heavyShadows": 0,
+          "softShadows": 0,
+          "shadowSamples": [],
+          "glass": 0
+        },
+        "chips": {
+          "count": 0,
+          "hues": 0,
+          "samples": []
+        },
+        "numbers": {
+          "cells": 0,
+          "leftAligned": 0,
+          "figures": 5,
+          "tabularShare": 1,
+          "kpiMax": 10.5
+        },
+        "rows": {
+          "count": 8,
+          "median": 225
+        },
+        "chartHues": 0,
+        "placeholders": ["example.com"],
+        "type": {
+          "under13": 0.89,
+          "tiny": 38,
+          "tinySamples": [
+            "Ứng viên 10px",
+            "Vị trí 10px",
+            "Kinh nghiệm 10px",
+            "Bằng chứng 10px"
+          ],
+          "sizes": [10, 11, 12, 13, 22]
+        },
+        "title": {
+          "text": "Candidates",
+          "size": 22,
+          "top": 62
+        },
+        "colourShare": 0.017
+      },
+      "consoleErrors": []
+    }
+  ],
+  "findings": [
+    {
+      "level": "FAIL",
+      "id": "micro-label",
+      "width": 1440,
+      "message": "6 tiny uppercase letter-spaced labels (e.g. \"Ứng viên\", \"Vị trí\", \"Kinh nghiệm\", \"Bằng chứng\").",
+      "fix": "Use sentence-case text at a readable size, or delete the label.",
+      "alsoAt": [768]
+    },
+    {
+      "level": "WARN",
+      "id": "contrast",
+      "width": 1440,
+      "message": "Low-contrast text: \"Recruitment intelligence\" 4.3:1 needs 4.5:1; \"8 vị trí đang mở\" 4.3:1 needs 4.5:1; \"Workspace\" 4.3:1 needs 4.5:1; \"Recruiter · Owner\" 4.3:1 needs 4.5:1",
+      "fix": "Darken or lighten the text colour."
+    },
+    {
+      "level": "FAIL",
+      "id": "placeholder-data",
+      "width": 1440,
+      "message": "Placeholder data on screen: example.com.",
+      "fix": "Use believable data for this product: real-looking names, amounts that add up, dates in order, units on every figure.",
+      "alsoAt": [768, 390]
+    },
+    {
+      "level": "FAIL",
+      "id": "tiny-text",
+      "width": 1440,
+      "message": "42 text blocks under 11px: Recruitment intelligence 10px, vị trí đang mở 10px, Workspace 10px, Recruiter · Owner 10px.",
+      "fix": "Nothing below 11px; secondary text 12px, data 13–14px.",
+      "alsoAt": [768, 390]
+    },
+    {
+      "level": "WARN",
+      "id": "panel-void",
+      "width": 1440,
+      "message": "1 card(s) hold a blank band inside: 115px in \"CandidatesMA\".",
+      "fix": "A card stretches to its neighbour only when it has content to fill. Keep a legend or a note directly under its chart (only an action or a total may sit at a stretched card's foot), let a short card keep its own height (align-items: start), and let a filtered block shrink to its rows."
+    },
+    {
+      "level": "WARN",
+      "id": "edge-text",
+      "width": 390,
+      "message": "2 text block(s) sit 12–15px from the phone's edge: \"Candidates\" (12px); \"128 hồ sơ trong workspace · 14\" (12px)",
+      "fix": "The page margin is 16–20px on a phone; the header and the corner labels sit on it too."
+    }
+  ],
+  "images": [
+    {
+      "viewport": "desktop",
+      "width": 1440,
+      "fold": "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/candidates/desktop-fold.jpg",
+      "pages": [
+        "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/candidates/desktop-page-01.jpg"
+      ],
+      "film": []
+    },
+    {
+      "viewport": "tablet",
+      "width": 768,
+      "fold": "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/candidates/tablet-fold.jpg",
+      "pages": [
+        "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/candidates/tablet-page-01.jpg"
+      ],
+      "film": []
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "fold": "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/candidates/mobile-fold.jpg",
+      "pages": [
+        "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/candidates/mobile-page-01.jpg"
+      ],
+      "film": []
+    }
+  ]
+}

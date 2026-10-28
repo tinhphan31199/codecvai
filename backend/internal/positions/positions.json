@@ -1,0 +1,330 @@
+[
+  {
+    "id": "be-dotnet",
+    "title": "Senior .NET Backend",
+    "team": "Product Engineering",
+    "level": "Senior",
+    "open": "2 vị trí",
+    "candidates": 36,
+    "updated": "24/10/2026",
+    "owner": "Minh Anh",
+    "location": "TP.HCM · Hybrid",
+    "description": "Xây dựng dịch vụ đơn hàng và thanh toán cho nền tảng B2B, làm việc trực tiếp với team Platform và đảm nhận các quyết định kiến trúc trong domain order.",
+    "criteria": [
+      {
+        "label": "5+ năm phát triển .NET / C#",
+        "kind": "must",
+        "weight": 5,
+        "verify": "CV · commit và pull request"
+      },
+      {
+        "label": "Thiết kế REST API và versioning",
+        "kind": "must",
+        "weight": 4,
+        "verify": "Repository · route và controller"
+      },
+      {
+        "label": "EF Core và PostgreSQL",
+        "kind": "must",
+        "weight": 4,
+        "verify": "Repository · migration và query"
+      },
+      {
+        "label": "Message broker (RabbitMQ)",
+        "kind": "must",
+        "weight": 4,
+        "verify": "Repository · consumer và publisher"
+      },
+      {
+        "label": "Kiểm thử tự động",
+        "kind": "must",
+        "weight": 3,
+        "verify": "Repository · test project và CI"
+      },
+      {
+        "label": "CI/CD và Docker",
+        "kind": "nice",
+        "weight": 2,
+        "verify": "Repository · Dockerfile và pipeline"
+      },
+      {
+        "label": "Thiết kế hệ thống phân tán",
+        "kind": "must",
+        "weight": 4,
+        "verify": "Phỏng vấn · câu hỏi kiến trúc"
+      },
+      {
+        "label": "Mentoring và review code",
+        "kind": "nice",
+        "weight": 2,
+        "verify": "Repository · review và comment"
+      }
+    ]
+  },
+  {
+    "id": "fullstack",
+    "title": "Full-stack Developer",
+    "team": "Growth",
+    "level": "Middle",
+    "open": "1 vị trí",
+    "candidates": 28,
+    "updated": "23/10/2026",
+    "owner": "Thu Trang",
+    "location": "TP.HCM · Hybrid",
+    "description": "Phát triển luồng thử nghiệm và onboarding cho khách hàng doanh nghiệp, từ API đến giao diện React.",
+    "criteria": [
+      {
+        "label": "TypeScript và React",
+        "kind": "must",
+        "weight": 4,
+        "verify": "Repository · component"
+      },
+      {
+        "label": "Node.js hoặc .NET API",
+        "kind": "must",
+        "weight": 4,
+        "verify": "Repository · endpoint"
+      },
+      {
+        "label": "PostgreSQL và ORM",
+        "kind": "must",
+        "weight": 3,
+        "verify": "Repository · schema"
+      },
+      {
+        "label": "Kiểm thử tích hợp",
+        "kind": "must",
+        "weight": 3,
+        "verify": "Repository · test"
+      },
+      {
+        "label": "Observability",
+        "kind": "nice",
+        "weight": 2,
+        "verify": "Repository · logging"
+      }
+    ]
+  },
+  {
+    "id": "frontend",
+    "title": "Frontend Engineer (React)",
+    "team": "Product Engineering",
+    "level": "Middle",
+    "open": "1 vị trí",
+    "candidates": 22,
+    "updated": "22/10/2026",
+    "owner": "Minh Anh",
+    "location": "TP.HCM · Hybrid",
+    "description": "Xây dựng bề mặt sản phẩm cho recruiter, phối hợp chặt với design system và team backend.",
+    "criteria": [
+      {
+        "label": "React và TypeScript",
+        "kind": "must",
+        "weight": 5,
+        "verify": "Repository · component"
+      },
+      {
+        "label": "Design system và accessibility",
+        "kind": "must",
+        "weight": 4,
+        "verify": "Repository · token và aria"
+      },
+      {
+        "label": "Kiểm thử component",
+        "kind": "must",
+        "weight": 3,
+        "verify": "Repository · test"
+      },
+      {
+        "label": "Hiệu năng và Core Web Vitals",
+        "kind": "nice",
+        "weight": 2,
+        "verify": "Phỏng vấn · ví dụ thực tế"
+      },
+      {
+        "label": "Quản lý state",
+        "kind": "must",
+        "weight": 3,
+        "verify": "Repository · store"
+      }
+    ]
+  },
+  {
+    "id": "devops",
+    "title": "DevOps Engineer",
+    "team": "Platform",
+    "level": "Senior",
+    "open": "1 vị trí",
+    "candidates": 18,
+    "updated": "21/10/2026",
+    "owner": "Quang Dũng",
+    "location": "TP.HCM · Remote",
+    "description": "Vận hành hạ tầng Kubernetes, pipeline triển khai và các tiêu chuẩn quan sát cho toàn bộ nền tảng.",
+    "criteria": [
+      {
+        "label": "Kubernetes và container",
+        "kind": "must",
+        "weight": 5,
+        "verify": "CV · dự án vận hành"
+      },
+      {
+        "label": "Terraform / IaC",
+        "kind": "must",
+        "weight": 4,
+        "verify": "Repository · module"
+      },
+      {
+        "label": "CI/CD",
+        "kind": "must",
+        "weight": 4,
+        "verify": "Repository · pipeline"
+      },
+      {
+        "label": "Observability",
+        "kind": "must",
+        "weight": 3,
+        "verify": "Phỏng vấn · sự cố thực tế"
+      },
+      {
+        "label": "Bảo mật hạ tầng",
+        "kind": "nice",
+        "weight": 2,
+        "verify": "Phỏng vấn"
+      }
+    ]
+  },
+  {
+    "id": "data",
+    "title": "Data Engineer",
+    "team": "Insights",
+    "level": "Middle",
+    "open": "1 vị trí",
+    "candidates": 14,
+    "updated": "20/10/2026",
+    "owner": "Thu Trang",
+    "location": "Hà Nội · Hybrid",
+    "description": "Xây dựng pipeline dữ liệu tuyển dụng và các bảng tổng hợp phục vụ báo cáo chất lượng tuyển dụng.",
+    "criteria": [
+      {
+        "label": "SQL và mô hình dữ liệu",
+        "kind": "must",
+        "weight": 5,
+        "verify": "CV · dự án"
+      },
+      {
+        "label": "Python và orchestration",
+        "kind": "must",
+        "weight": 4,
+        "verify": "Repository · DAG"
+      },
+      {
+        "label": "Chất lượng dữ liệu",
+        "kind": "must",
+        "weight": 3,
+        "verify": "Phỏng vấn"
+      },
+      {
+        "label": "Streaming",
+        "kind": "nice",
+        "weight": 2,
+        "verify": "Repository · consumer"
+      }
+    ]
+  },
+  {
+    "id": "mobile",
+    "title": "Mobile Engineer (Flutter)",
+    "team": "Product Engineering",
+    "level": "Junior",
+    "open": "1 vị trí",
+    "candidates": 4,
+    "updated": "19/10/2026",
+    "owner": "Minh Anh",
+    "location": "TP.HCM · Hybrid",
+    "description": "Phát triển ứng dụng di động cho ứng viên theo dõi trạng thái hồ sơ và lịch phỏng vấn.",
+    "criteria": [
+      {
+        "label": "Dart và Flutter",
+        "kind": "must",
+        "weight": 5,
+        "verify": "Repository · app"
+      },
+      {
+        "label": "State management",
+        "kind": "must",
+        "weight": 3,
+        "verify": "Repository"
+      },
+      {
+        "label": "Kiểm thử widget",
+        "kind": "nice",
+        "weight": 2,
+        "verify": "Repository · test"
+      }
+    ]
+  },
+  {
+    "id": "solutions",
+    "title": "Solutions Architect",
+    "team": "Enterprise",
+    "level": "Senior",
+    "open": "1 vị trí",
+    "candidates": 3,
+    "updated": "18/10/2026",
+    "owner": "Quang Dũng",
+    "location": "TP.HCM · Hybrid",
+    "description": "Thiết kế giải pháp tích hợp cho khách hàng doanh nghiệp và dẫn dắt các buổi review kiến trúc.",
+    "criteria": [
+      {
+        "label": "Thiết kế hệ thống",
+        "kind": "must",
+        "weight": 5,
+        "verify": "CV · dự án"
+      },
+      {
+        "label": "Giao tiếp với khách hàng",
+        "kind": "must",
+        "weight": 4,
+        "verify": "Phỏng vấn"
+      },
+      {
+        "label": "Bảo mật và tuân thủ",
+        "kind": "must",
+        "weight": 3,
+        "verify": "Phỏng vấn"
+      }
+    ]
+  },
+  {
+    "id": "qa",
+    "title": "QA Automation Engineer",
+    "team": "Product Engineering",
+    "level": "Middle",
+    "open": "1 vị trí",
+    "candidates": 3,
+    "updated": "17/10/2026",
+    "owner": "Thu Trang",
+    "location": "Đà Nẵng · Remote",
+    "description": "Xây dựng bộ kiểm thử tự động cho luồng phân tích CV và báo cáo ứng viên.",
+    "criteria": [
+      {
+        "label": "Playwright / Cypress",
+        "kind": "must",
+        "weight": 4,
+        "verify": "Repository · test"
+      },
+      {
+        "label": "API testing",
+        "kind": "must",
+        "weight": 4,
+        "verify": "Repository · test"
+      },
+      {
+        "label": "CI và flaky test",
+        "kind": "nice",
+        "weight": 2,
+        "verify": "Phỏng vấn"
+      }
+    ]
+  }
+]

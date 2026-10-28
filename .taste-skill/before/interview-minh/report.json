@@ -1,0 +1,1402 @@
+{
+  "url": "http://localhost:3000/#interview/minh",
+  "at": "2026-10-27T03:17:43.218Z",
+  "allow": [],
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 900,
+      "load": "load",
+      "screens": 1,
+      "filled": [0.86],
+      "motion": {
+        "elements": 3,
+        "css": 0,
+        "transitions": 2,
+        "scripted": 1,
+        "videos": 0,
+        "playingVideos": 0
+      },
+      "metrics": {
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "page": {
+          "height": 900,
+          "screens": 1,
+          "words": 374,
+          "img": 0,
+          "video": 0,
+          "canvas": 0,
+          "svg": 26,
+          "sections": 4,
+          "horizontalOverflow": 0,
+          "overflowCulprits": [],
+          "uiFragments": 0,
+          "uiAbuse": false,
+          "realPictures": 0,
+          "videoCount": 0,
+          "uiPictures": 0,
+          "pictureSamples": [],
+          "blendText": 0,
+          "sideScrollers": 0,
+          "brokenImages": [],
+          "emoji": [],
+          "videosNoPoster": 0
+        },
+        "hero": {
+          "text": "Interview Studio",
+          "words": 2,
+          "chars": 16,
+          "lines": 1,
+          "size": 25,
+          "vw": 1.7,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 73,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "h1": {
+          "text": "Interview Studio",
+          "words": 2,
+          "lines": 1,
+          "size": 25,
+          "font": "Inter"
+        },
+        "headings": [],
+        "headingSummary": {
+          "count": 0,
+          "maxLines": 0,
+          "over2Lines": 0,
+          "statements": 0,
+          "centered": 0,
+          "medianWords": null,
+          "mixedFontHeadings": 0
+        },
+        "type": {
+          "families": [
+            {
+              "family": "Inter",
+              "share": 1,
+              "mono": false
+            },
+            {
+              "family": "IBM Plex Mono",
+              "share": 0,
+              "mono": true
+            }
+          ],
+          "familyCount": 2,
+          "sizes": [9, 10, 11, 12, 13, 14, 16, 25],
+          "sizeCount": 8,
+          "notLoaded": [],
+          "body": {
+            "font": "Inter",
+            "size": 12,
+            "leading": 1.5,
+            "weight": 400,
+            "tracking": 0,
+            "contrast": 4.8
+          },
+          "measureChars": 90,
+          "max": {
+            "size": 25,
+            "vw": 1.7,
+            "font": "Inter",
+            "text": "Interview Studio"
+          },
+          "monoShare": 0,
+          "monoProseShare": 0,
+          "monoFamilies": ["IBM Plex Mono"],
+          "monoSamples": [],
+          "microLabels": 3,
+          "microLabelShare": 0.023,
+          "microSamples": ["Architecture", "Security", "Câu hỏi nối tiếp"],
+          "upperShare": 0.03,
+          "centerShare": 0.1,
+          "smallText": 43
+        },
+        "eyebrows": [],
+        "numbered": [],
+        "color": {
+          "bodyBg": "#f1f5f9",
+          "bodyBgHsl": {
+            "h": 210,
+            "s": 0.4,
+            "l": 0.96
+          },
+          "dark": false,
+          "sectionBgs": [
+            {
+              "color": "#f1f5f9",
+              "top": 0,
+              "hsl": {
+                "h": 210,
+                "s": 0.4,
+                "l": 0.96
+              }
+            },
+            {
+              "color": "#ffffff",
+              "top": 48,
+              "hsl": {
+                "h": 0,
+                "s": 0,
+                "l": 1
+              }
+            }
+          ],
+          "textColors": [
+            {
+              "color": "#475569",
+              "share": 0.39
+            },
+            {
+              "color": "#64748b",
+              "share": 0.38
+            },
+            {
+              "color": "#0f172a",
+              "share": 0.21
+            },
+            {
+              "color": "#ffffff",
+              "share": 0.01
+            },
+            {
+              "color": "#322f60",
+              "share": 0
+            }
+          ],
+          "button": {
+            "bg": "#ffffff",
+            "hsl": {
+              "h": 0,
+              "s": 0,
+              "l": 1
+            },
+            "fg": "#0f172a"
+          },
+          "lowContrast": [
+            {
+              "text": "Senior",
+              "ratio": 4.2,
+              "need": 4.5,
+              "size": 9,
+              "fg": "#64748b",
+              "bg": "#eef0ff"
+            },
+            {
+              "text": "Recruitment intelligence",
+              "ratio": 4.3,
+              "need": 4.5,
+              "size": 10,
+              "fg": "#64748b",
+              "bg": "#f1f5f9"
+            },
+            {
+              "text": "8 vị trí đang mở",
+              "ratio": 4.3,
+              "need": 4.5,
+              "size": 10,
+              "fg": "#64748b",
+              "bg": "#f1f5f9"
+            },
+            {
+              "text": "Workspace",
+              "ratio": 4.3,
+              "need": 4.5,
+              "size": 9.5,
+              "fg": "#64748b",
+              "bg": "#f1f5f9"
+            },
+            {
+              "text": "Recruiter · Owner",
+              "ratio": 4.3,
+              "need": 4.5,
+              "size": 10,
+              "fg": "#64748b",
+              "bg": "#f1f5f9"
+            },
+            {
+              "text": "Gemini 3.5 Flash Lite",
+              "ratio": 4.3,
+              "need": 4.5,
+              "size": 10.5,
+              "fg": "#64748b",
+              "bg": "#f1f5f9"
+            }
+          ]
+        },
+        "buttons": {
+          "count": 6,
+          "inHero": 6,
+          "radius": 8,
+          "height": 34,
+          "withShadow": 0,
+          "withGradient": 0,
+          "mono": 0,
+          "upper": 0,
+          "heroLabels": [
+            "Product Engineering 8 vị trí đang mở",
+            "Interview Studio",
+            "Mở hồ sơ",
+            "Xuất phiếu phỏng vấn",
+            "1 Bạn bảo vệ webhook thanh toán khỏi req"
+          ]
+        },
+        "surfaces": {
+          "shadowStatic": 0,
+          "shadowOverlay": 0,
+          "shadowSamples": [],
+          "gradients": 0,
+          "scrims": 0,
+          "gradientSamples": [],
+          "gradientText": 0,
+          "hairlines": 15,
+          "hairlineSamples": [
+            "div.answer-tabs 518px",
+            "div.follow-ups 518px",
+            "div.answer-note 518px",
+            "div.rubric-row 258px",
+            "div.rubric-row 258px"
+          ],
+          "outlinedBoxes": 5,
+          "dashed": 0,
+          "blurred": 0,
+          "roundedBoxes": 5,
+          "boxRadius": 12,
+          "squareMedia": 0,
+          "roundedMedia": 0,
+          "mediaRadius": 0,
+          "textShadow": 0,
+          "cardRows": []
+        },
+        "heroMedia": [],
+        "nav": {
+          "links": 0,
+          "fixed": false,
+          "height": 274,
+          "floatingPill": false,
+          "blur": false
+        },
+        "fontsLoaded": ["inter", "ibm plex mono"]
+      },
+      "layout": {
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "pageH": 900,
+        "margins": {
+          "left": 24,
+          "right": 49
+        },
+        "sections": [],
+        "gaps": [],
+        "h1s": [
+          {
+            "text": "Interview Studio",
+            "size": 25,
+            "top": 73,
+            "firstScreen": true
+          }
+        ],
+        "edgeText": [],
+        "edges": [
+          {
+            "x": 265,
+            "n": 1
+          }
+        ],
+        "leftBlocks": 1,
+        "bodySize": 12,
+        "stage": false,
+        "explains": false,
+        "slivers": [],
+        "voidShare": 0.13,
+        "voidBox": {
+          "x": 0,
+          "y": 480,
+          "w": 540,
+          "h": 300
+        }
+      },
+      "app": {
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "dark": false,
+        "ground": "#f1f5f9",
+        "sidebar": {
+          "w": 236,
+          "tag": "aside",
+          "links": 11,
+          "share": 0.16
+        },
+        "topbar": {
+          "h": 48
+        },
+        "canvas": {
+          "left": 30,
+          "right": 49
+        },
+        "hero": {
+          "text": "Interview Studio",
+          "words": 2,
+          "chars": 16,
+          "lines": 1,
+          "size": 25,
+          "vw": 1.7,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 73,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "charts": 0,
+        "layout": {
+          "panels": 1,
+          "firstScreen": 1,
+          "ragged": [],
+          "voids": []
+        },
+        "tiles": 0,
+        "panels": {
+          "count": 6,
+          "radii": [
+            [12, 4],
+            [16, 1],
+            [0, 1]
+          ],
+          "heavyBorders": 0,
+          "borderSamples": [],
+          "heavyShadows": 0,
+          "softShadows": 0,
+          "shadowSamples": [],
+          "glass": 0
+        },
+        "chips": {
+          "count": 0,
+          "hues": 0,
+          "samples": []
+        },
+        "numbers": {
+          "cells": 0,
+          "leftAligned": 0,
+          "figures": 1,
+          "tabularShare": 1,
+          "kpiMax": 10
+        },
+        "rows": null,
+        "chartHues": 0,
+        "placeholders": [],
+        "type": {
+          "under13": 0.81,
+          "tiny": 20,
+          "tinySamples": [
+            "Recruitment intelligence 10px",
+            "vị trí đang mở 10px",
+            "Workspace 10px",
+            "Recruiter · Owner 10px"
+          ],
+          "sizes": [9, 10, 11, 12, 13, 14, 16, 25]
+        },
+        "title": {
+          "text": "Interview Studio",
+          "size": 25,
+          "top": 73
+        },
+        "colourShare": 0.005
+      },
+      "consoleErrors": []
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "load": "load",
+      "screens": 1,
+      "filled": [1],
+      "motion": {
+        "elements": 3,
+        "css": 0,
+        "transitions": 2,
+        "scripted": 1,
+        "videos": 0,
+        "playingVideos": 0
+      },
+      "metrics": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "page": {
+          "height": 1024,
+          "screens": 1,
+          "words": 336,
+          "img": 0,
+          "video": 0,
+          "canvas": 0,
+          "svg": 26,
+          "sections": 4,
+          "horizontalOverflow": 0,
+          "overflowCulprits": [],
+          "uiFragments": 0,
+          "uiAbuse": false,
+          "realPictures": 0,
+          "videoCount": 0,
+          "uiPictures": 0,
+          "pictureSamples": [],
+          "blendText": 0,
+          "sideScrollers": 0,
+          "brokenImages": [],
+          "emoji": [],
+          "videosNoPoster": 0
+        },
+        "hero": {
+          "text": "Interview Studio",
+          "words": 2,
+          "chars": 16,
+          "lines": 1,
+          "size": 25,
+          "vw": 3.3,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 66,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "h1": {
+          "text": "Interview Studio",
+          "words": 2,
+          "lines": 1,
+          "size": 25,
+          "font": "Inter"
+        },
+        "headings": [],
+        "headingSummary": {
+          "count": 0,
+          "maxLines": 0,
+          "over2Lines": 0,
+          "statements": 0,
+          "centered": 0,
+          "medianWords": null,
+          "mixedFontHeadings": 0
+        },
+        "type": {
+          "families": [
+            {
+              "family": "Inter",
+              "share": 1,
+              "mono": false
+            }
+          ],
+          "familyCount": 1,
+          "sizes": [9, 10, 11, 12, 13, 14, 16, 25],
+          "sizeCount": 8,
+          "notLoaded": [],
+          "body": {
+            "font": "Inter",
+            "size": 12,
+            "leading": 1.5,
+            "weight": 400,
+            "tracking": 0,
+            "contrast": 4.8
+          },
+          "measureChars": 122,
+          "max": {
+            "size": 25,
+            "vw": 3.3,
+            "font": "Inter",
+            "text": "Interview Studio"
+          },
+          "monoShare": 0,
+          "monoProseShare": 0,
+          "monoFamilies": [],
+          "monoSamples": [],
+          "microLabels": 3,
+          "microLabelShare": 0.026,
+          "microSamples": ["Architecture", "Security", "Câu hỏi nối tiếp"],
+          "upperShare": 0.03,
+          "centerShare": 0.12,
+          "smallText": 35
+        },
+        "eyebrows": [],
+        "numbered": [],
+        "color": {
+          "bodyBg": "#f1f5f9",
+          "bodyBgHsl": {
+            "h": 210,
+            "s": 0.4,
+            "l": 0.96
+          },
+          "dark": false,
+          "sectionBgs": [
+            {
+              "color": "#f1f5f9",
+              "top": 0,
+              "hsl": {
+                "h": 210,
+                "s": 0.4,
+                "l": 0.96
+              }
+            },
+            {
+              "color": "#ffffff",
+              "top": 0,
+              "hsl": {
+                "h": 0,
+                "s": 0,
+                "l": 1
+              }
+            }
+          ],
+          "textColors": [
+            {
+              "color": "#475569",
+              "share": 0.38
+            },
+            {
+              "color": "#64748b",
+              "share": 0.38
+            },
+            {
+              "color": "#0f172a",
+              "share": 0.22
+            },
+            {
+              "color": "#ffffff",
+              "share": 0.01
+            },
+            {
+              "color": "#322f60",
+              "share": 0
+            }
+          ],
+          "button": {
+            "bg": "#ffffff",
+            "hsl": {
+              "h": 0,
+              "s": 0,
+              "l": 1
+            },
+            "fg": "#0f172a"
+          },
+          "lowContrast": [
+            {
+              "text": "Senior",
+              "ratio": 4.2,
+              "need": 4.5,
+              "size": 9,
+              "fg": "#64748b",
+              "bg": "#eef0ff"
+            }
+          ]
+        },
+        "buttons": {
+          "count": 6,
+          "inHero": 6,
+          "radius": 8,
+          "height": 34,
+          "withShadow": 0,
+          "withGradient": 0,
+          "mono": 0,
+          "upper": 0,
+          "heroLabels": [
+            "Mở hồ sơ",
+            "Xuất phiếu phỏng vấn",
+            "1 Bạn bảo vệ webhook thanh toán khỏi req",
+            "Lưu ghi chú"
+          ]
+        },
+        "surfaces": {
+          "shadowStatic": 0,
+          "shadowOverlay": 0,
+          "shadowSamples": [],
+          "gradients": 0,
+          "scrims": 0,
+          "gradientSamples": [],
+          "gradientText": 0,
+          "hairlines": 16,
+          "hairlineSamples": [
+            "header.mobilebar 768px",
+            "div.answer-tabs 702px",
+            "div.follow-ups 702px",
+            "div.answer-note 702px",
+            "div.rubric-row 326px"
+          ],
+          "outlinedBoxes": 4,
+          "dashed": 0,
+          "blurred": 0,
+          "roundedBoxes": 4,
+          "boxRadius": 12,
+          "squareMedia": 0,
+          "roundedMedia": 0,
+          "mediaRadius": 0,
+          "textShadow": 0,
+          "cardRows": []
+        },
+        "heroMedia": [],
+        "nav": {
+          "links": 0,
+          "fixed": true,
+          "height": 1024,
+          "floatingPill": false,
+          "blur": false
+        },
+        "fontsLoaded": ["inter"]
+      },
+      "layout": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "pageH": 1024,
+        "margins": {
+          "left": 16,
+          "right": 16
+        },
+        "sections": [
+          {
+            "sel": "section.card.question-pane",
+            "tag": "section",
+            "top": 215,
+            "height": 204,
+            "words": 36,
+            "media": 0,
+            "middle": 0,
+            "heading": {
+              "text": "Câu hỏi theo chủ đề",
+              "size": 14,
+              "tag": "h2"
+            },
+            "left": 24,
+            "right": 24,
+            "textLeft": 30,
+            "textRight": 408,
+            "fullBleed": false,
+            "footer": false,
+            "hero": true,
+            "continues": false,
+            "pinned": false
+          },
+          {
+            "sel": "section.card.answer-pane",
+            "tag": "section",
+            "top": 435,
+            "height": 467,
+            "words": 102,
+            "media": 0,
+            "middle": 0,
+            "heading": {
+              "text": "Câu hỏi nối tiếp",
+              "size": 10,
+              "tag": "h3"
+            },
+            "left": 33,
+            "right": 33,
+            "textLeft": 33,
+            "textRight": 33,
+            "fullBleed": false,
+            "footer": false,
+            "hero": true,
+            "continues": false,
+            "pinned": false
+          },
+          {
+            "sel": "aside.studio-rail",
+            "tag": "aside",
+            "top": 917,
+            "height": 544,
+            "words": 88,
+            "media": 0,
+            "middle": 62,
+            "heading": {
+              "text": "Rubric phỏng vấn",
+              "size": 14,
+              "tag": "h2"
+            },
+            "left": 33,
+            "right": 33,
+            "textLeft": 33,
+            "textRight": 33,
+            "fullBleed": false,
+            "footer": true,
+            "hero": false,
+            "continues": false,
+            "pinned": false
+          }
+        ],
+        "gaps": [],
+        "h1s": [
+          {
+            "text": "Interview Studio",
+            "size": 25,
+            "top": 66,
+            "firstScreen": true
+          }
+        ],
+        "edgeText": [],
+        "edges": [
+          {
+            "x": 16,
+            "n": 1
+          }
+        ],
+        "leftBlocks": 1,
+        "bodySize": 12,
+        "stage": false,
+        "explains": false,
+        "slivers": [],
+        "voidShare": 0,
+        "voidBox": null
+      },
+      "app": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "dark": false,
+        "ground": "#f1f5f9",
+        "sidebar": null,
+        "topbar": {
+          "h": 48
+        },
+        "canvas": {
+          "left": 16,
+          "right": 24
+        },
+        "hero": {
+          "text": "Interview Studio",
+          "words": 2,
+          "chars": 16,
+          "lines": 1,
+          "size": 25,
+          "vw": 3.3,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 66,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "charts": 0,
+        "layout": {
+          "panels": 4,
+          "firstScreen": 4,
+          "ragged": [
+            {
+              "diff": 341,
+              "top": 917
+            }
+          ],
+          "voids": [
+            {
+              "gap": 48,
+              "at": 690,
+              "panel": "CÂU HỎI NỐI TIẾP"
+            }
+          ]
+        },
+        "tiles": 0,
+        "panels": {
+          "count": 5,
+          "radii": [
+            [12, 4],
+            [0, 1]
+          ],
+          "heavyBorders": 0,
+          "borderSamples": [],
+          "heavyShadows": 0,
+          "softShadows": 0,
+          "shadowSamples": [],
+          "glass": 0
+        },
+        "chips": {
+          "count": 0,
+          "hues": 0,
+          "samples": []
+        },
+        "numbers": {
+          "cells": 0,
+          "leftAligned": 0,
+          "figures": 0,
+          "tabularShare": null,
+          "kpiMax": null
+        },
+        "rows": null,
+        "chartHues": 0,
+        "placeholders": [],
+        "type": {
+          "under13": 0.87,
+          "tiny": 16,
+          "tinySamples": [
+            "Senior .NET Backend 10px",
+            "năm · 10px",
+            "Bình Thạnh, TP.HCM 10px",
+            "Architecture 9px"
+          ],
+          "sizes": [9, 10, 11, 12, 13, 14, 16, 25]
+        },
+        "title": {
+          "text": "Interview Studio",
+          "size": 25,
+          "top": 66
+        },
+        "colourShare": 0.008
+      },
+      "consoleErrors": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "load": "load",
+      "screens": 1,
+      "filled": [1],
+      "motion": {
+        "elements": 3,
+        "css": 0,
+        "transitions": 2,
+        "scripted": 1,
+        "videos": 0,
+        "playingVideos": 0
+      },
+      "metrics": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "page": {
+          "height": 844,
+          "screens": 1,
+          "words": 336,
+          "img": 0,
+          "video": 0,
+          "canvas": 0,
+          "svg": 26,
+          "sections": 4,
+          "horizontalOverflow": 0,
+          "overflowCulprits": [],
+          "uiFragments": 0,
+          "uiAbuse": false,
+          "realPictures": 0,
+          "videoCount": 0,
+          "uiPictures": 0,
+          "pictureSamples": [],
+          "blendText": 0,
+          "sideScrollers": 0,
+          "brokenImages": [],
+          "emoji": [],
+          "videosNoPoster": 0
+        },
+        "hero": {
+          "text": "Interview Studio",
+          "words": 2,
+          "chars": 16,
+          "lines": 1,
+          "size": 22,
+          "vw": 5.6,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 62,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "h1": {
+          "text": "Interview Studio",
+          "words": 2,
+          "lines": 1,
+          "size": 22,
+          "font": "Inter"
+        },
+        "headings": [
+          {
+            "text": "Interview Studio",
+            "words": 2,
+            "chars": 16,
+            "lines": 1,
+            "size": 22,
+            "vw": 5.6,
+            "font": "Inter",
+            "weight": 600,
+            "tracking": -0.022,
+            "leading": 1.2,
+            "upper": false,
+            "italic": false,
+            "mono": false,
+            "align": "left",
+            "position": "center",
+            "widthRatio": 0.94,
+            "top": 62,
+            "tag": "h1",
+            "kind": "heading"
+          }
+        ],
+        "headingSummary": {
+          "count": 1,
+          "maxLines": 1,
+          "over2Lines": 0,
+          "statements": 0,
+          "centered": 0,
+          "medianWords": null,
+          "mixedFontHeadings": 0
+        },
+        "type": {
+          "families": [
+            {
+              "family": "Inter",
+              "share": 1,
+              "mono": false
+            }
+          ],
+          "familyCount": 1,
+          "sizes": [9, 10, 11, 12, 13, 14, 15, 22],
+          "sizeCount": 8,
+          "notLoaded": [],
+          "body": {
+            "font": "Inter",
+            "size": 11.5,
+            "leading": 1.5,
+            "weight": 400,
+            "tracking": 0,
+            "contrast": 4.8
+          },
+          "measureChars": 58,
+          "max": {
+            "size": 22,
+            "vw": 5.6,
+            "font": "Inter",
+            "text": "Interview Studio"
+          },
+          "monoShare": 0,
+          "monoProseShare": 0,
+          "monoFamilies": [],
+          "monoSamples": [],
+          "microLabels": 3,
+          "microLabelShare": 0.026,
+          "microSamples": ["Architecture", "Security", "Câu hỏi nối tiếp"],
+          "upperShare": 0.03,
+          "centerShare": 0.12,
+          "smallText": 35
+        },
+        "eyebrows": [],
+        "numbered": [],
+        "color": {
+          "bodyBg": "#f1f5f9",
+          "bodyBgHsl": {
+            "h": 210,
+            "s": 0.4,
+            "l": 0.96
+          },
+          "dark": false,
+          "sectionBgs": [
+            {
+              "color": "#f1f5f9",
+              "top": 0,
+              "hsl": {
+                "h": 210,
+                "s": 0.4,
+                "l": 0.96
+              }
+            },
+            {
+              "color": "#ffffff",
+              "top": 0,
+              "hsl": {
+                "h": 0,
+                "s": 0,
+                "l": 1
+              }
+            }
+          ],
+          "textColors": [
+            {
+              "color": "#475569",
+              "share": 0.38
+            },
+            {
+              "color": "#64748b",
+              "share": 0.38
+            },
+            {
+              "color": "#0f172a",
+              "share": 0.22
+            },
+            {
+              "color": "#ffffff",
+              "share": 0.01
+            },
+            {
+              "color": "#322f60",
+              "share": 0
+            }
+          ],
+          "button": {
+            "bg": "#ffffff",
+            "hsl": {
+              "h": 0,
+              "s": 0,
+              "l": 1
+            },
+            "fg": "#0f172a"
+          },
+          "lowContrast": [
+            {
+              "text": "Senior",
+              "ratio": 4.2,
+              "need": 4.5,
+              "size": 9,
+              "fg": "#64748b",
+              "bg": "#eef0ff"
+            }
+          ]
+        },
+        "buttons": {
+          "count": 6,
+          "inHero": 5,
+          "radius": 8,
+          "height": 32,
+          "withShadow": 0,
+          "withGradient": 0,
+          "mono": 0,
+          "upper": 0,
+          "heroLabels": [
+            "Mở hồ sơ",
+            "Xuất phiếu phỏng vấn",
+            "1 Bạn bảo vệ webhook thanh toán khỏi req"
+          ]
+        },
+        "surfaces": {
+          "shadowStatic": 0,
+          "shadowOverlay": 0,
+          "shadowSamples": [],
+          "gradients": 0,
+          "scrims": 0,
+          "gradientSamples": [],
+          "gradientText": 0,
+          "hairlines": 16,
+          "hairlineSamples": [
+            "header.mobilebar 390px",
+            "div.answer-tabs 336px",
+            "div.follow-ups 336px",
+            "div.answer-note 336px",
+            "div.rubric-row 336px"
+          ],
+          "outlinedBoxes": 5,
+          "dashed": 0,
+          "blurred": 0,
+          "roundedBoxes": 5,
+          "boxRadius": 12,
+          "squareMedia": 0,
+          "roundedMedia": 0,
+          "mediaRadius": 0,
+          "textShadow": 0,
+          "cardRows": []
+        },
+        "heroMedia": [],
+        "nav": {
+          "links": 0,
+          "fixed": true,
+          "height": 844,
+          "floatingPill": false,
+          "blur": false
+        },
+        "fontsLoaded": ["inter"]
+      },
+      "layout": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "pageH": 844,
+        "margins": {
+          "left": 12,
+          "right": 27
+        },
+        "sections": [
+          {
+            "sel": "section.card.question-pane",
+            "tag": "section",
+            "top": 324,
+            "height": 262,
+            "words": 36,
+            "media": 0,
+            "middle": 0,
+            "heading": {
+              "text": "Câu hỏi theo chủ đề",
+              "size": 14,
+              "tag": "h2"
+            },
+            "left": 34,
+            "right": 34,
+            "textLeft": 40,
+            "textRight": 66,
+            "fullBleed": false,
+            "footer": false,
+            "hero": true,
+            "continues": false,
+            "pinned": false
+          },
+          {
+            "sel": "section.card.answer-pane",
+            "tag": "section",
+            "top": 603,
+            "height": 488,
+            "words": 102,
+            "media": 0,
+            "middle": 0,
+            "heading": {
+              "text": "Câu hỏi nối tiếp",
+              "size": 10,
+              "tag": "h3"
+            },
+            "left": 27,
+            "right": 27,
+            "textLeft": 27,
+            "textRight": 27,
+            "fullBleed": false,
+            "footer": false,
+            "hero": false,
+            "continues": false,
+            "pinned": false
+          },
+          {
+            "sel": "aside.studio-rail",
+            "tag": "aside",
+            "top": 1107,
+            "height": 760,
+            "words": 88,
+            "media": 0,
+            "middle": 0,
+            "heading": {
+              "text": "Rubric phỏng vấn",
+              "size": 14,
+              "tag": "h2"
+            },
+            "left": 27,
+            "right": 27,
+            "textLeft": 27,
+            "textRight": 27,
+            "fullBleed": false,
+            "footer": true,
+            "hero": false,
+            "continues": false,
+            "pinned": false
+          }
+        ],
+        "gaps": [],
+        "h1s": [
+          {
+            "text": "Interview Studio",
+            "size": 22,
+            "top": 62,
+            "firstScreen": true
+          }
+        ],
+        "edgeText": [
+          {
+            "text": "Interview Studio",
+            "side": "left",
+            "px": 12
+          },
+          {
+            "text": "Lê Hoàng Minh · Senior .NET Backend · Vòng 2 · 2 c",
+            "side": "left",
+            "px": 12
+          }
+        ],
+        "edges": [
+          {
+            "x": 12,
+            "n": 1
+          }
+        ],
+        "leftBlocks": 1,
+        "bodySize": 12,
+        "stage": false,
+        "explains": false,
+        "slivers": [],
+        "voidShare": 0,
+        "voidBox": null
+      },
+      "app": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "dark": false,
+        "ground": "#f1f5f9",
+        "sidebar": null,
+        "topbar": {
+          "h": 48
+        },
+        "canvas": {
+          "left": 12,
+          "right": 27
+        },
+        "hero": {
+          "text": "Interview Studio",
+          "words": 2,
+          "chars": 16,
+          "lines": 1,
+          "size": 22,
+          "vw": 5.6,
+          "font": "Inter",
+          "weight": 600,
+          "tracking": -0.02,
+          "leading": 1.2,
+          "top": 62,
+          "tag": "h1",
+          "kind": "heading",
+          "align": "left",
+          "position": "left"
+        },
+        "charts": 1,
+        "layout": {
+          "panels": 5,
+          "firstScreen": 3,
+          "ragged": [],
+          "voids": []
+        },
+        "tiles": 0,
+        "panels": {
+          "count": 6,
+          "radii": [
+            [12, 5],
+            [0, 1]
+          ],
+          "heavyBorders": 0,
+          "borderSamples": [],
+          "heavyShadows": 0,
+          "softShadows": 0,
+          "shadowSamples": [],
+          "glass": 0
+        },
+        "chips": {
+          "count": 0,
+          "hues": 0,
+          "samples": []
+        },
+        "numbers": {
+          "cells": 0,
+          "leftAligned": 0,
+          "figures": 0,
+          "tabularShare": null,
+          "kpiMax": null
+        },
+        "rows": null,
+        "chartHues": 0,
+        "placeholders": [],
+        "type": {
+          "under13": 0.89,
+          "tiny": 16,
+          "tinySamples": [
+            "Senior .NET Backend 10px",
+            "năm · 10px",
+            "Bình Thạnh, TP.HCM 10px",
+            "Architecture 9px"
+          ],
+          "sizes": [9, 10, 11, 12, 13, 14, 15, 22]
+        },
+        "title": {
+          "text": "Interview Studio",
+          "size": 22,
+          "top": 62
+        },
+        "colourShare": 0.016
+      },
+      "consoleErrors": []
+    }
+  ],
+  "findings": [
+    {
+      "level": "FAIL",
+      "id": "micro-label",
+      "width": 1440,
+      "message": "3 tiny uppercase letter-spaced labels (e.g. \"Architecture\", \"Security\", \"Câu hỏi nối tiếp\").",
+      "fix": "Use sentence-case text at a readable size, or delete the label.",
+      "alsoAt": [768, 390]
+    },
+    {
+      "level": "WARN",
+      "id": "contrast",
+      "width": 1440,
+      "message": "Low-contrast text: \"Senior\" 4.2:1 needs 4.5:1; \"Recruitment intelligence\" 4.3:1 needs 4.5:1; \"8 vị trí đang mở\" 4.3:1 needs 4.5:1; \"Workspace\" 4.3:1 needs 4.5:1",
+      "fix": "Darken or lighten the text colour.",
+      "alsoAt": [768, 390]
+    },
+    {
+      "level": "FAIL",
+      "id": "tiny-text",
+      "width": 1440,
+      "message": "20 text blocks under 11px: Recruitment intelligence 10px, vị trí đang mở 10px, Workspace 10px, Recruiter · Owner 10px.",
+      "fix": "Nothing below 11px; secondary text 12px, data 13–14px.",
+      "alsoAt": [768, 390]
+    },
+    {
+      "level": "WARN",
+      "id": "ragged-row",
+      "width": 768,
+      "message": "1 pair(s) of cards in one row end at different heights (by 341px).",
+      "fix": "Cards that share a row share a bottom edge: balance them by their content (the same number of rows, a block of similar height beside it), or stack them. In testing, ragged rows were marked down every time."
+    },
+    {
+      "level": "WARN",
+      "id": "edge-text",
+      "width": 390,
+      "message": "2 text block(s) sit 12–15px from the phone's edge: \"Interview Studio\" (12px); \"Lê Hoàng Minh · Senior .NET Ba\" (12px)",
+      "fix": "The page margin is 16–20px on a phone; the header and the corner labels sit on it too."
+    }
+  ],
+  "images": [
+    {
+      "viewport": "desktop",
+      "width": 1440,
+      "fold": "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/interview-minh/desktop-fold.jpg",
+      "pages": [
+        "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/interview-minh/desktop-page-01.jpg"
+      ],
+      "film": []
+    },
+    {
+      "viewport": "tablet",
+      "width": 768,
+      "fold": "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/interview-minh/tablet-fold.jpg",
+      "pages": [
+        "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/interview-minh/tablet-page-01.jpg"
+      ],
+      "film": []
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "fold": "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/interview-minh/mobile-fold.jpg",
+      "pages": [
+        "/Users/phantrongtinh/Documents/DEV/TraCuuNhaDat/.taste-skill/before/interview-minh/mobile-page-01.jpg"
+      ],
+      "film": []
+    }
+  ]
+}

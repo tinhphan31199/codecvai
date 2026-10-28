@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS levels (
+    name TEXT PRIMARY KEY,
+    rank INT NOT NULL DEFAULT 0
+);
