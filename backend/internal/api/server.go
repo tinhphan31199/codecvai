@@ -87,6 +87,10 @@ func New(cfg Config) http.Handler {
 	mux.HandleFunc("POST /api/levels", withStore(server, server.handleLevels))
 	mux.HandleFunc("PUT /api/levels/{name}", withStore(server, server.handleLevel))
 	mux.HandleFunc("DELETE /api/levels/{name}", withStore(server, server.handleLevel))
+	mux.HandleFunc("GET /api/teams", withStore(server, server.handleTeams))
+	mux.HandleFunc("POST /api/teams", withStore(server, server.handleTeams))
+	mux.HandleFunc("PUT /api/teams/{name}", withStore(server, server.handleTeamItem))
+	mux.HandleFunc("DELETE /api/teams/{name}", withStore(server, server.handleTeamItem))
 
 	return recoverer(cors(cfg.AllowedOrigins, mux))
 }

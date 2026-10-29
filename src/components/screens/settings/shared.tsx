@@ -1,8 +1,80 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { AlertTriangle, Loader2, Pencil, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { useT } from "@/lib/i18n";
+
+export const PAGE_SIZE = 10;
+
+export function paginate<T>(rows: T[], page: number) {
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const safePage = Math.min(Math.max(1, page), pages);
+  const start = (safePage - 1) * PAGE_SIZE;
+  return {
+    page: safePage,
+    pages,
+    total: rows.length,
+    from: rows.length ? start + 1 : 0,
+    to: Math.min(start + PAGE_SIZE, rows.length),
+    visible: rows.slice(start, start + PAGE_SIZE),
+  };
+}
+
+export function Pagination({
+  page,
+  pages,
+  from,
+  to,
+  total,
+  onChange,
+}: {
+  page: number;
+  pages: number;
+  from: number;
+  to: number;
+  total: number;
+  onChange: (page: number) => void;
+}) {
+  const t = useT();
+  if (total <= PAGE_SIZE) return null;
+  return (
+    <div className="pagination">
+      <span className="page-info">
+        {t("settings.page.info", { from, to, total })}
+      </span>
+      <div className="page-controls">
+        <button
+          type="button"
+          className="btn btn-quiet"
+          disabled={page <= 1}
+          onClick={() => onChange(page - 1)}
+        >
+          <ChevronLeft size={14} aria-hidden="true" />
+          {t("settings.page.prev")}
+        </button>
+        <span className="page-current num">
+          {page}/{pages}
+        </span>
+        <button
+          type="button"
+          className="btn btn-quiet"
+          disabled={page >= pages}
+          onClick={() => onChange(page + 1)}
+        >
+          {t("settings.page.next")}
+          <ChevronRight size={14} aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export function Toggle({
   checked,

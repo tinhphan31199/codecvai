@@ -9,7 +9,7 @@ import {
 } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { CardHead, LoadError, Loading } from "../../ui";
-import { FormStatus } from "./shared";
+import { FormStatus, Pagination, paginate } from "./shared";
 
 type Draft = {
   baseUrl: string;
@@ -25,6 +25,9 @@ export default function ProvidersTab() {
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+
+  const view = paginate(configs, page);
 
   const closeForm = () => {
     setEditing(null);
@@ -163,7 +166,7 @@ export default function ProvidersTab() {
               </tr>
             </thead>
             <tbody>
-              {configs.map((config) => (
+              {view.visible.map((config) => (
                 <tr key={config.id}>
                   <td className="c-name">
                     <span className="person-main">
@@ -204,6 +207,15 @@ export default function ProvidersTab() {
           </table>
         </div>
       )}
+
+      <Pagination
+        page={view.page}
+        pages={view.pages}
+        from={view.from}
+        to={view.to}
+        total={view.total}
+        onChange={setPage}
+      />
 
       <p className="crud-note">{t("settingsCrud.providers.note")}</p>
     </section>

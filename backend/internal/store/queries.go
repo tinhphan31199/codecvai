@@ -110,7 +110,7 @@ func (s *Store) Positions(ctx context.Context) ([]model.Position, error) {
 		SELECT p.id, p.title, p.team, p.level, p.open, p.candidates, p.updated,
 			p.owner, p.location, p.description,
 			(SELECT COUNT(*) FROM candidates c WHERE c.position = p.title) AS candidate_count
-		FROM positions p ORDER BY p.candidates DESC`)
+		FROM positions p ORDER BY p.candidates DESC, p.id ASC`)
 	if err != nil {
 		return nil, fmt.Errorf("store: positions: %w", err)
 	}
@@ -806,6 +806,63 @@ func (s *Store) DeleteLevel(ctx context.Context, name string) error {
 	tag, err := s.pool.Exec(ctx, `DELETE FROM levels WHERE name = $1`, name)
 	if err != nil {
 		return fmt.Errorf("store: delete level: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (s *Store) Teams(ctx context.Context) ([]model.Team, error) {
+	rows, err := s.pool.Query(ctx, `SELECT name, rank FROM teams ORDER BY rank, name`)
+	if err != nil {
+		return nil, fmt.Errorf("store: teams: %w", err)
+	}
+	defer rows.Close()
+
+	teams := make([]model.Team, 0)
+	for rows.Next() {
+		var team model.Team
+		if err := rows.Scan(&team.Name, &team.Rank); err != nil {
+			return nil, err
+		}
+		teams = append(teams, team)
+	}
+	return teams, rows.Err()
+}
+
+func (s *Store) CreateTeam(ctx context.Context, team model.Team) error {
+	_, err := s.pool.Exec(ctx, `INSERT INTO teams (name, rank) VALUES ($1, $2)`, team.Name, team.Rank)
+	return wrapConfigError("store: create team", err)
+}
+
+// Đổi tên chuyên môn lan sang các vị trí đang mang tên cũ.
+func (s *Store) UpdateTeam(ctx context.Context, original string, team model.Team) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("store: update team: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	tag, err := tx.Exec(ctx, `UPDATE teams SET name = $1, rank = $2 WHERE name = $3`, team.Name, team.Rank, original)
+	if err != nil {
+		return wrapConfigError("store: update team", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	if team.Name != original {
+		if _, err := tx.Exec(ctx, `UPDATE positions SET team = $1 WHERE team = $2`, team.Name, original); err != nil {
+			return fmt.Errorf("store: rename team in positions: %w", err)
+		}
+	}
+	return tx.Commit(ctx)
+}
+
+func (s *Store) DeleteTeam(ctx context.Context, name string) error {
+	tag, err := s.pool.Exec(ctx, `DELETE FROM teams WHERE name = $1`, name)
+	if err != nil {
+		return fmt.Errorf("store: delete team: %w", err)
 	}
 	if tag.RowsAffected() == 0 {
 		return ErrNotFound

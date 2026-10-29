@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Loader2, Plus, Trash2, X } from "lucide-react";
+import { Check, Loader2, Plus, Search, Trash2, X } from "lucide-react";
 import type { CriterionKind, Position } from "@/data/codecv";
 import {
   createPosition,
@@ -10,11 +10,12 @@ import {
   useLevels,
   usePositions,
   useTeam,
+  useTeams,
 } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { CardHead, LoadError, Loading } from "../../ui";
 import { RichTextEditor } from "../../RichTextEditor";
-import { ConfirmDelete, FormStatus, RowActions } from "./shared";
+import { ConfirmDelete, FormStatus, Pagination, RowActions, paginate } from "./shared";
 
 type CriterionDraft = {
   label: string;
@@ -38,7 +39,7 @@ type Draft = {
 
 const EMPTY: Draft = {
   title: "",
-  team: "Product Engineering",
+  team: "",
   level: "Middle",
   open: "1 vị trí",
   location: "TP.HCM · Hybrid",
@@ -49,7 +50,17 @@ const EMPTY: Draft = {
   criteria: [],
 };
 
-const FALLBACK_LEVELS = ["Junior", "Middle", "Senior"];
+const FALLBACK_LEVELS = [
+  "Intern",
+  "Fresher",
+  "Junior",
+  "Middle",
+  "Senior",
+  "Lead",
+  "Principal",
+  "Manager",
+  "Director",
+];
 
 function toDraft(position: Position): Draft {
   return {
@@ -70,12 +81,14 @@ export default function PositionsTab() {
   const t = useT();
   const { data, loading, error, refetch } = usePositions();
   const { data: levelData } = useLevels();
-  const { data: teamData } = useTeam();
+  const { data: memberData } = useTeam();
+  const { data: teamsData } = useTeams();
   const positions = data ?? [];
   const levelOptions = levelData?.length
     ? levelData.map((level) => level.name)
     : FALLBACK_LEVELS;
-  const ownerOptions = (teamData ?? [])
+  const teamOptions = (teamsData ?? []).map((team) => team.name);
+  const ownerOptions = (memberData ?? [])
     .map((member) => member.name)
     .filter(Boolean);
   const [editing, setEditing] = useState<Position | null>(null);
@@ -85,11 +98,34 @@ export default function PositionsTab() {
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState("");
+  const [teamFilter, setTeamFilter] = useState("all");
+
+  const searchTerm = query.trim().toLowerCase();
+  const filteredPositions = positions.filter((position) => {
+    if (teamFilter !== "all" && position.team !== teamFilter) return false;
+    if (!searchTerm) return true;
+    return `${position.title} ${position.id} ${position.team} ${position.level} ${position.owner}`
+      .toLowerCase()
+      .includes(searchTerm);
+  });
+  const filtersActive = Boolean(searchTerm) || teamFilter !== "all";
+  const teamFilterOptions = Array.from(
+    new Set([...teamOptions, ...positions.map((position) => position.team)]),
+  ).filter(Boolean);
+
+  const view = paginate(filteredPositions, page);
 
   const levelChoices =
     draft.level && !levelOptions.includes(draft.level)
       ? [draft.level, ...levelOptions]
       : levelOptions;
+
+  const teamChoices =
+    draft.team && !teamOptions.includes(draft.team)
+      ? [draft.team, ...teamOptions]
+      : teamOptions;
 
   const ownerChoices =
     draft.owner && !ownerOptions.includes(draft.owner)
@@ -100,6 +136,7 @@ export default function PositionsTab() {
     setEditing(null);
     setDraft({
       ...EMPTY,
+      team: teamOptions[0] ?? "",
       level: levelOptions[0],
       owner: ownerOptions[0] ?? EMPTY.owner,
       criteria: [],
@@ -112,7 +149,10 @@ export default function PositionsTab() {
 
   const openEdit = (position: Position) => {
     setEditing(position);
-    setDraft(toDraft(position));
+    setDraft({
+      ...toDraft(position),
+      team: position.team || teamOptions[0] || "",
+    });
     setFormOpen(true);
     setFormError(null);
     setNote(null);
@@ -209,7 +249,14 @@ export default function PositionsTab() {
     <section className="card crud-card">
       <CardHead
         title={t("settingsCrud.positions.title")}
-        meta={t("settingsCrud.positions.meta", { count: positions.length })}
+        meta={
+          filtersActive
+            ? t("settingsCrud.positions.metaFiltered", {
+                shown: filteredPositions.length,
+                total: positions.length,
+              })
+            : t("settingsCrud.positions.meta", { count: positions.length })
+        }
         action={
           <button type="button" className="btn btn-ghost btn-sm" onClick={openCreate}>
             <Plus size={14} aria-hidden="true" />
@@ -245,11 +292,22 @@ export default function PositionsTab() {
               <span className="field-label">
                 {t("settingsCrud.positions.field.team")}
               </span>
-              <input
-                type="text"
-                value={draft.team}
-                onChange={(event) => patchDraft({ team: event.target.value })}
-              />
+              {teamChoices.length ? (
+                <select
+                  value={draft.team}
+                  onChange={(event) => patchDraft({ team: event.target.value })}
+                >
+                  {teamChoices.map((team) => (
+                    <option key={team}>{team}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={draft.team}
+                  onChange={(event) => patchDraft({ team: event.target.value })}
+                />
+              )}
             </label>
             <label className="field">
               <span className="field-label">
@@ -475,11 +533,63 @@ export default function PositionsTab() {
         </form>
       ) : null}
 
+      {positions.length ? (
+        <div className="filter-bar">
+          <div className="filter-search">
+            <Search size={15} aria-hidden="true" />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(1);
+              }}
+              placeholder={t("settingsCrud.positions.searchPlaceholder")}
+              aria-label={t("settingsCrud.positions.searchAria")}
+            />
+            {query ? (
+              <button
+                type="button"
+                className="filter-clear"
+                aria-label={t("settingsCrud.positions.clearSearchAria")}
+                onClick={() => {
+                  setQuery("");
+                  setPage(1);
+                }}
+              >
+                <X size={14} />
+              </button>
+            ) : null}
+          </div>
+          <label className="filter-select">
+            <span className="visually-hidden">
+              {t("settingsCrud.positions.filterTeamAria")}
+            </span>
+            <select
+              value={teamFilter}
+              onChange={(event) => {
+                setTeamFilter(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="all">
+                {t("settingsCrud.positions.allTeams")}
+              </option>
+              {teamFilterOptions.map((team) => (
+                <option key={team} value={team}>
+                  {team}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      ) : null}
+
       {loading && !positions.length ? (
         <Loading label={t("settingsCrud.positions.loading")} />
       ) : error ? (
         <LoadError message={error} onRetry={refetch} />
-      ) : (
+      ) : filteredPositions.length || !positions.length ? (
         <div className="table-wrap">
           <table className="table">
             <thead>
@@ -496,7 +606,7 @@ export default function PositionsTab() {
               </tr>
             </thead>
             <tbody>
-              {positions.map((position) => (
+              {view.visible.map((position) => (
                 <tr key={position.id}>
                   <td className="c-name">
                     <span className="person-main">
@@ -542,7 +652,18 @@ export default function PositionsTab() {
             </tbody>
           </table>
         </div>
+      ) : (
+        <p className="crud-note">{t("settingsCrud.positions.noMatch")}</p>
       )}
+
+      <Pagination
+        page={view.page}
+        pages={view.pages}
+        from={view.from}
+        to={view.to}
+        total={view.total}
+        onChange={setPage}
+      />
 
       {confirming ? (
         <ConfirmDelete

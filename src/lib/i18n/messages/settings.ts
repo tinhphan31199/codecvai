@@ -4,6 +4,9 @@ const vi = {
   "settings.tabsAria": "Trang cấu hình",
   "settings.saveChanges": "Lưu thay đổi",
   "settings.actions": "Thao tác",
+  "settings.page.info": "Hiển thị {from}–{to} trên {total}",
+  "settings.page.prev": "Trước",
+  "settings.page.next": "Sau",
 
   "settings.tab.security": "Bảo mật & Thông báo",
   "settings.tab.securitySub":
@@ -14,6 +17,9 @@ const vi = {
   "settings.tab.levels": "Cấp bậc",
   "settings.tab.levelsSub":
     "Cấp bậc dùng chung cho vị trí, Upload CV và phân tích hồ sơ.",
+  "settings.tab.teams": "Chuyên môn",
+  "settings.tab.teamsSub":
+    "Danh mục chuyên môn CNTT dùng cho vị trí và phân tích CV.",
   "settings.tab.positions": "Vị trí",
   "settings.tab.positionsSub": "Vị trí và bộ tiêu chí dùng khi phân tích CV.",
   "settings.tab.models": "AI models",
@@ -100,12 +106,39 @@ const vi = {
   "settings.levels.deleteAria": "Xoá {name}",
   "settings.levels.footnote":
     "Danh sách sắp theo thứ tự tăng dần. Đổi tên cấp bậc sẽ cập nhật luôn vị trí và hồ sơ ứng viên đang dùng tên cũ.",
+
+  "settings.teams.title": "Chuyên môn",
+  "settings.teams.meta": "{count} chuyên môn · teams",
+  "settings.teams.add": "Thêm chuyên môn",
+  "settings.teams.name": "Tên chuyên môn",
+  "settings.teams.namePlaceholder": "Ví dụ: Backend",
+  "settings.teams.rank": "Thứ tự",
+  "settings.teams.rankPlaceholder": "1",
+  "settings.teams.loading": "Đang tải chuyên môn…",
+  "settings.teams.colTeam": "Chuyên môn",
+  "settings.teams.rankError": "Thứ tự phải là số nguyên.",
+  "settings.teams.renamed":
+    "Đã đổi {from} thành {to} và cập nhật vị trí liên quan.",
+  "settings.teams.updated": "Đã cập nhật chuyên môn {name}.",
+  "settings.teams.added": "Đã thêm chuyên môn {name}.",
+  "settings.teams.saveError": "Không lưu được chuyên môn.",
+  "settings.teams.deleted": "Đã xoá chuyên môn {name}.",
+  "settings.teams.deleteError": "Không xoá được chuyên môn.",
+  "settings.teams.confirm":
+    "Xoá chuyên môn {name}? Vị trí đang dùng tên này vẫn giữ nguyên giá trị.",
+  "settings.teams.editAria": "Sửa {name}",
+  "settings.teams.deleteAria": "Xoá {name}",
+  "settings.teams.footnote":
+    "Danh sách sắp theo thứ tự tăng dần. Đổi tên chuyên môn sẽ cập nhật luôn các vị trí đang dùng tên cũ.",
 } as const;
 
 const en: Record<keyof typeof vi, Message> = {
   "settings.tabsAria": "Settings tabs",
   "settings.saveChanges": "Save changes",
   "settings.actions": "Actions",
+  "settings.page.info": "Showing {from}–{to} of {total}",
+  "settings.page.prev": "Previous",
+  "settings.page.next": "Next",
 
   "settings.tab.security": "Security & notifications",
   "settings.tab.securitySub":
@@ -116,6 +149,9 @@ const en: Record<keyof typeof vi, Message> = {
   "settings.tab.levels": "Levels",
   "settings.tab.levelsSub":
     "Levels shared by positions, CV upload and profile analysis.",
+  "settings.tab.teams": "Specializations",
+  "settings.tab.teamsSub":
+    "IT specialization catalog shared by positions and CV analysis.",
   "settings.tab.positions": "Positions",
   "settings.tab.positionsSub":
     "Positions and criteria sets used when analyzing CVs.",
@@ -212,6 +248,33 @@ const en: Record<keyof typeof vi, Message> = {
   "settings.levels.deleteAria": "Delete {name}",
   "settings.levels.footnote":
     "The list is sorted by ascending order. Renaming a level also updates positions and candidate profiles that use the old name.",
+
+  "settings.teams.title": "Specializations",
+  "settings.teams.meta": {
+    one: "{count} specialization · teams",
+    other: "{count} specializations · teams",
+  },
+  "settings.teams.add": "Add specialization",
+  "settings.teams.name": "Specialization name",
+  "settings.teams.namePlaceholder": "e.g. Backend",
+  "settings.teams.rank": "Order",
+  "settings.teams.rankPlaceholder": "1",
+  "settings.teams.loading": "Loading specializations…",
+  "settings.teams.colTeam": "Specialization",
+  "settings.teams.rankError": "Order must be a whole number.",
+  "settings.teams.renamed":
+    "Renamed {from} to {to} and updated related positions.",
+  "settings.teams.updated": "Updated specialization {name}.",
+  "settings.teams.added": "Added specialization {name}.",
+  "settings.teams.saveError": "Couldn't save the specialization.",
+  "settings.teams.deleted": "Deleted specialization {name}.",
+  "settings.teams.deleteError": "Couldn't delete the specialization.",
+  "settings.teams.confirm":
+    "Delete specialization {name}? Positions using this name keep their current value.",
+  "settings.teams.editAria": "Edit {name}",
+  "settings.teams.deleteAria": "Delete {name}",
+  "settings.teams.footnote":
+    "The list is sorted by ascending order. Renaming a specialization also updates positions that use the old name.",
 };
 
 export const settingsMessages = { vi, en };

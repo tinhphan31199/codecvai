@@ -3,7 +3,7 @@ import type { Message } from "../types";
 const vi = {
   "jobs.loading": "Đang tải danh sách vị trí…",
   "jobs.sub":
-    "{count} vị trí đang mở · {teams} team · tiêu chí dùng chung cho CV và repository.",
+    "{count} vị trí đang mở · {teams} chuyên môn · tiêu chí dùng chung cho CV và repository.",
   "jobs.closeForm": "Đóng form",
   "jobs.create": "Tạo vị trí",
 
@@ -11,11 +11,11 @@ const vi = {
   "jobs.form.note": "Tiêu chí có thể bổ sung sau khi tạo.",
   "jobs.form.titleLabel": "Tên vị trí",
   "jobs.form.titlePlaceholder": "Ví dụ: Staff Backend Engineer",
-  "jobs.form.team": "Team",
+  "jobs.form.team": "Chuyên môn",
   "jobs.form.level": "Cấp bậc",
   "jobs.form.location": "Địa điểm",
 
-  "jobs.filter.aria": "Lọc theo team",
+  "jobs.filter.aria": "Lọc theo chuyên môn",
   "jobs.filter.all": "Tất cả",
   "jobs.resultUnit": "vị trí",
 
@@ -28,8 +28,8 @@ const vi = {
   "jobs.updated": "{owner} · cập nhật {updated}",
   "jobs.viewCandidates": "Xem ứng viên",
 
-  "jobs.empty.title": "Không có vị trí trong team này",
-  "jobs.empty.detail": "Chọn team khác hoặc tạo vị trí mới.",
+  "jobs.empty.title": "Không có vị trí trong chuyên môn này",
+  "jobs.empty.detail": "Chọn chuyên môn khác hoặc tạo vị trí mới.",
   "jobs.note":
     "Mỗi vị trí dùng cùng một bộ tiêu chí để đối chiếu CV và repository, nhờ đó bằng chứng giữa các ứng viên có thể so sánh được.",
 } as const;
@@ -37,9 +37,9 @@ const vi = {
 const en: Record<keyof typeof vi, Message> = {
   "jobs.loading": "Loading positions…",
   "jobs.sub": {
-    one: "{count} open position · {teams} team · one criteria set shared across CVs and repositories.",
+    one: "{count} open position · {teams} specialization · one criteria set shared across CVs and repositories.",
     other:
-      "{count} open positions · {teams} teams · one criteria set shared across CVs and repositories.",
+      "{count} open positions · {teams} specializations · one criteria set shared across CVs and repositories.",
   },
   "jobs.closeForm": "Close form",
   "jobs.create": "Create position",
@@ -48,11 +48,11 @@ const en: Record<keyof typeof vi, Message> = {
   "jobs.form.note": "Criteria can be added after the position is created.",
   "jobs.form.titleLabel": "Position title",
   "jobs.form.titlePlaceholder": "e.g. Staff Backend Engineer",
-  "jobs.form.team": "Team",
+  "jobs.form.team": "Specialization",
   "jobs.form.level": "Level",
   "jobs.form.location": "Location",
 
-  "jobs.filter.aria": "Filter by team",
+  "jobs.filter.aria": "Filter by specialization",
   "jobs.filter.all": "All",
   "jobs.resultUnit": {
     one: "position",
@@ -71,8 +71,8 @@ const en: Record<keyof typeof vi, Message> = {
   "jobs.updated": "{owner} · updated {updated}",
   "jobs.viewCandidates": "View candidates",
 
-  "jobs.empty.title": "No positions in this team",
-  "jobs.empty.detail": "Choose another team or create a new position.",
+  "jobs.empty.title": "No positions in this specialization",
+  "jobs.empty.detail": "Choose another specialization or create a new position.",
   "jobs.note":
     "Every position uses the same criteria set to assess CVs and repositories, so evidence stays comparable across candidates.",
 };

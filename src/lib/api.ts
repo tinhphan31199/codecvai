@@ -87,6 +87,11 @@ export interface Level {
   rank: number;
 }
 
+export interface Team {
+  name: string;
+  rank: number;
+}
+
 export interface TreeNode {
   name: string;
   type: "folder" | "file";
@@ -197,16 +202,17 @@ function useQuery<T>(path: string): QueryResult<T> {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (cache.has(path)) {
-      setData(cache.get(path) as T);
+    const cached = cache.get(path) as T | undefined;
+    if (cached !== undefined) {
+      setData(cached);
       setLoading(false);
-      return;
     }
     let pending = inflight.get(path) as Promise<T> | undefined;
     if (!pending) {
       pending = requestJSON<T>(path)
         .then((json) => {
           cache.set(path, json);
+          inflight.delete(path);
           return json;
         })
         .catch((err) => {
@@ -215,7 +221,7 @@ function useQuery<T>(path: string): QueryResult<T> {
         });
       inflight.set(path, pending);
     }
-    setLoading(true);
+    if (cached === undefined) setLoading(true);
     try {
       setData(await pending);
       setError(null);
@@ -322,6 +328,11 @@ export function useStages(): QueryResult<UploadStage[]> {
 export function useLevels(): QueryResult<Level[]> {
   const result = useQuery<{ levels: Level[] }>("/api/levels");
   return { ...result, data: result.data ? result.data.levels : null };
+}
+
+export function useTeams(): QueryResult<Team[]> {
+  const result = useQuery<{ teams: Team[] }>("/api/teams");
+  return { ...result, data: result.data ? result.data.teams : null };
 }
 
 // ---- Mutations ----
@@ -503,6 +514,36 @@ export async function deleteLevel(name: string): Promise<void> {
     method: "DELETE",
   });
   invalidate("/api/levels");
+}
+
+export async function createTeam(team: Team): Promise<Team> {
+  const created = await requestJSON<Team>("/api/teams", {
+    method: "POST",
+    body: JSON.stringify(team),
+  });
+  invalidate("/api/teams");
+  return created;
+}
+
+export async function updateTeam(
+  originalName: string,
+  team: Team,
+): Promise<Team> {
+  const updated = await requestJSON<Team>(
+    `/api/teams/${encodeURIComponent(originalName)}`,
+    { method: "PUT", body: JSON.stringify(team) },
+  );
+  invalidate("/api/teams");
+  invalidate("/api/positions");
+  invalidate("/api/dashboard");
+  return updated;
+}
+
+export async function deleteTeam(name: string): Promise<void> {
+  await requestJSON(`/api/teams/${encodeURIComponent(name)}`, {
+    method: "DELETE",
+  });
+  invalidate("/api/teams");
 }
 
 export async function saveWorkspaceSettings(

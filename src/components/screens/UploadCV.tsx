@@ -16,7 +16,7 @@ import {
   X,
 } from "lucide-react";
 import type { Screen } from "@/data/codecv";
-import { useLevels, useModels, usePositions, useStages } from "@/lib/api";
+import { useLevels, useModels, usePositions, useStages, useTeams } from "@/lib/api";
 import { useLang, useNumberFormat, useT, type MessageKey } from "@/lib/i18n";
 import {
   MAX_FILE_BYTES,
@@ -152,6 +152,7 @@ export default function UploadCV({
     questions: true,
   });
   const [positionId, setPositionId] = useState("be-dotnet");
+  const [teamChoice, setTeamChoice] = useState("");
   const [level, setLevel] = useState("Senior");
   const [language, setLanguage] = useState("Tiếng Việt");
   const [modelChoice, setModelChoice] = useState("");
@@ -166,14 +167,26 @@ export default function UploadCV({
   const { data: stagesData, loading: stagesLoading } = useStages();
   const { data: levelData } = useLevels();
   const { data: modelsData } = useModels();
+  const { data: teamsData } = useTeams();
   const positions = positionsData ?? [];
+  const teams = teamsData ?? [];
+  const teamOptions = teams.length
+    ? teams.map((item) => item.name)
+    : [...new Set(positions.map((item) => item.team))];
   const uploadStages = stagesData ?? [];
   const levelOptions = levelData?.length
     ? levelData.map((item) => item.name)
-    : ["Junior", "Middle", "Senior"];
-  const levelChoices = levelOptions.includes(level)
-    ? levelOptions
-    : [level, ...levelOptions];
+    : [
+        "Intern",
+        "Fresher",
+        "Junior",
+        "Middle",
+        "Senior",
+        "Lead",
+        "Principal",
+        "Manager",
+        "Director",
+      ];
   const allModels = modelsData ?? [];
   const activeModels = allModels.filter((item) => item.active);
   const defaultModel =
@@ -193,7 +206,22 @@ export default function UploadCV({
   );
   const modelOptionLabel = (item: (typeof activeModels)[number]) =>
     `${item.name}${duplicateModelNames.has(item.name) ? ` (${item.id})` : ""} · ${item.provider}`;
-  const position = positions.find((item) => item.id === positionId) ?? positions[0];
+  const currentPosition = positions.find((item) => item.id === positionId);
+  const activeTeam = teamChoice || currentPosition?.team || teamOptions[0] || "";
+  const teamPositions = activeTeam
+    ? positions.filter((item) => item.team === activeTeam)
+    : positions;
+  const teamChoices =
+    activeTeam && !teamOptions.includes(activeTeam)
+      ? [activeTeam, ...teamOptions]
+      : teamOptions;
+  const position =
+    teamPositions.find((item) => item.id === positionId) ?? teamPositions[0];
+  const levelValue = levelOptions.includes(level)
+    ? level
+    : currentPosition?.level && levelOptions.includes(currentPosition.level)
+      ? currentPosition.level
+      : (levelOptions[0] ?? "");
   const running = phase === "uploading" || phase === "analyzing";
   const isPdf = Boolean(
     file && (file.file.type === "application/pdf" || /\.pdf$/i.test(file.name)),
@@ -218,10 +246,13 @@ export default function UploadCV({
 
   useEffect(() => {
     if (!positions.length) return;
-    if (!positions.some((item) => item.id === positionId)) {
-      setPositionId(positions[0].id);
+    const pool = teamChoice
+      ? positions.filter((item) => item.team === teamChoice)
+      : positions;
+    if (!pool.some((item) => item.id === positionId)) {
+      setPositionId(pool[0]?.id ?? "");
     }
-  }, [positions, positionId]);
+  }, [positions, positionId, teamChoice]);
 
   if ((positionsLoading || stagesLoading) && !positions.length) {
     return (
@@ -306,7 +337,7 @@ export default function UploadCV({
     const form = new FormData();
     form.append("file", file.file);
     form.append("positionId", pos.id);
-    form.append("level", level);
+    form.append("level", levelValue);
     form.append("language", language);
     form.append("model", model);
     form.append("includeQuestions", String(analysis.questions));
@@ -337,7 +368,7 @@ export default function UploadCV({
           {
             key: `live-${Date.now()}`,
             name: file.name,
-            role: `${pos.title} · ${level}`,
+            role: `${pos.title} · ${levelValue}`,
             stageKey: "upload.queueStageDone",
             stageVars: { count: body.analysis.criteria.length },
             step: 6,
@@ -569,10 +600,10 @@ export default function UploadCV({
             <label className="field">
               <span className="field-label">{t("upload.levelLabel")}</span>
               <select
-                value={level}
+                value={levelValue}
                 onChange={(event) => setLevel(event.target.value)}
               >
-                {levelChoices.map((item) => (
+                {levelOptions.map((item) => (
                   <option key={item} value={item}>
                     {item}
                   </option>
@@ -608,12 +639,32 @@ export default function UploadCV({
           ) : null}
           <div className="form-stack">
             <label className="field">
+              <span className="field-label">{t("upload.teamLabel")}</span>
+              <select
+                value={activeTeam}
+                onChange={(event) => {
+                  const team = event.target.value;
+                  setTeamChoice(team);
+                  setPositionId(
+                    positions.find((item) => item.team === team)?.id ?? "",
+                  );
+                }}
+              >
+                {teamChoices.map((team) => (
+                  <option key={team} value={team}>
+                    {team}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
               <span className="field-label">{t("upload.positionLabel")}</span>
               <select
                 value={positionId}
                 onChange={(event) => setPositionId(event.target.value)}
               >
-                {positions.map((item) => (
+                {teamPositions.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.title}
                   </option>
@@ -758,7 +809,7 @@ export default function UploadCV({
             <button
               type="button"
               className="btn btn-primary btn-block"
-              disabled={!file || running || !model}
+              disabled={!file || running || !model || !position}
               onClick={start}
             >
               {running ? (
@@ -782,8 +833,8 @@ export default function UploadCV({
               </span>
             ) : (
               <span className="field-hint">
-                {languageLabelKey ? t(languageLabelKey) : language} · {level} ·{" "}
-                {modelName(model)}
+                {languageLabelKey ? t(languageLabelKey) : language} ·{" "}
+                {levelValue} · {modelName(model)}
               </span>
             )}
           </div>

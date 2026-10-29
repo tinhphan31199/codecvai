@@ -19,9 +19,11 @@ import {
 import {
   ConfirmDelete,
   FormStatus,
+  Pagination,
   RowActions,
   hueOf,
   initialsOf,
+  paginate,
 } from "./shared";
 
 type Draft = { name: string; email: string; role: string };
@@ -40,6 +42,9 @@ export default function TeamTab() {
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+
+  const view = paginate(members, page);
 
   const openCreate = () => {
     setEditing(null);
@@ -216,7 +221,7 @@ export default function TeamTab() {
               </tr>
             </thead>
             <tbody>
-              {members.map((member) => (
+              {view.visible.map((member) => (
                 <tr key={member.name}>
                   <td className="c-name">
                     <div className="person-cell">
@@ -262,6 +267,15 @@ export default function TeamTab() {
           </table>
         </div>
       )}
+
+      <Pagination
+        page={view.page}
+        pages={view.pages}
+        from={view.from}
+        to={view.to}
+        total={view.total}
+        onChange={setPage}
+      />
 
       {confirming ? (
         <ConfirmDelete

@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 import type { Position, Screen } from "@/data/codecv";
-import { createPosition, useLevels, usePositions } from "@/lib/api";
+import { createPosition, useLevels, usePositions, useTeams } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { sanitizeHtml } from "@/lib/sanitize";
 import {
@@ -20,7 +20,21 @@ import {
   ScreenLoader,
 } from "../ui";
 
-const FALLBACK_LEVELS = ["Junior", "Middle", "Senior"];
+const FALLBACK_LEVELS = [
+  "Intern",
+  "Fresher",
+  "Junior",
+  "Middle",
+  "Senior",
+  "Lead",
+  "Principal",
+  "Manager",
+  "Director",
+];
+
+function newPositionId() {
+  return `jd-${Date.now()}`;
+}
 
 export default function Jobs({
   go,
@@ -29,17 +43,19 @@ export default function Jobs({
 }) {
   const { data, loading, error, refetch } = usePositions();
   const { data: levelData } = useLevels();
+  const { data: teamsData } = useTeams();
   const t = useT();
   const positions = data ?? [];
   const levelOptions = levelData?.length
     ? levelData.map((level) => level.name)
     : FALLBACK_LEVELS;
+  const teamOptions = (teamsData ?? []).map((team) => team.name);
   const [team, setTeam] = useState("all");
   const [openForm, setOpenForm] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [draft, setDraft] = useState({
     title: "",
-    team: "Product Engineering",
+    team: "",
     level: "Middle",
     location: "TP.HCM · Hybrid",
   });
@@ -48,9 +64,20 @@ export default function Jobs({
     ? levelOptions
     : [draft.level, ...levelOptions];
 
+  const teamChoices =
+    draft.team && !teamOptions.includes(draft.team)
+      ? [draft.team, ...teamOptions]
+      : teamOptions;
+
   const toggleForm = () => {
-    if (!openForm && !levelOptions.includes(draft.level)) {
-      setDraft((prev) => ({ ...prev, level: levelOptions[0] ?? prev.level }));
+    if (!openForm) {
+      setDraft((prev) => ({
+        ...prev,
+        level: levelOptions.includes(prev.level)
+          ? prev.level
+          : (levelOptions[0] ?? prev.level),
+        team: prev.team || teamOptions[0] || "",
+      }));
     }
     setOpenForm((value) => !value);
   };
@@ -63,7 +90,7 @@ export default function Jobs({
     event.preventDefault();
     if (!draft.title.trim()) return;
     const newPosition: Position = {
-      id: `jd-${Date.now()}`,
+      id: newPositionId(),
       title: draft.title.trim(),
       team: draft.team,
       level: draft.level,
@@ -83,7 +110,7 @@ export default function Jobs({
     }
     setDraft({
       title: "",
-      team: "Product Engineering",
+      team: teamOptions[0] ?? "",
       level: levelOptions[0] ?? "Middle",
       location: "TP.HCM · Hybrid",
     });
@@ -152,13 +179,26 @@ export default function Jobs({
             </label>
             <label className="field">
               <span className="field-label">{t("jobs.form.team")}</span>
-              <input
-                type="text"
-                value={draft.team}
-                onChange={(event) =>
-                  setDraft((prev) => ({ ...prev, team: event.target.value }))
-                }
-              />
+              {teamChoices.length ? (
+                <select
+                  value={draft.team}
+                  onChange={(event) =>
+                    setDraft((prev) => ({ ...prev, team: event.target.value }))
+                  }
+                >
+                  {teamChoices.map((name) => (
+                    <option key={name}>{name}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={draft.team}
+                  onChange={(event) =>
+                    setDraft((prev) => ({ ...prev, team: event.target.value }))
+                  }
+                />
+              )}
             </label>
             <label className="field">
               <span className="field-label">{t("jobs.form.level")}</span>

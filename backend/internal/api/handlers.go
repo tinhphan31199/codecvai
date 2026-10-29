@@ -569,6 +569,61 @@ func (s *Server) handleLevel(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) handleTeams(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		var team model.Team
+		if err := decodeJSON(r, &team); err != nil {
+			s.fail(w, http.StatusBadRequest, "bad_request", "Không đọc được dữ liệu gửi lên.")
+			return
+		}
+		if strings.TrimSpace(team.Name) == "" {
+			s.fail(w, http.StatusBadRequest, "bad_request", "Thiếu tên chuyên môn.")
+			return
+		}
+		if err := s.store.CreateTeam(r.Context(), team); err != nil {
+			s.configError(w, err, "Không tìm thấy chuyên môn.", "Chuyên môn đã tồn tại.")
+			return
+		}
+		writeJSON(w, http.StatusCreated, team)
+		return
+	}
+
+	teams, err := s.store.Teams(r.Context())
+	if err != nil {
+		s.storeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"teams": teams})
+}
+
+func (s *Server) handleTeamItem(w http.ResponseWriter, r *http.Request) {
+	name := r.PathValue("name")
+
+	switch r.Method {
+	case http.MethodPut:
+		var team model.Team
+		if err := decodeJSON(r, &team); err != nil {
+			s.fail(w, http.StatusBadRequest, "bad_request", "Không đọc được dữ liệu gửi lên.")
+			return
+		}
+		if strings.TrimSpace(team.Name) == "" {
+			s.fail(w, http.StatusBadRequest, "bad_request", "Thiếu tên chuyên môn.")
+			return
+		}
+		if err := s.store.UpdateTeam(r.Context(), name, team); err != nil {
+			s.configError(w, err, "Không tìm thấy chuyên môn.", "Chuyên môn đã tồn tại.")
+			return
+		}
+		writeJSON(w, http.StatusOK, team)
+	case http.MethodDelete:
+		if err := s.store.DeleteTeam(r.Context(), name); err != nil {
+			s.configError(w, err, "Không tìm thấy chuyên môn.", "")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
 func decodeJSON(r *http.Request, dst any) error {
 	defer r.Body.Close()
 	decoder := json.NewDecoder(io.LimitReader(r.Body, 1<<20))

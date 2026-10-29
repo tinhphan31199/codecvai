@@ -152,6 +152,11 @@ type Level struct {
 	Rank int    `json:"rank"`
 }
 
+type Team struct {
+	Name string `json:"name"`
+	Rank int    `json:"rank"`
+}
+
 type Stats struct {
 	Total      int    `json:"total"`
 	Completed  int    `json:"completed"`

@@ -107,14 +107,58 @@ func (s *Store) Seed(ctx context.Context) error {
 		return fmt.Errorf("store: seed level check: %w", err)
 	}
 	if levelCount == 0 {
-		for i, name := range []string{"Junior", "Middle", "Senior"} {
+		for i, name := range []string{
+			"Intern", "Fresher", "Junior", "Middle", "Senior",
+			"Lead", "Principal", "Manager", "Director",
+		} {
 			if _, err := tx.Exec(ctx, `INSERT INTO levels (name, rank) VALUES ($1, $2)`, name, i+1); err != nil {
 				return fmt.Errorf("store: seed levels: %w", err)
 			}
 		}
 	}
 
+	var teamCount int
+	if err := tx.QueryRow(ctx, `SELECT count(*) FROM teams`).Scan(&teamCount); err != nil {
+		return fmt.Errorf("store: seed team check: %w", err)
+	}
+	if teamCount == 0 {
+		for i, name := range defaultTeams {
+			if _, err := tx.Exec(ctx, `INSERT INTO teams (name, rank) VALUES ($1, $2)`, name, i+1); err != nil {
+				return fmt.Errorf("store: seed teams: %w", err)
+			}
+		}
+	}
+
 	return tx.Commit(ctx)
+}
+
+// Danh mục chuyên môn CNTT mặc định, chỉ nạp khi bảng teams còn rỗng.
+var defaultTeams = []string{
+	"Frontend",
+	"Backend",
+	"Fullstack",
+	"Mobile",
+	"DevOps",
+	"Cloud",
+	"Site Reliability (SRE)",
+	"Platform Engineering",
+	"Data Engineering",
+	"Data Science",
+	"AI / Machine Learning",
+	"Computer Vision",
+	"NLP",
+	"QA/QC",
+	"Security",
+	"Solution Architecture",
+	"Embedded",
+	"IoT",
+	"Game Development",
+	"Database Administration",
+	"Network Engineering",
+	"System Administration",
+	"IT Support",
+	"UI/UX Design",
+	"Business Analysis",
 }
 
 type execer interface {

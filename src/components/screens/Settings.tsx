@@ -4,6 +4,7 @@ import {
   Cpu,
   FileText,
   GraduationCap,
+  Layers,
   ListOrdered,
   PlugZap,
   ShieldCheck,
@@ -15,6 +16,7 @@ import { PageHead } from "../ui";
 import SecurityTab from "./settings/SecurityTab";
 import TeamTab from "./settings/TeamTab";
 import LevelsTab from "./settings/LevelsTab";
+import TeamsTab from "./settings/TeamsTab";
 import PositionsTab from "./settings/PositionsTab";
 import ModelsTab from "./settings/ModelsTab";
 import ProvidersTab from "./settings/ProvidersTab";
@@ -38,6 +40,12 @@ const TABS = [
     labelKey: "settings.tab.levels",
     icon: GraduationCap,
     subKey: "settings.tab.levelsSub",
+  },
+  {
+    key: "teams",
+    labelKey: "settings.tab.teams",
+    icon: Layers,
+    subKey: "settings.tab.teamsSub",
   },
   {
     key: "positions",
@@ -109,6 +117,7 @@ export default function SettingsScreen({
       {active === "security" ? <SecurityTab /> : null}
       {active === "team" ? <TeamTab /> : null}
       {active === "levels" ? <LevelsTab /> : null}
+      {active === "teams" ? <TeamsTab /> : null}
       {active === "positions" ? <PositionsTab /> : null}
       {active === "models" ? <ModelsTab /> : null}
       {active === "providers" ? <ProvidersTab /> : null}

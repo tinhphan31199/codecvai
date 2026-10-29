@@ -11,7 +11,7 @@ import {
 } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { CardHead, LoadError, Loading } from "../../ui";
-import { ConfirmDelete, FormStatus, RowActions } from "./shared";
+import { ConfirmDelete, FormStatus, Pagination, RowActions, paginate } from "./shared";
 
 type Draft = { id: string; label: string; detail: string };
 
@@ -28,8 +28,10 @@ export default function StagesTab() {
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const nextId = stages.reduce((max, stage) => Math.max(max, stage.id), 0) + 1;
+  const view = paginate(stages, page);
 
   const openCreate = () => {
     setEditing(null);
@@ -215,7 +217,7 @@ export default function StagesTab() {
               </tr>
             </thead>
             <tbody>
-              {stages.map((stage) => (
+              {view.visible.map((stage) => (
                 <tr key={stage.id}>
                   <td
                     className="num c-name"
@@ -251,6 +253,15 @@ export default function StagesTab() {
           </table>
         </div>
       )}
+
+      <Pagination
+        page={view.page}
+        pages={view.pages}
+        from={view.from}
+        to={view.to}
+        total={view.total}
+        onChange={setPage}
+      />
 
       {confirming ? (
         <ConfirmDelete

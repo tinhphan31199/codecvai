@@ -11,7 +11,7 @@ import {
 } from "@/lib/api";
 import { useNumberFormat, useT } from "@/lib/i18n";
 import { CardHead, LoadError, Loading } from "../../ui";
-import { ConfirmDelete, FormStatus, RowActions } from "./shared";
+import { ConfirmDelete, FormStatus, Pagination, RowActions, paginate } from "./shared";
 
 type Draft = { name: string; rank: string };
 
@@ -29,8 +29,10 @@ export default function LevelsTab() {
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const nextRank = levels.reduce((max, level) => Math.max(max, level.rank), 0) + 1;
+  const view = paginate(levels, page);
 
   const openCreate = () => {
     setEditing(null);
@@ -198,7 +200,7 @@ export default function LevelsTab() {
               </tr>
             </thead>
             <tbody>
-              {levels.map((level) => (
+              {view.visible.map((level) => (
                 <tr key={level.name}>
                   <td className="c-name">
                     <span className="person-main">
@@ -230,6 +232,15 @@ export default function LevelsTab() {
           </table>
         </div>
       )}
+
+      <Pagination
+        page={view.page}
+        pages={view.pages}
+        from={view.from}
+        to={view.to}
+        total={view.total}
+        onChange={setPage}
+      />
 
       {confirming ? (
         <ConfirmDelete

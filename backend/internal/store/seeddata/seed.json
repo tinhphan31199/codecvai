@@ -17,7 +17,7 @@
     {
       "id": "be-dotnet",
       "title": "Senior .NET Backend",
-      "team": "Product Engineering",
+      "team": "Backend",
       "level": "Senior",
       "open": "2 vị trí",
       "candidates": 36,
@@ -79,7 +79,7 @@
     {
       "id": "fullstack",
       "title": "Full-stack Developer",
-      "team": "Growth",
+      "team": "Fullstack",
       "level": "Middle",
       "open": "1 vị trí",
       "candidates": 28,
@@ -123,7 +123,7 @@
     {
       "id": "frontend",
       "title": "Frontend Engineer (React)",
-      "team": "Product Engineering",
+      "team": "Frontend",
       "level": "Middle",
       "open": "1 vị trí",
       "candidates": 22,
@@ -167,7 +167,7 @@
     {
       "id": "devops",
       "title": "DevOps Engineer",
-      "team": "Platform",
+      "team": "DevOps",
       "level": "Senior",
       "open": "1 vị trí",
       "candidates": 18,
@@ -211,7 +211,7 @@
     {
       "id": "data",
       "title": "Data Engineer",
-      "team": "Insights",
+      "team": "Data Engineering",
       "level": "Middle",
       "open": "1 vị trí",
       "candidates": 14,
@@ -249,7 +249,7 @@
     {
       "id": "mobile",
       "title": "Mobile Engineer (Flutter)",
-      "team": "Product Engineering",
+      "team": "Mobile",
       "level": "Junior",
       "open": "1 vị trí",
       "candidates": 4,
@@ -281,7 +281,7 @@
     {
       "id": "solutions",
       "title": "Solutions Architect",
-      "team": "Enterprise",
+      "team": "Solution Architecture",
       "level": "Senior",
       "open": "1 vị trí",
       "candidates": 3,
@@ -313,7 +313,7 @@
     {
       "id": "qa",
       "title": "QA Automation Engineer",
-      "team": "Product Engineering",
+      "team": "QA/QC",
       "level": "Middle",
       "open": "1 vị trí",
       "candidates": 3,
@@ -339,6 +339,2942 @@
           "kind": "nice",
           "weight": 2,
           "verify": "Phỏng vấn"
+        }
+      ]
+    },
+    {
+      "id": "fe-junior",
+      "title": "Junior Frontend Engineer",
+      "team": "Frontend",
+      "level": "Junior",
+      "open": "2 vị trí",
+      "candidates": 0,
+      "updated": "01/10/2026",
+      "owner": "Minh Anh",
+      "location": "TP.HCM · Hybrid",
+      "description": "Gia nhập đội Frontend để xây dựng giao diện React/Next.js cho sản phẩm, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "HTML, CSS và JavaScript",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · component và style"
+        },
+        {
+          "label": "React và Next.js",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Repository · trang và hook"
+        },
+        {
+          "label": "TypeScript và quản lý state",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Repository · kiểu dữ liệu và store"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "fe-senior",
+      "title": "Senior Frontend Engineer",
+      "team": "Frontend",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "04/10/2026",
+      "owner": "Thu Trang",
+      "location": "TP.HCM · Remote",
+      "description": "Dẫn dắt mảng xây dựng giao diện React/Next.js cho sản phẩm, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "HTML, CSS và JavaScript",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Repository · component và style"
+        },
+        {
+          "label": "React và Next.js",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · trang và hook"
+        },
+        {
+          "label": "Hiệu năng và accessibility giao diện",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · bài toán tối ưu"
+        },
+        {
+          "label": "Kiểm thử giao diện với Playwright/Jest",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · test và CI"
+        },
+        {
+          "label": "Thiết kế kiến trúc frontend và design system",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "be-junior",
+      "title": "Junior Backend Engineer",
+      "team": "Backend",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "07/10/2026",
+      "owner": "Quang Dũng",
+      "location": "Hà Nội · Hybrid",
+      "description": "Gia nhập đội Backend để phát triển dịch vụ backend và API cho nền tảng, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Ngôn ngữ backend (Go/.NET/Node.js)",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · service và handler"
+        },
+        {
+          "label": "REST API và thiết kế dữ liệu",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Repository · route và schema"
+        },
+        {
+          "label": "SQL và transaction",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Repository · migration và query"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "be-middle",
+      "title": "Middle Backend Engineer",
+      "team": "Backend",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "10/10/2026",
+      "owner": "Hải Yến",
+      "location": "TP.HCM · Hybrid",
+      "description": "Đảm nhận việc phát triển dịch vụ backend và API cho nền tảng một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Ngôn ngữ backend (Go/.NET/Node.js)",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · service và handler"
+        },
+        {
+          "label": "REST API và thiết kế dữ liệu",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · route và schema"
+        },
+        {
+          "label": "SQL và transaction",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · migration và query"
+        },
+        {
+          "label": "Message broker và xử lý bất đồng bộ",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · consumer và publisher"
+        },
+        {
+          "label": "Kiểm thử tự động và CI",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Repository · test và pipeline"
+        }
+      ]
+    },
+    {
+      "id": "fs-junior",
+      "title": "Junior Fullstack Engineer",
+      "team": "Fullstack",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "13/10/2026",
+      "owner": "Minh Anh",
+      "location": "TP.HCM · Remote",
+      "description": "Gia nhập đội Fullstack để phát triển cả frontend và backend cho tính năng sản phẩm, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "JavaScript/TypeScript và React",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · trang và component"
+        },
+        {
+          "label": "API và tầng dịch vụ backend",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Repository · route và service"
+        },
+        {
+          "label": "Cơ sở dữ liệu quan hệ",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Repository · schema và query"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "fs-senior",
+      "title": "Senior Fullstack Engineer",
+      "team": "Fullstack",
+      "level": "Senior",
+      "open": "2 vị trí",
+      "candidates": 0,
+      "updated": "16/10/2026",
+      "owner": "Thu Trang",
+      "location": "Hà Nội · Hybrid",
+      "description": "Dẫn dắt mảng phát triển cả frontend và backend cho tính năng sản phẩm, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "JavaScript/TypeScript và React",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Repository · trang và component"
+        },
+        {
+          "label": "API và tầng dịch vụ backend",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · route và service"
+        },
+        {
+          "label": "Xác thực, phân quyền và bảo mật cơ bản",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · middleware và test"
+        },
+        {
+          "label": "Triển khai tính năng end-to-end",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · dự án thực tế"
+        },
+        {
+          "label": "Thiết kế kiến trúc tính năng xuyên tầng",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "mob-middle",
+      "title": "Middle Mobile Engineer",
+      "team": "Mobile",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "19/10/2026",
+      "owner": "Quang Dũng",
+      "location": "TP.HCM · Hybrid",
+      "description": "Đảm nhận việc phát triển ứng dụng di động Flutter/React Native một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Dart hoặc TypeScript cho mobile",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · widget và màn hình"
+        },
+        {
+          "label": "Thiết kế UI mobile và responsive",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · layout và theme"
+        },
+        {
+          "label": "Gọi API và quản lý state",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · service và store"
+        },
+        {
+          "label": "Hiệu năng, bộ nhớ và chế độ offline",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · bài toán tối ưu"
+        },
+        {
+          "label": "Phát hành ứng dụng lên store",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · ứng dụng đã phát hành"
+        }
+      ]
+    },
+    {
+      "id": "mob-senior",
+      "title": "Senior Mobile Engineer",
+      "team": "Mobile",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "22/10/2026",
+      "owner": "Hải Yến",
+      "location": "TP.HCM · Remote",
+      "description": "Dẫn dắt mảng phát triển ứng dụng di động Flutter/React Native, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "Dart hoặc TypeScript cho mobile",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Repository · widget và màn hình"
+        },
+        {
+          "label": "Thiết kế UI mobile và responsive",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · layout và theme"
+        },
+        {
+          "label": "Hiệu năng, bộ nhớ và chế độ offline",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · bài toán tối ưu"
+        },
+        {
+          "label": "Phát hành ứng dụng lên store",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · ứng dụng đã phát hành"
+        },
+        {
+          "label": "Kiến trúc module và design system mobile",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "ops-junior",
+      "title": "Junior DevOps Engineer",
+      "team": "DevOps",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "25/10/2026",
+      "owner": "Minh Anh",
+      "location": "Hà Nội · Hybrid",
+      "description": "Gia nhập đội DevOps để vận hành hạ tầng, pipeline và tự động hoá triển khai, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Linux và container",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · Dockerfile"
+        },
+        {
+          "label": "CI/CD với GitHub Actions/GitLab",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Repository · pipeline"
+        },
+        {
+          "label": "Git và quy trình release",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · dự án thực tế"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "ops-middle",
+      "title": "Middle DevOps Engineer",
+      "team": "DevOps",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "01/10/2026",
+      "owner": "Thu Trang",
+      "location": "TP.HCM · Hybrid",
+      "description": "Đảm nhận việc vận hành hạ tầng, pipeline và tự động hoá triển khai một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Linux và container",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · Dockerfile"
+        },
+        {
+          "label": "CI/CD với GitHub Actions/GitLab",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · pipeline"
+        },
+        {
+          "label": "Git và quy trình release",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · dự án thực tế"
+        },
+        {
+          "label": "Kubernetes và quản lý cấu hình",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · manifest và Helm"
+        },
+        {
+          "label": "IaC với Terraform",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Repository · module"
+        }
+      ]
+    },
+    {
+      "id": "cloud-junior",
+      "title": "Junior Cloud Engineer",
+      "team": "Cloud",
+      "level": "Junior",
+      "open": "2 vị trí",
+      "candidates": 0,
+      "updated": "04/10/2026",
+      "owner": "Quang Dũng",
+      "location": "TP.HCM · Remote",
+      "description": "Gia nhập đội Cloud để thiết kế và vận hành hạ tầng cloud, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Nền tảng cloud (AWS/GCP/Azure)",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · chứng chỉ hoặc dự án"
+        },
+        {
+          "label": "Mạng và bảo mật cloud cơ bản",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "IaC với Terraform",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Repository · module"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "cloud-middle",
+      "title": "Middle Cloud Engineer",
+      "team": "Cloud",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "07/10/2026",
+      "owner": "Hải Yến",
+      "location": "Hà Nội · Hybrid",
+      "description": "Đảm nhận việc thiết kế và vận hành hạ tầng cloud một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Nền tảng cloud (AWS/GCP/Azure)",
+          "kind": "must",
+          "weight": 4,
+          "verify": "CV · chứng chỉ hoặc dự án"
+        },
+        {
+          "label": "Mạng và bảo mật cloud cơ bản",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "IaC với Terraform",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · module"
+        },
+        {
+          "label": "Container và dịch vụ managed",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · manifest"
+        },
+        {
+          "label": "Giám sát và tối ưu chi phí cloud",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · kinh nghiệm vận hành"
+        }
+      ]
+    },
+    {
+      "id": "cloud-senior",
+      "title": "Senior Cloud Engineer",
+      "team": "Cloud",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "10/10/2026",
+      "owner": "Minh Anh",
+      "location": "TP.HCM · Hybrid",
+      "description": "Dẫn dắt mảng thiết kế và vận hành hạ tầng cloud, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "Nền tảng cloud (AWS/GCP/Azure)",
+          "kind": "must",
+          "weight": 5,
+          "verify": "CV · chứng chỉ hoặc dự án"
+        },
+        {
+          "label": "Mạng và bảo mật cloud cơ bản",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Container và dịch vụ managed",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · manifest"
+        },
+        {
+          "label": "Giám sát và tối ưu chi phí cloud",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · kinh nghiệm vận hành"
+        },
+        {
+          "label": "Thiết kế kiến trúc cloud đa vùng",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "sre-junior",
+      "title": "Junior Site Reliability Engineer",
+      "team": "Site Reliability (SRE)",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "13/10/2026",
+      "owner": "Thu Trang",
+      "location": "TP.HCM · Remote",
+      "description": "Gia nhập đội Site Reliability (SRE) để đảm bảo độ ổn định và khả năng quan sát của hệ thống, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Linux và scripting (Bash/Python)",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · script vận hành"
+        },
+        {
+          "label": "Monitoring và alerting",
+          "kind": "must",
+          "weight": 2,
+          "verify": "CV · dự án vận hành"
+        },
+        {
+          "label": "Khắc phục sự cố cơ bản",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "sre-middle",
+      "title": "Middle Site Reliability Engineer",
+      "team": "Site Reliability (SRE)",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "16/10/2026",
+      "owner": "Quang Dũng",
+      "location": "Hà Nội · Hybrid",
+      "description": "Đảm nhận việc đảm bảo độ ổn định và khả năng quan sát của hệ thống một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Linux và scripting (Bash/Python)",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · script vận hành"
+        },
+        {
+          "label": "Monitoring và alerting",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · dự án vận hành"
+        },
+        {
+          "label": "Khắc phục sự cố cơ bản",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "SLO/SLI và xử lý sự cố",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · sự cố thực tế"
+        },
+        {
+          "label": "Tự động hoá vận hành",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Repository · tool nội bộ"
+        }
+      ]
+    },
+    {
+      "id": "sre-senior",
+      "title": "Senior Site Reliability Engineer",
+      "team": "Site Reliability (SRE)",
+      "level": "Senior",
+      "open": "2 vị trí",
+      "candidates": 0,
+      "updated": "19/10/2026",
+      "owner": "Hải Yến",
+      "location": "TP.HCM · Hybrid",
+      "description": "Dẫn dắt mảng đảm bảo độ ổn định và khả năng quan sát của hệ thống, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "Linux và scripting (Bash/Python)",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Repository · script vận hành"
+        },
+        {
+          "label": "Monitoring và alerting",
+          "kind": "must",
+          "weight": 4,
+          "verify": "CV · dự án vận hành"
+        },
+        {
+          "label": "SLO/SLI và xử lý sự cố",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · sự cố thực tế"
+        },
+        {
+          "label": "Tự động hoá vận hành",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · tool nội bộ"
+        },
+        {
+          "label": "Thiết kế độ tin cậy và capacity planning",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "plat-junior",
+      "title": "Junior Platform Engineer",
+      "team": "Platform Engineering",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "22/10/2026",
+      "owner": "Minh Anh",
+      "location": "TP.HCM · Remote",
+      "description": "Gia nhập đội Platform Engineering để xây dựng nền tảng nội bộ cho các đội sản phẩm, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Container và Kubernetes",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · manifest"
+        },
+        {
+          "label": "CI/CD và template pipeline",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Repository · pipeline dùng chung"
+        },
+        {
+          "label": "Go hoặc Python để viết tool",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Repository · CLI/tool"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "plat-middle",
+      "title": "Middle Platform Engineer",
+      "team": "Platform Engineering",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "25/10/2026",
+      "owner": "Thu Trang",
+      "location": "Hà Nội · Hybrid",
+      "description": "Đảm nhận việc xây dựng nền tảng nội bộ cho các đội sản phẩm một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Container và Kubernetes",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · manifest"
+        },
+        {
+          "label": "CI/CD và template pipeline",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · pipeline dùng chung"
+        },
+        {
+          "label": "Go hoặc Python để viết tool",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · CLI/tool"
+        },
+        {
+          "label": "Thiết kế dịch vụ nền tảng và API nội bộ",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Observability cho nền tảng",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Repository · dashboard và log"
+        }
+      ]
+    },
+    {
+      "id": "plat-senior",
+      "title": "Senior Platform Engineer",
+      "team": "Platform Engineering",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "01/10/2026",
+      "owner": "Quang Dũng",
+      "location": "TP.HCM · Hybrid",
+      "description": "Dẫn dắt mảng xây dựng nền tảng nội bộ cho các đội sản phẩm, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "Container và Kubernetes",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Repository · manifest"
+        },
+        {
+          "label": "CI/CD và template pipeline",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · pipeline dùng chung"
+        },
+        {
+          "label": "Thiết kế dịch vụ nền tảng và API nội bộ",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Observability cho nền tảng",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · dashboard và log"
+        },
+        {
+          "label": "Chiến lược nền tảng và developer experience",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "de-junior",
+      "title": "Junior Data Engineer",
+      "team": "Data Engineering",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "04/10/2026",
+      "owner": "Hải Yến",
+      "location": "TP.HCM · Remote",
+      "description": "Gia nhập đội Data Engineering để xây dựng pipeline dữ liệu và kho dữ liệu, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "SQL và mô hình dữ liệu",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · schema và query"
+        },
+        {
+          "label": "Python cho xử lý dữ liệu",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Repository · job ETL"
+        },
+        {
+          "label": "Pipeline ETL/ELT cơ bản",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · dự án dữ liệu"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "de-senior",
+      "title": "Senior Data Engineer",
+      "team": "Data Engineering",
+      "level": "Senior",
+      "open": "2 vị trí",
+      "candidates": 0,
+      "updated": "07/10/2026",
+      "owner": "Minh Anh",
+      "location": "Hà Nội · Hybrid",
+      "description": "Dẫn dắt mảng xây dựng pipeline dữ liệu và kho dữ liệu, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "SQL và mô hình dữ liệu",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Repository · schema và query"
+        },
+        {
+          "label": "Python cho xử lý dữ liệu",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · job ETL"
+        },
+        {
+          "label": "Airflow/dbt và orchestration",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · DAG và model"
+        },
+        {
+          "label": "Chất lượng dữ liệu và kiểm thử",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · test dữ liệu"
+        },
+        {
+          "label": "Thiết kế kiến trúc dữ liệu và lakehouse",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "ds-junior",
+      "title": "Junior Data Scientist",
+      "team": "Data Science",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "10/10/2026",
+      "owner": "Thu Trang",
+      "location": "TP.HCM · Hybrid",
+      "description": "Gia nhập đội Data Science để phân tích dữ liệu và xây dựng mô hình dự đoán, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Python và pandas",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · notebook phân tích"
+        },
+        {
+          "label": "Thống kê và trực quan hoá dữ liệu",
+          "kind": "must",
+          "weight": 2,
+          "verify": "CV · báo cáo phân tích"
+        },
+        {
+          "label": "SQL để truy vấn dữ liệu",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · bài tập SQL"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "ds-middle",
+      "title": "Middle Data Scientist",
+      "team": "Data Science",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "13/10/2026",
+      "owner": "Quang Dũng",
+      "location": "TP.HCM · Remote",
+      "description": "Đảm nhận việc phân tích dữ liệu và xây dựng mô hình dự đoán một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Python và pandas",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · notebook phân tích"
+        },
+        {
+          "label": "Thống kê và trực quan hoá dữ liệu",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · báo cáo phân tích"
+        },
+        {
+          "label": "SQL để truy vấn dữ liệu",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · bài tập SQL"
+        },
+        {
+          "label": "Machine learning cơ bản và đánh giá mô hình",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · notebook mô hình"
+        },
+        {
+          "label": "Đưa mô hình vào sản phẩm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · dự án thực tế"
+        }
+      ]
+    },
+    {
+      "id": "ds-senior",
+      "title": "Senior Data Scientist",
+      "team": "Data Science",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "16/10/2026",
+      "owner": "Hải Yến",
+      "location": "Hà Nội · Hybrid",
+      "description": "Dẫn dắt mảng phân tích dữ liệu và xây dựng mô hình dự đoán, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "Python và pandas",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Repository · notebook phân tích"
+        },
+        {
+          "label": "Thống kê và trực quan hoá dữ liệu",
+          "kind": "must",
+          "weight": 4,
+          "verify": "CV · báo cáo phân tích"
+        },
+        {
+          "label": "Machine learning cơ bản và đánh giá mô hình",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · notebook mô hình"
+        },
+        {
+          "label": "Đưa mô hình vào sản phẩm",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · dự án thực tế"
+        },
+        {
+          "label": "Thiết kế thí nghiệm và định hướng phân tích",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "ml-junior",
+      "title": "Junior ML Engineer",
+      "team": "AI / Machine Learning",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "19/10/2026",
+      "owner": "Minh Anh",
+      "location": "TP.HCM · Hybrid",
+      "description": "Gia nhập đội AI / Machine Learning để huấn luyện và triển khai mô hình học máy, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Python và thư viện ML (PyTorch/TensorFlow)",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · notebook huấn luyện"
+        },
+        {
+          "label": "Xử lý dữ liệu và đặc trưng",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Repository · pipeline dữ liệu"
+        },
+        {
+          "label": "Đánh giá và theo dõi mô hình",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · dự án ML"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "ml-middle",
+      "title": "Middle ML Engineer",
+      "team": "AI / Machine Learning",
+      "level": "Middle",
+      "open": "2 vị trí",
+      "candidates": 0,
+      "updated": "22/10/2026",
+      "owner": "Thu Trang",
+      "location": "TP.HCM · Remote",
+      "description": "Đảm nhận việc huấn luyện và triển khai mô hình học máy một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Python và thư viện ML (PyTorch/TensorFlow)",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · notebook huấn luyện"
+        },
+        {
+          "label": "Xử lý dữ liệu và đặc trưng",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · pipeline dữ liệu"
+        },
+        {
+          "label": "Đánh giá và theo dõi mô hình",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · dự án ML"
+        },
+        {
+          "label": "Triển khai mô hình lên production",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · inference service"
+        },
+        {
+          "label": "MLOps và pipeline huấn luyện",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · kinh nghiệm vận hành"
+        }
+      ]
+    },
+    {
+      "id": "ml-senior",
+      "title": "Senior ML Engineer",
+      "team": "AI / Machine Learning",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "25/10/2026",
+      "owner": "Quang Dũng",
+      "location": "Hà Nội · Hybrid",
+      "description": "Dẫn dắt mảng huấn luyện và triển khai mô hình học máy, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "Python và thư viện ML (PyTorch/TensorFlow)",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Repository · notebook huấn luyện"
+        },
+        {
+          "label": "Xử lý dữ liệu và đặc trưng",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · pipeline dữ liệu"
+        },
+        {
+          "label": "Triển khai mô hình lên production",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · inference service"
+        },
+        {
+          "label": "MLOps và pipeline huấn luyện",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · kinh nghiệm vận hành"
+        },
+        {
+          "label": "Thiết kế hệ thống ML end-to-end",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi kiến trúc"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "cv-junior",
+      "title": "Junior Computer Vision Engineer",
+      "team": "Computer Vision",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "01/10/2026",
+      "owner": "Hải Yến",
+      "location": "TP.HCM · Hybrid",
+      "description": "Gia nhập đội Computer Vision để xây dựng mô hình thị giác máy tính, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Python và OpenCV",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · xử lý ảnh"
+        },
+        {
+          "label": "Mô hình CNN và transfer learning",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Repository · notebook huấn luyện"
+        },
+        {
+          "label": "Đánh giá mô hình theo bộ dữ liệu",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · dự án CV"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "cv-middle",
+      "title": "Middle Computer Vision Engineer",
+      "team": "Computer Vision",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "04/10/2026",
+      "owner": "Minh Anh",
+      "location": "TP.HCM · Remote",
+      "description": "Đảm nhận việc xây dựng mô hình thị giác máy tính một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Python và OpenCV",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · xử lý ảnh"
+        },
+        {
+          "label": "Mô hình CNN và transfer learning",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · notebook huấn luyện"
+        },
+        {
+          "label": "Đánh giá mô hình theo bộ dữ liệu",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · dự án CV"
+        },
+        {
+          "label": "Tối ưu inference và triển khai",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · service suy luận"
+        },
+        {
+          "label": "Tiền xử lý và gán nhãn dữ liệu ảnh",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · dự án thực tế"
+        }
+      ]
+    },
+    {
+      "id": "cv-senior",
+      "title": "Senior Computer Vision Engineer",
+      "team": "Computer Vision",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "07/10/2026",
+      "owner": "Thu Trang",
+      "location": "Hà Nội · Hybrid",
+      "description": "Dẫn dắt mảng xây dựng mô hình thị giác máy tính, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "Python và OpenCV",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Repository · xử lý ảnh"
+        },
+        {
+          "label": "Mô hình CNN và transfer learning",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · notebook huấn luyện"
+        },
+        {
+          "label": "Tối ưu inference và triển khai",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · service suy luận"
+        },
+        {
+          "label": "Tiền xử lý và gán nhãn dữ liệu ảnh",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · dự án thực tế"
+        },
+        {
+          "label": "Thiết kế pipeline thị giác máy tính",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "nlp-junior",
+      "title": "Junior NLP Engineer",
+      "team": "NLP",
+      "level": "Junior",
+      "open": "2 vị trí",
+      "candidates": 0,
+      "updated": "10/10/2026",
+      "owner": "Quang Dũng",
+      "location": "TP.HCM · Hybrid",
+      "description": "Gia nhập đội NLP để xây dựng mô hình xử lý ngôn ngữ tự nhiên, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Python và xử lý văn bản",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · tiền xử lý dữ liệu"
+        },
+        {
+          "label": "Mô hình transformer và embedding",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Repository · notebook huấn luyện"
+        },
+        {
+          "label": "Đánh giá mô hình NLP",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · dự án NLP"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "nlp-middle",
+      "title": "Middle NLP Engineer",
+      "team": "NLP",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "13/10/2026",
+      "owner": "Hải Yến",
+      "location": "TP.HCM · Remote",
+      "description": "Đảm nhận việc xây dựng mô hình xử lý ngôn ngữ tự nhiên một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Python và xử lý văn bản",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · tiền xử lý dữ liệu"
+        },
+        {
+          "label": "Mô hình transformer và embedding",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · notebook huấn luyện"
+        },
+        {
+          "label": "Đánh giá mô hình NLP",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · dự án NLP"
+        },
+        {
+          "label": "Fine-tune và triển khai mô hình ngôn ngữ",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · pipeline fine-tune"
+        },
+        {
+          "label": "Pipeline RAG và tìm kiếm ngữ nghĩa",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · dự án thực tế"
+        }
+      ]
+    },
+    {
+      "id": "nlp-senior",
+      "title": "Senior NLP Engineer",
+      "team": "NLP",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "16/10/2026",
+      "owner": "Minh Anh",
+      "location": "Hà Nội · Hybrid",
+      "description": "Dẫn dắt mảng xây dựng mô hình xử lý ngôn ngữ tự nhiên, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "Python và xử lý văn bản",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Repository · tiền xử lý dữ liệu"
+        },
+        {
+          "label": "Mô hình transformer và embedding",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · notebook huấn luyện"
+        },
+        {
+          "label": "Fine-tune và triển khai mô hình ngôn ngữ",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · pipeline fine-tune"
+        },
+        {
+          "label": "Pipeline RAG và tìm kiếm ngữ nghĩa",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · dự án thực tế"
+        },
+        {
+          "label": "Thiết kế hệ thống NLP cho sản phẩm",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "qa-junior",
+      "title": "Junior QA Engineer",
+      "team": "QA/QC",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "19/10/2026",
+      "owner": "Thu Trang",
+      "location": "TP.HCM · Hybrid",
+      "description": "Gia nhập đội QA/QC để đảm bảo chất lượng sản phẩm qua kiểm thử, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Kỹ thuật kiểm thử và viết test case",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · tài liệu test"
+        },
+        {
+          "label": "Kiểm thử API với Postman",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Repository · bộ test API"
+        },
+        {
+          "label": "Theo dõi lỗi và quy trình release",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · quy trình"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "qa-senior",
+      "title": "Senior QA Engineer",
+      "team": "QA/QC",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "22/10/2026",
+      "owner": "Quang Dũng",
+      "location": "TP.HCM · Remote",
+      "description": "Dẫn dắt mảng đảm bảo chất lượng sản phẩm qua kiểm thử, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "Kỹ thuật kiểm thử và viết test case",
+          "kind": "must",
+          "weight": 5,
+          "verify": "CV · tài liệu test"
+        },
+        {
+          "label": "Kiểm thử API với Postman",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · bộ test API"
+        },
+        {
+          "label": "Kiểm thử tự động (Playwright/Cypress)",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · test E2E"
+        },
+        {
+          "label": "Kiểm thử hiệu năng cơ bản",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · kinh nghiệm"
+        },
+        {
+          "label": "Chiến lược kiểm thử và chất lượng release",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "sec-junior",
+      "title": "Junior Security Engineer",
+      "team": "Security",
+      "level": "Junior",
+      "open": "2 vị trí",
+      "candidates": 0,
+      "updated": "25/10/2026",
+      "owner": "Hải Yến",
+      "location": "Hà Nội · Hybrid",
+      "description": "Gia nhập đội Security để đánh giá và tăng cường bảo mật hệ thống, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "OWASP Top 10 và kiểm thử bảo mật",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · báo cáo đánh giá"
+        },
+        {
+          "label": "Bảo mật ứng dụng web và API",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Quản lý secret và phân quyền",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Repository · cấu hình"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "sec-middle",
+      "title": "Middle Security Engineer",
+      "team": "Security",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "01/10/2026",
+      "owner": "Minh Anh",
+      "location": "TP.HCM · Hybrid",
+      "description": "Đảm nhận việc đánh giá và tăng cường bảo mật hệ thống một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "OWASP Top 10 và kiểm thử bảo mật",
+          "kind": "must",
+          "weight": 4,
+          "verify": "CV · báo cáo đánh giá"
+        },
+        {
+          "label": "Bảo mật ứng dụng web và API",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Quản lý secret và phân quyền",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · cấu hình"
+        },
+        {
+          "label": "Review code và threat modeling",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Công cụ quét bảo mật và xử lý lỗ hổng",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · dự án thực tế"
+        }
+      ]
+    },
+    {
+      "id": "sec-senior",
+      "title": "Senior Security Engineer",
+      "team": "Security",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "04/10/2026",
+      "owner": "Thu Trang",
+      "location": "TP.HCM · Remote",
+      "description": "Dẫn dắt mảng đánh giá và tăng cường bảo mật hệ thống, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "OWASP Top 10 và kiểm thử bảo mật",
+          "kind": "must",
+          "weight": 5,
+          "verify": "CV · báo cáo đánh giá"
+        },
+        {
+          "label": "Bảo mật ứng dụng web và API",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Review code và threat modeling",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Công cụ quét bảo mật và xử lý lỗ hổng",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · dự án thực tế"
+        },
+        {
+          "label": "Thiết kế kiến trúc bảo mật và ứng cứu sự cố",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "sol-junior",
+      "title": "Junior Solution Architect",
+      "team": "Solution Architecture",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "07/10/2026",
+      "owner": "Quang Dũng",
+      "location": "Hà Nội · Hybrid",
+      "description": "Gia nhập đội Solution Architecture để thiết kế giải pháp kỹ thuật cho hệ thống và khách hàng, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Thiết kế hệ thống và tài liệu kiến trúc",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · tài liệu thiết kế"
+        },
+        {
+          "label": "API, tích hợp và dữ liệu",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Nền tảng cloud và hạ tầng",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "sol-middle",
+      "title": "Middle Solution Architect",
+      "team": "Solution Architecture",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "10/10/2026",
+      "owner": "Hải Yến",
+      "location": "TP.HCM · Hybrid",
+      "description": "Đảm nhận việc thiết kế giải pháp kỹ thuật cho hệ thống và khách hàng một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Thiết kế hệ thống và tài liệu kiến trúc",
+          "kind": "must",
+          "weight": 4,
+          "verify": "CV · tài liệu thiết kế"
+        },
+        {
+          "label": "API, tích hợp và dữ liệu",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Nền tảng cloud và hạ tầng",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Phân tích yêu cầu và đánh giá trade-off",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Trình bày giải pháp cho stakeholder",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · dự án tư vấn"
+        }
+      ]
+    },
+    {
+      "id": "emb-junior",
+      "title": "Junior Embedded Engineer",
+      "team": "Embedded",
+      "level": "Junior",
+      "open": "2 vị trí",
+      "candidates": 0,
+      "updated": "13/10/2026",
+      "owner": "Minh Anh",
+      "location": "TP.HCM · Remote",
+      "description": "Gia nhập đội Embedded để phát triển firmware và phần mềm nhúng, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "C/C++ và vi điều khiển",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · firmware"
+        },
+        {
+          "label": "Giao tiếp I2C/SPI/UART",
+          "kind": "must",
+          "weight": 2,
+          "verify": "CV · dự án nhúng"
+        },
+        {
+          "label": "Debug với oscilloscope/logic analyzer",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · kinh nghiệm"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "emb-middle",
+      "title": "Middle Embedded Engineer",
+      "team": "Embedded",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "16/10/2026",
+      "owner": "Thu Trang",
+      "location": "Hà Nội · Hybrid",
+      "description": "Đảm nhận việc phát triển firmware và phần mềm nhúng một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "C/C++ và vi điều khiển",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · firmware"
+        },
+        {
+          "label": "Giao tiếp I2C/SPI/UART",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · dự án nhúng"
+        },
+        {
+          "label": "Debug với oscilloscope/logic analyzer",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · kinh nghiệm"
+        },
+        {
+          "label": "RTOS và quản lý tác vụ",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · task và driver"
+        },
+        {
+          "label": "Tối ưu bộ nhớ và năng lượng",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · bài toán tối ưu"
+        }
+      ]
+    },
+    {
+      "id": "emb-senior",
+      "title": "Senior Embedded Engineer",
+      "team": "Embedded",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "19/10/2026",
+      "owner": "Quang Dũng",
+      "location": "TP.HCM · Hybrid",
+      "description": "Dẫn dắt mảng phát triển firmware và phần mềm nhúng, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "C/C++ và vi điều khiển",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Repository · firmware"
+        },
+        {
+          "label": "Giao tiếp I2C/SPI/UART",
+          "kind": "must",
+          "weight": 4,
+          "verify": "CV · dự án nhúng"
+        },
+        {
+          "label": "RTOS và quản lý tác vụ",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · task và driver"
+        },
+        {
+          "label": "Tối ưu bộ nhớ và năng lượng",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · bài toán tối ưu"
+        },
+        {
+          "label": "Thiết kế kiến trúc firmware nhiều module",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "iot-junior",
+      "title": "Junior IoT Engineer",
+      "team": "IoT",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "22/10/2026",
+      "owner": "Hải Yến",
+      "location": "TP.HCM · Remote",
+      "description": "Gia nhập đội IoT để kết nối thiết bị và xây dựng hệ thống IoT, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Firmware và giao thức MQTT",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · firmware thiết bị"
+        },
+        {
+          "label": "Cảm biến và thu thập dữ liệu",
+          "kind": "must",
+          "weight": 2,
+          "verify": "CV · dự án IoT"
+        },
+        {
+          "label": "Python/Node.js cho gateway",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Repository · service gateway"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "iot-middle",
+      "title": "Middle IoT Engineer",
+      "team": "IoT",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "25/10/2026",
+      "owner": "Minh Anh",
+      "location": "Hà Nội · Hybrid",
+      "description": "Đảm nhận việc kết nối thiết bị và xây dựng hệ thống IoT một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Firmware và giao thức MQTT",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · firmware thiết bị"
+        },
+        {
+          "label": "Cảm biến và thu thập dữ liệu",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · dự án IoT"
+        },
+        {
+          "label": "Python/Node.js cho gateway",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · service gateway"
+        },
+        {
+          "label": "Quản lý thiết bị và OTA update",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · kinh nghiệm"
+        },
+        {
+          "label": "Bảo mật thiết bị và dữ liệu",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · tình huống"
+        }
+      ]
+    },
+    {
+      "id": "iot-senior",
+      "title": "Senior IoT Engineer",
+      "team": "IoT",
+      "level": "Senior",
+      "open": "2 vị trí",
+      "candidates": 0,
+      "updated": "01/10/2026",
+      "owner": "Thu Trang",
+      "location": "TP.HCM · Hybrid",
+      "description": "Dẫn dắt mảng kết nối thiết bị và xây dựng hệ thống IoT, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "Firmware và giao thức MQTT",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Repository · firmware thiết bị"
+        },
+        {
+          "label": "Cảm biến và thu thập dữ liệu",
+          "kind": "must",
+          "weight": 4,
+          "verify": "CV · dự án IoT"
+        },
+        {
+          "label": "Quản lý thiết bị và OTA update",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · kinh nghiệm"
+        },
+        {
+          "label": "Bảo mật thiết bị và dữ liệu",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Thiết kế kiến trúc IoT end-to-end",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "game-junior",
+      "title": "Junior Game Developer",
+      "team": "Game Development",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "04/10/2026",
+      "owner": "Quang Dũng",
+      "location": "TP.HCM · Remote",
+      "description": "Gia nhập đội Game Development để phát triển gameplay và hệ thống game, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Unity hoặc Unreal Engine",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · project game"
+        },
+        {
+          "label": "C# hoặc C++ cho gameplay",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Repository · script gameplay"
+        },
+        {
+          "label": "Vòng lặp game và vật lý cơ bản",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · sản phẩm đã làm"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "game-middle",
+      "title": "Middle Game Developer",
+      "team": "Game Development",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "07/10/2026",
+      "owner": "Hải Yến",
+      "location": "Hà Nội · Hybrid",
+      "description": "Đảm nhận việc phát triển gameplay và hệ thống game một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Unity hoặc Unreal Engine",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · project game"
+        },
+        {
+          "label": "C# hoặc C++ cho gameplay",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · script gameplay"
+        },
+        {
+          "label": "Vòng lặp game và vật lý cơ bản",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · sản phẩm đã làm"
+        },
+        {
+          "label": "Tối ưu hiệu năng và bộ nhớ",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · bài toán tối ưu"
+        },
+        {
+          "label": "Hệ thống UI và âm thanh trong game",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Repository · scene và UI"
+        }
+      ]
+    },
+    {
+      "id": "game-senior",
+      "title": "Senior Game Developer",
+      "team": "Game Development",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "10/10/2026",
+      "owner": "Minh Anh",
+      "location": "TP.HCM · Hybrid",
+      "description": "Dẫn dắt mảng phát triển gameplay và hệ thống game, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "Unity hoặc Unreal Engine",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Repository · project game"
+        },
+        {
+          "label": "C# hoặc C++ cho gameplay",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · script gameplay"
+        },
+        {
+          "label": "Tối ưu hiệu năng và bộ nhớ",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · bài toán tối ưu"
+        },
+        {
+          "label": "Hệ thống UI và âm thanh trong game",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · scene và UI"
+        },
+        {
+          "label": "Thiết kế kiến trúc gameplay và công cụ nội bộ",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "dba-junior",
+      "title": "Junior Database Administrator",
+      "team": "Database Administration",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "13/10/2026",
+      "owner": "Thu Trang",
+      "location": "TP.HCM · Remote",
+      "description": "Gia nhập đội Database Administration để quản trị và tối ưu hệ quản trị cơ sở dữ liệu, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "SQL nâng cao và tuning truy vấn",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · bài tập SQL"
+        },
+        {
+          "label": "Sao lưu, phục hồi và replication",
+          "kind": "must",
+          "weight": 2,
+          "verify": "CV · kinh nghiệm vận hành"
+        },
+        {
+          "label": "Phân quyền và bảo mật dữ liệu",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "dba-middle",
+      "title": "Middle Database Administrator",
+      "team": "Database Administration",
+      "level": "Middle",
+      "open": "2 vị trí",
+      "candidates": 0,
+      "updated": "16/10/2026",
+      "owner": "Quang Dũng",
+      "location": "Hà Nội · Hybrid",
+      "description": "Đảm nhận việc quản trị và tối ưu hệ quản trị cơ sở dữ liệu một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "SQL nâng cao và tuning truy vấn",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · bài tập SQL"
+        },
+        {
+          "label": "Sao lưu, phục hồi và replication",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · kinh nghiệm vận hành"
+        },
+        {
+          "label": "Phân quyền và bảo mật dữ liệu",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Giám sát hiệu năng và xử lý sự cố",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · sự cố thực tế"
+        },
+        {
+          "label": "Tự động hoá vận hành cơ sở dữ liệu",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Repository · script"
+        }
+      ]
+    },
+    {
+      "id": "dba-senior",
+      "title": "Senior Database Administrator",
+      "team": "Database Administration",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "19/10/2026",
+      "owner": "Hải Yến",
+      "location": "TP.HCM · Hybrid",
+      "description": "Dẫn dắt mảng quản trị và tối ưu hệ quản trị cơ sở dữ liệu, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "SQL nâng cao và tuning truy vấn",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · bài tập SQL"
+        },
+        {
+          "label": "Sao lưu, phục hồi và replication",
+          "kind": "must",
+          "weight": 4,
+          "verify": "CV · kinh nghiệm vận hành"
+        },
+        {
+          "label": "Giám sát hiệu năng và xử lý sự cố",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · sự cố thực tế"
+        },
+        {
+          "label": "Tự động hoá vận hành cơ sở dữ liệu",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · script"
+        },
+        {
+          "label": "Thiết kế kiến trúc dữ liệu độ sẵn sàng cao",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "net-junior",
+      "title": "Junior Network Engineer",
+      "team": "Network Engineering",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "22/10/2026",
+      "owner": "Minh Anh",
+      "location": "TP.HCM · Remote",
+      "description": "Gia nhập đội Network Engineering để thiết kế và vận hành hạ tầng mạng, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "TCP/IP, routing và switching",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · chứng chỉ mạng"
+        },
+        {
+          "label": "Cấu hình firewall và VPN",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Giám sát và xử lý sự cố mạng",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · kinh nghiệm vận hành"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "net-middle",
+      "title": "Middle Network Engineer",
+      "team": "Network Engineering",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "25/10/2026",
+      "owner": "Thu Trang",
+      "location": "Hà Nội · Hybrid",
+      "description": "Đảm nhận việc thiết kế và vận hành hạ tầng mạng một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "TCP/IP, routing và switching",
+          "kind": "must",
+          "weight": 4,
+          "verify": "CV · chứng chỉ mạng"
+        },
+        {
+          "label": "Cấu hình firewall và VPN",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Giám sát và xử lý sự cố mạng",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · kinh nghiệm vận hành"
+        },
+        {
+          "label": "Thiết kế mạng cho hệ thống nhiều site",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Tự động hoá cấu hình mạng",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Repository · script"
+        }
+      ]
+    },
+    {
+      "id": "net-senior",
+      "title": "Senior Network Engineer",
+      "team": "Network Engineering",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "01/10/2026",
+      "owner": "Quang Dũng",
+      "location": "TP.HCM · Hybrid",
+      "description": "Dẫn dắt mảng thiết kế và vận hành hạ tầng mạng, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "TCP/IP, routing và switching",
+          "kind": "must",
+          "weight": 5,
+          "verify": "CV · chứng chỉ mạng"
+        },
+        {
+          "label": "Cấu hình firewall và VPN",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Thiết kế mạng cho hệ thống nhiều site",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Tự động hoá cấu hình mạng",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · script"
+        },
+        {
+          "label": "Thiết kế kiến trúc mạng và tiêu chuẩn bảo mật",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "sys-junior",
+      "title": "Junior System Administrator",
+      "team": "System Administration",
+      "level": "Junior",
+      "open": "2 vị trí",
+      "candidates": 0,
+      "updated": "04/10/2026",
+      "owner": "Hải Yến",
+      "location": "TP.HCM · Remote",
+      "description": "Gia nhập đội System Administration để quản trị hệ thống server và dịch vụ nội bộ, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Linux server và quản lý dịch vụ",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · kinh nghiệm vận hành"
+        },
+        {
+          "label": "Scripting Bash/PowerShell",
+          "kind": "must",
+          "weight": 2,
+          "verify": "Repository · script quản trị"
+        },
+        {
+          "label": "Sao lưu và giám sát hệ thống",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "sys-middle",
+      "title": "Middle System Administrator",
+      "team": "System Administration",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "07/10/2026",
+      "owner": "Minh Anh",
+      "location": "Hà Nội · Hybrid",
+      "description": "Đảm nhận việc quản trị hệ thống server và dịch vụ nội bộ một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Linux server và quản lý dịch vụ",
+          "kind": "must",
+          "weight": 4,
+          "verify": "CV · kinh nghiệm vận hành"
+        },
+        {
+          "label": "Scripting Bash/PowerShell",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · script quản trị"
+        },
+        {
+          "label": "Sao lưu và giám sát hệ thống",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Quản lý người dùng, quyền và chính sách",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Tự động hoá cấu hình với Ansible",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Repository · playbook"
+        }
+      ]
+    },
+    {
+      "id": "sys-senior",
+      "title": "Senior System Administrator",
+      "team": "System Administration",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "10/10/2026",
+      "owner": "Thu Trang",
+      "location": "TP.HCM · Hybrid",
+      "description": "Dẫn dắt mảng quản trị hệ thống server và dịch vụ nội bộ, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "Linux server và quản lý dịch vụ",
+          "kind": "must",
+          "weight": 5,
+          "verify": "CV · kinh nghiệm vận hành"
+        },
+        {
+          "label": "Scripting Bash/PowerShell",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Repository · script quản trị"
+        },
+        {
+          "label": "Quản lý người dùng, quyền và chính sách",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Tự động hoá cấu hình với Ansible",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Repository · playbook"
+        },
+        {
+          "label": "Thiết kế hạ tầng server và tiêu chuẩn vận hành",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "itsup-junior",
+      "title": "Junior IT Support Specialist",
+      "team": "IT Support",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "13/10/2026",
+      "owner": "Quang Dũng",
+      "location": "TP.HCM · Remote",
+      "description": "Gia nhập đội IT Support để hỗ trợ người dùng và vận hành thiết bị nội bộ, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Cài đặt và cấu hình Windows/macOS",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Xử lý sự cố phần cứng và phần mềm",
+          "kind": "must",
+          "weight": 2,
+          "verify": "CV · kinh nghiệm hỗ trợ"
+        },
+        {
+          "label": "Quản lý tài khoản và thiết bị",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · quy trình"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "itsup-middle",
+      "title": "Middle IT Support Specialist",
+      "team": "IT Support",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "16/10/2026",
+      "owner": "Hải Yến",
+      "location": "Hà Nội · Hybrid",
+      "description": "Đảm nhận việc hỗ trợ người dùng và vận hành thiết bị nội bộ một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Cài đặt và cấu hình Windows/macOS",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Xử lý sự cố phần cứng và phần mềm",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · kinh nghiệm hỗ trợ"
+        },
+        {
+          "label": "Quản lý tài khoản và thiết bị",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · quy trình"
+        },
+        {
+          "label": "Hệ thống ticket và SLA hỗ trợ",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · kinh nghiệm"
+        },
+        {
+          "label": "Tài liệu hoá và hướng dẫn người dùng",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · tài liệu nội bộ"
+        }
+      ]
+    },
+    {
+      "id": "itsup-senior",
+      "title": "Senior IT Support Specialist",
+      "team": "IT Support",
+      "level": "Senior",
+      "open": "2 vị trí",
+      "candidates": 0,
+      "updated": "19/10/2026",
+      "owner": "Minh Anh",
+      "location": "TP.HCM · Hybrid",
+      "description": "Dẫn dắt mảng hỗ trợ người dùng và vận hành thiết bị nội bộ, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "Cài đặt và cấu hình Windows/macOS",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · tình huống"
+        },
+        {
+          "label": "Xử lý sự cố phần cứng và phần mềm",
+          "kind": "must",
+          "weight": 4,
+          "verify": "CV · kinh nghiệm hỗ trợ"
+        },
+        {
+          "label": "Hệ thống ticket và SLA hỗ trợ",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · kinh nghiệm"
+        },
+        {
+          "label": "Tài liệu hoá và hướng dẫn người dùng",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · tài liệu nội bộ"
+        },
+        {
+          "label": "Quy chuẩn vận hành IT và cải tiến hỗ trợ",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "ux-junior",
+      "title": "Junior UI/UX Designer",
+      "team": "UI/UX Design",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "22/10/2026",
+      "owner": "Thu Trang",
+      "location": "TP.HCM · Remote",
+      "description": "Gia nhập đội UI/UX Design để thiết kế trải nghiệm và giao diện sản phẩm, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Figma và thiết kế giao diện",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · portfolio"
+        },
+        {
+          "label": "Nghiên cứu người dùng và wireframe",
+          "kind": "must",
+          "weight": 2,
+          "verify": "CV · case study"
+        },
+        {
+          "label": "Design system và component",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · portfolio"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "ux-middle",
+      "title": "Middle UI/UX Designer",
+      "team": "UI/UX Design",
+      "level": "Middle",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "25/10/2026",
+      "owner": "Quang Dũng",
+      "location": "Hà Nội · Hybrid",
+      "description": "Đảm nhận việc thiết kế trải nghiệm và giao diện sản phẩm một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Figma và thiết kế giao diện",
+          "kind": "must",
+          "weight": 4,
+          "verify": "CV · portfolio"
+        },
+        {
+          "label": "Nghiên cứu người dùng và wireframe",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · case study"
+        },
+        {
+          "label": "Design system và component",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · portfolio"
+        },
+        {
+          "label": "Prototype và kiểm thử khả dụng",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Phối hợp với đội kỹ thuật và handoff",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · dự án thực tế"
+        }
+      ]
+    },
+    {
+      "id": "ux-senior",
+      "title": "Senior UI/UX Designer",
+      "team": "UI/UX Design",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "01/10/2026",
+      "owner": "Hải Yến",
+      "location": "TP.HCM · Hybrid",
+      "description": "Dẫn dắt mảng thiết kế trải nghiệm và giao diện sản phẩm, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "Figma và thiết kế giao diện",
+          "kind": "must",
+          "weight": 5,
+          "verify": "CV · portfolio"
+        },
+        {
+          "label": "Nghiên cứu người dùng và wireframe",
+          "kind": "must",
+          "weight": 4,
+          "verify": "CV · case study"
+        },
+        {
+          "label": "Prototype và kiểm thử khả dụng",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Phối hợp với đội kỹ thuật và handoff",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · dự án thực tế"
+        },
+        {
+          "label": "Định hướng trải nghiệm và design system",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · câu hỏi thiết kế"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
+        }
+      ]
+    },
+    {
+      "id": "ba-junior",
+      "title": "Junior Business Analyst",
+      "team": "Business Analysis",
+      "level": "Junior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "04/10/2026",
+      "owner": "Minh Anh",
+      "location": "TP.HCM · Remote",
+      "description": "Gia nhập đội Business Analysis để phân tích nghiệp vụ và đặc tả yêu cầu, làm việc dưới sự kèm cặp của Middle/Senior và có lộ trình lên Middle.",
+      "criteria": [
+        {
+          "label": "Thu thập và phân tích yêu cầu",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · tài liệu nghiệp vụ"
+        },
+        {
+          "label": "Viết user story và acceptance criteria",
+          "kind": "must",
+          "weight": 2,
+          "verify": "CV · backlog mẫu"
+        },
+        {
+          "label": "Công cụ quản lý công việc (Jira)",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · quy trình"
+        },
+        {
+          "label": "Tinh thần học hỏi và phối hợp nhóm",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "Phỏng vấn · trao đổi trực tiếp"
+        }
+      ]
+    },
+    {
+      "id": "ba-middle",
+      "title": "Middle Business Analyst",
+      "team": "Business Analysis",
+      "level": "Middle",
+      "open": "2 vị trí",
+      "candidates": 0,
+      "updated": "07/10/2026",
+      "owner": "Thu Trang",
+      "location": "Hà Nội · Hybrid",
+      "description": "Đảm nhận việc phân tích nghiệp vụ và đặc tả yêu cầu một cách độc lập, phối hợp cùng đội sản phẩm và chịu trách nhiệm chất lượng phần việc của mình.",
+      "criteria": [
+        {
+          "label": "Thu thập và phân tích yêu cầu",
+          "kind": "must",
+          "weight": 4,
+          "verify": "CV · tài liệu nghiệp vụ"
+        },
+        {
+          "label": "Viết user story và acceptance criteria",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · backlog mẫu"
+        },
+        {
+          "label": "Công cụ quản lý công việc (Jira)",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · quy trình"
+        },
+        {
+          "label": "Mô hình hoá quy trình nghiệp vụ",
+          "kind": "must",
+          "weight": 3,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Phối hợp stakeholder và đội kỹ thuật",
+          "kind": "nice",
+          "weight": 2,
+          "verify": "CV · dự án thực tế"
+        }
+      ]
+    },
+    {
+      "id": "ba-senior",
+      "title": "Senior Business Analyst",
+      "team": "Business Analysis",
+      "level": "Senior",
+      "open": "1 vị trí",
+      "candidates": 0,
+      "updated": "10/10/2026",
+      "owner": "Quang Dũng",
+      "location": "TP.HCM · Hybrid",
+      "description": "Dẫn dắt mảng phân tích nghiệp vụ và đặc tả yêu cầu, định hướng kỹ thuật, review code và kèm cặp các thành viên ít kinh nghiệm.",
+      "criteria": [
+        {
+          "label": "Thu thập và phân tích yêu cầu",
+          "kind": "must",
+          "weight": 5,
+          "verify": "CV · tài liệu nghiệp vụ"
+        },
+        {
+          "label": "Viết user story và acceptance criteria",
+          "kind": "must",
+          "weight": 4,
+          "verify": "CV · backlog mẫu"
+        },
+        {
+          "label": "Mô hình hoá quy trình nghiệp vụ",
+          "kind": "must",
+          "weight": 4,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Phối hợp stakeholder và đội kỹ thuật",
+          "kind": "must",
+          "weight": 3,
+          "verify": "CV · dự án thực tế"
+        },
+        {
+          "label": "Định hướng phân tích và tiêu chuẩn tài liệu",
+          "kind": "must",
+          "weight": 5,
+          "verify": "Phỏng vấn · case study"
+        },
+        {
+          "label": "Mentoring và review code",
+          "kind": "nice",
+          "weight": 3,
+          "verify": "Repository · review và trao đổi"
         }
       ]
     }

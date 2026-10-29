@@ -14,7 +14,7 @@ import {
 } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { CardHead, LoadError, Loading } from "../../ui";
-import { ConfirmDelete, FormStatus, RowActions, Toggle } from "./shared";
+import { ConfirmDelete, FormStatus, Pagination, RowActions, Toggle, paginate } from "./shared";
 
 type Draft = {
   id: string;
@@ -50,6 +50,9 @@ export default function ModelsTab() {
   const [googleModels, setGoogleModels] = useState<GeminiModel[]>([]);
   const [listBusy, setListBusy] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+
+  const view = paginate(models, page);
 
   const closeForm = () => {
     setFormOpen(false);
@@ -409,7 +412,7 @@ export default function ModelsTab() {
               </tr>
             </thead>
             <tbody>
-              {models.map((model) => (
+              {view.visible.map((model) => (
                 <tr key={model.id}>
                   <td className="c-name">
                     <span className="person-main">
@@ -470,6 +473,15 @@ export default function ModelsTab() {
           </table>
         </div>
       )}
+
+      <Pagination
+        page={view.page}
+        pages={view.pages}
+        from={view.from}
+        to={view.to}
+        total={view.total}
+        onChange={setPage}
+      />
 
       {confirming ? (
         <ConfirmDelete
