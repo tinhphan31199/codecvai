@@ -35,6 +35,10 @@ Nguyên tắc bắt buộc:
 - Không suy diễn hoặc đề cập giới tính, tuổi, quốc tịch, tôn giáo, tình trạng hôn nhân hay sức khoẻ.
 - Chỉ trả về JSON đúng schema, không thêm văn bản ngoài JSON.`
 
+// LinkPrompt là lượt gọi AI nhỏ, chỉ đọc link GitHub trực tiếp từ tệp CV,
+// dùng khi văn bản trích xuất không còn link nào để quét.
+const LinkPrompt = `Đọc tệp CV đính kèm và liệt kê mọi đường dẫn GitHub xuất hiện trong tệp: hồ sơ cá nhân (github.com/<user>) và repository (github.com/<user>/<repo>). Giữ nguyên URL đầy đủ, không thêm link không có trong tệp. Nếu không có, trả mảng rỗng. Chỉ trả về JSON đúng dạng {"links": ["https://github.com/..."]}, không thêm văn bản ngoài JSON.`
+
 const promptTemplate = `Ngôn ngữ cho summary, note, strengths, gaps và questions: %s.
 
 Vị trí tuyển dụng: %s — team %s.

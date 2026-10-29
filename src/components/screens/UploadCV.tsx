@@ -16,8 +16,22 @@ import {
   X,
 } from "lucide-react";
 import type { Screen } from "@/data/codecv";
-import { useLevels, useModels, usePositions, useStages, useTeams } from "@/lib/api";
-import { useLang, useNumberFormat, useT, type MessageKey } from "@/lib/i18n";
+import {
+  useAnalysisQueue,
+  useLevels,
+  useModels,
+  usePositions,
+  useStages,
+  useTeams,
+} from "@/lib/api";
+import {
+  localeOf,
+  useLang,
+  useNumberFormat,
+  useT,
+  type MessageKey,
+  type Vars,
+} from "@/lib/i18n";
 import {
   MAX_FILE_BYTES,
   type AnalyzeCvErrorBody,
@@ -26,12 +40,13 @@ import {
 import {
   Avatar,
   CardHead,
+  EmptyState,
   EvidenceMeter,
   EvidencePill,
+  Loading,
   LoadError,
   PageHead,
   ScreenLoader,
-  StageLadder,
 } from "../ui";
 
 type PickedFile = {
@@ -66,6 +81,26 @@ const formatSeconds = (milliseconds: number, locale: string) =>
     maximumFractionDigits: 1,
   }).format(milliseconds / 1000);
 
+const relativeTime = (
+  value: string,
+  t: (key: MessageKey, vars?: Vars) => string,
+  locale: string,
+) => {
+  const then = new Date(value).getTime();
+  if (Number.isNaN(then)) return "";
+  const minutes = Math.floor((Date.now() - then) / 60_000);
+  if (minutes < 1) return t("upload.queueTimeJustNow");
+  if (minutes < 60) return t("upload.queueTimeMinutesAgo", { count: minutes });
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return t("upload.queueTimeHoursAgo", { count: hours });
+  if (hours < 48) return t("upload.queueTimeYesterday");
+  return new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(then);
+};
+
 const initialsOf = (name: string) =>
   name
     .trim()
@@ -83,52 +118,6 @@ const hueOf = (name: string) => {
 const languageOptions: { value: string; labelKey: MessageKey }[] = [
   { value: "Tiếng Việt", labelKey: "upload.langVi" },
   { value: "English", labelKey: "upload.langEn" },
-];
-
-type QueueItem = {
-  key: string;
-  name: string;
-  role: string;
-  stageKey: MessageKey;
-  stageVars?: Record<string, string | number>;
-  step: number;
-  timeKey: MessageKey;
-  timeVars?: Record<string, string | number>;
-  state: "done" | "running" | "queued";
-};
-
-const initialQueue: QueueItem[] = [
-  {
-    key: "an",
-    name: "Pham_Minh_An_CV.pdf",
-    role: "Senior Backend Engineer",
-    stageKey: "upload.queueStageDone",
-    stageVars: { count: 8 },
-    step: 6,
-    timeKey: "upload.queueTimeMinutesAgo",
-    timeVars: { count: 2 },
-    state: "done",
-  },
-  {
-    key: "minh",
-    name: "Le_Hoang_Minh_CV.pdf",
-    role: "Backend Engineer",
-    stageKey: "upload.queueStageExtracting",
-    step: 3,
-    timeKey: "upload.queueTimeMinutesAgo",
-    timeVars: { count: 4 },
-    state: "running",
-  },
-  {
-    key: "ha",
-    name: "Nguyen_Thu_Ha_CV.pdf",
-    role: "Product Designer",
-    stageKey: "upload.queueStageDone",
-    stageVars: { count: 6 },
-    step: 6,
-    timeKey: "upload.queueTimeYesterday",
-    state: "done",
-  },
 ];
 
 export default function UploadCV({
@@ -157,7 +146,13 @@ export default function UploadCV({
   const [language, setLanguage] = useState("Tiếng Việt");
   const [modelChoice, setModelChoice] = useState("");
   const [queued, setQueued] = useState(false);
-  const [queue, setQueue] = useState<QueueItem[]>(initialQueue);
+  const {
+    data: queueData,
+    loading: queueLoading,
+    error: queueError,
+    refetch: refetchQueue,
+  } = useAnalysisQueue(5);
+  const queue = queueData ?? [];
   const {
     data: positionsData,
     loading: positionsLoading,
@@ -288,16 +283,12 @@ export default function UploadCV({
     setPreviewUrl(url);
   };
 
-  const clearLiveQueue = () =>
-    setQueue((prev) => prev.filter((item) => !item.key.startsWith("live-")));
-
   const pick = (selected: File) => {
     closePreview();
     setQueued(false);
     setResult(null);
     setPhase("idle");
     setError(null);
-    clearLiveQueue();
 
     const typeOk =
       /\.(pdf|docx)$/i.test(selected.name) ||
@@ -364,19 +355,7 @@ export default function UploadCV({
         setResult(body);
         setPhase("done");
         setQueued(true);
-        setQueue((prev) => [
-          {
-            key: `live-${Date.now()}`,
-            name: file.name,
-            role: `${pos.title} · ${levelValue}`,
-            stageKey: "upload.queueStageDone",
-            stageVars: { count: body.analysis.criteria.length },
-            step: 6,
-            timeKey: "upload.queueTimeJustNow",
-            state: "done",
-          },
-          ...prev.filter((item) => !item.key.startsWith("live-")),
-        ]);
+        void refetchQueue();
         window.setTimeout(() => {
           const reduce = window.matchMedia(
             "(prefers-reduced-motion: reduce)",
@@ -416,7 +395,6 @@ export default function UploadCV({
     setPhase("idle");
     setError(null);
     setQueued(false);
-    clearLiveQueue();
   };
 
   const downloadJson = () => {
@@ -1134,86 +1112,79 @@ export default function UploadCV({
             </button>
           }
         />
-        <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>{t("upload.colCandidate")}</th>
-                <th>{t("upload.colPosition")}</th>
-                <th>{t("upload.colStage")}</th>
-                <th className="num">{t("upload.colTime")}</th>
-                <th>{t("upload.colStatus")}</th>
-                <th aria-label={t("upload.colOpenAria")} />
-              </tr>
-            </thead>
-            <tbody>
-              {queue.map((item) => (
-                <tr key={item.key}>
-                  <td className="c-name">
-                    <div className="file-cell">
-                      <FileText size={15} aria-hidden="true" />
-                      <span className="file-cell-name">{item.name}</span>
-                    </div>
-                  </td>
-                  <td className="c-role" data-label={t("upload.colPosition")}>
-                    {item.role}
-                  </td>
-                  <td className="c-stage" data-label={t("upload.colStage")}>
-                    <div className="stage-cell">
-                      <span>{t(item.stageKey, item.stageVars)}</span>
-                      {item.state === "running" ? (
-                        <StageLadder step={item.step} labels={false} />
-                      ) : null}
-                    </div>
-                  </td>
-                  <td className="num c-updated" data-label={t("upload.colTime")}>
-                    {t(item.timeKey, item.timeVars)}
-                  </td>
-                  <td className="c-status" data-label={t("upload.colStatus")}>
-                    <span
-                      className={`pill ${
-                        item.state === "done"
-                          ? "pill-positive"
-                          : item.state === "running"
-                            ? "pill-info"
-                            : "pill-neutral"
-                      }`}
-                    >
-                      {item.state === "done"
-                        ? t("status.completed")
-                        : item.state === "running"
-                          ? t("status.processing")
-                          : t("upload.queueStateQueued")}
-                    </span>
-                  </td>
-                  <td className="c-go">
-                    <button
-                      type="button"
-                      className="icon-btn"
-                      aria-label={t("upload.queueOpenAria", { name: item.name })}
-                      onClick={() => {
-                        if (item.key.startsWith("live-")) {
-                          scrollToResult();
-                          return;
-                        }
-                        go(
-                          "candidate",
-                          item.key === "ha"
-                            ? "ha"
-                            : item.key === "minh"
-                              ? "minh"
-                              : "an",
-                        );
-                      }}
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                  </td>
+        {queue.length ? (
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>{t("upload.colCandidate")}</th>
+                  <th>{t("upload.colPosition")}</th>
+                  <th>{t("upload.colStage")}</th>
+                  <th className="num">{t("upload.colTime")}</th>
+                  <th>{t("upload.colStatus")}</th>
+                  <th aria-label={t("upload.colOpenAria")} />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {queue.map((item) => {
+                  const name = item.file || item.candidate;
+                  const role = [item.position, item.level]
+                    .filter(Boolean)
+                    .join(" · ");
+                  return (
+                    <tr key={item.id}>
+                      <td className="c-name">
+                        <div className="file-cell">
+                          <FileText size={15} aria-hidden="true" />
+                          <span className="file-cell-name">{name}</span>
+                        </div>
+                      </td>
+                      <td className="c-role" data-label={t("upload.colPosition")}>
+                        {role}
+                      </td>
+                      <td className="c-stage" data-label={t("upload.colStage")}>
+                        <div className="stage-cell">
+                          <span>
+                            {t("upload.queueStageDone", {
+                              count: item.criteria,
+                            })}
+                          </span>
+                        </div>
+                      </td>
+                      <td
+                        className="num c-updated"
+                        data-label={t("upload.colTime")}
+                      >
+                        {relativeTime(item.analyzedAt, t, localeOf(lang))}
+                      </td>
+                      <td className="c-status" data-label={t("upload.colStatus")}>
+                        <span className="pill pill-positive">
+                          {t("status.completed")}
+                        </span>
+                      </td>
+                      <td className="c-go">
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          aria-label={t("upload.queueOpenAria", { name })}
+                          onClick={() => go("candidate", item.id)}
+                        >
+                          <ChevronRight size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : queueError ? (
+          <LoadError message={queueError} onRetry={refetchQueue} />
+        ) : queueLoading ? (
+          <Loading label={t("upload.loading")} />
+        ) : (
+          <EmptyState title={t("upload.queueEmpty")} />
+        )}
         <div className="card-foot">
           <span className="foot-note">
             <Info size={13} aria-hidden="true" /> {t("upload.queueNote")}

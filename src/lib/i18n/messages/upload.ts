@@ -124,10 +124,13 @@ const vi = {
   "upload.colStatus": "Trạng thái",
   "upload.colOpenAria": "Mở hồ sơ",
   "upload.queueStateQueued": "Chờ xử lý",
+  "upload.queueEmpty":
+    "Chưa có hồ sơ nào được phân tích. Kết quả sẽ xuất hiện ở đây sau khi bạn tải CV lên.",
   "upload.queueOpenAria": "Mở {name}",
   "upload.queueStageDone": "Hoàn tất · {count} tiêu chí",
   "upload.queueStageExtracting": "Đang trích xuất bằng chứng",
   "upload.queueTimeMinutesAgo": "{count} phút trước",
+  "upload.queueTimeHoursAgo": "{count} giờ trước",
   "upload.queueTimeYesterday": "Hôm qua",
   "upload.queueTimeJustNow": "Vừa xong",
   "upload.queueNote":
@@ -291,6 +294,8 @@ const en: Record<keyof typeof vi, Message> = {
   "upload.colStatus": "Status",
   "upload.colOpenAria": "Open file",
   "upload.queueStateQueued": "Queued",
+  "upload.queueEmpty":
+    "No CV has been analyzed yet. Results will appear here once you upload one.",
   "upload.queueOpenAria": "Open {name}",
   "upload.queueStageDone": {
     one: "Completed · {count} criterion",
@@ -300,6 +305,10 @@ const en: Record<keyof typeof vi, Message> = {
   "upload.queueTimeMinutesAgo": {
     one: "{count} minute ago",
     other: "{count} minutes ago",
+  },
+  "upload.queueTimeHoursAgo": {
+    one: "{count} hour ago",
+    other: "{count} hours ago",
   },
   "upload.queueTimeYesterday": "Yesterday",
   "upload.queueTimeJustNow": "Just now",

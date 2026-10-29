@@ -15,7 +15,12 @@ import (
 func (g *Gateway) analyzeGoogle(ctx context.Context, target upstream, input analysis.Input, req Request) (model.Analysis, error) {
 	client := gemini.New(target.baseURL, target.key)
 
-	if len(req.CVFile) > 0 {
+	switch {
+	case req.CVFileURI != "":
+		input.CVFileURI = req.CVFileURI
+		input.CVFileMime = req.CVFileMime
+		input.CVAttached = true
+	case len(req.CVFile) > 0:
 		name := req.CVFileName
 		if name == "" {
 			name = "cv.pdf"

@@ -92,6 +92,17 @@ export interface Team {
   rank: number;
 }
 
+export interface AnalysisQueueItem {
+  id: string;
+  file: string;
+  candidate: string;
+  position: string;
+  level: string;
+  status: string;
+  criteria: number;
+  analyzedAt: string;
+}
+
 export interface TreeNode {
   name: string;
   type: "folder" | "file";
@@ -335,7 +346,18 @@ export function useTeams(): QueryResult<Team[]> {
   return { ...result, data: result.data ? result.data.teams : null };
 }
 
+export function useAnalysisQueue(limit = 5): QueryResult<AnalysisQueueItem[]> {
+  const result = useQuery<{ items: AnalysisQueueItem[] }>(
+    `/api/analysis-queue?limit=${limit}`,
+  );
+  return { ...result, data: result.data ? result.data.items : null };
+}
+
 // ---- Mutations ----
+
+export function candidateCvUrl(id: string): string {
+  return `${API_BASE}/api/candidates/${encodeURIComponent(id)}/cv`;
+}
 
 export async function patchCandidate(
   id: string,

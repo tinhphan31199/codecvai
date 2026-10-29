@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"codecv/backend/internal/analysis"
+	"codecv/backend/internal/gemini"
 	"codecv/backend/internal/model"
 	"codecv/backend/internal/positions"
 	"codecv/backend/internal/store"
@@ -32,6 +33,8 @@ type Request struct {
 	ModelID          string
 	CVText           string
 	CVFile           []byte
+	CVFileURI        string
+	CVFileMime       string
 	CVFileName       string
 	Repositories     []model.Repository
 	GithubContext    string
@@ -70,66 +73,9 @@ var defaultBaseURLs = map[string]string{
 var httpClient = &http.Client{}
 
 func (g *Gateway) Analyze(ctx context.Context, req Request) (Result, error) {
-	modelID := strings.TrimSpace(req.ModelID)
-	if modelID == "" {
-		return Result{}, &Error{Code: "bad_request", Message: "Chưa chọn model phân tích. Chọn model ở màn hình Phân tích CV."}
-	}
-
-	record, err := g.configs.ModelByID(ctx, modelID)
+	providerKey, target, err := g.resolveUpstream(ctx, req.ModelID)
 	if err != nil {
-		if errors.Is(err, store.ErrNotFound) {
-			return Result{}, &Error{
-				Code:    "bad_request",
-				Message: fmt.Sprintf("Model phân tích %q không tồn tại. Chọn lại trong Cài đặt → AI models.", modelID),
-			}
-		}
-		return Result{}, &Error{Code: "server_error", Message: "Không đọc được cấu hình model phân tích. Vui lòng thử lại."}
-	}
-	if !record.Active {
-		return Result{}, &Error{
-			Code:    "bad_request",
-			Message: fmt.Sprintf("Model %q đang tắt. Bật lại trong Cài đặt → AI models hoặc chọn model khác.", modelID),
-		}
-	}
-
-	providerKey, providerLabel, supported := resolveProvider(record.Provider)
-	if !supported {
-		return Result{}, &Error{
-			Code:    "bad_request",
-			Message: fmt.Sprintf("Provider %q chưa được hỗ trợ. Chỉ hỗ trợ Google, OpenAI, Anthropic và Self-hosted.", record.Provider),
-		}
-	}
-
-	cfg, err := g.configs.ServiceConfig(ctx, providerKey)
-	if err != nil && !errors.Is(err, store.ErrNotFound) {
-		return Result{}, &Error{Code: "server_error", Message: "Không đọc được cấu hình provider. Vui lòng thử lại."}
-	}
-
-	display := strings.TrimSpace(cfg.Name)
-	if display == "" {
-		display = providerLabel
-	}
-
-	baseURL := strings.TrimSpace(cfg.BaseURL)
-	if baseURL == "" {
-		baseURL = defaultBaseURLs[providerKey]
-	}
-	if baseURL == "" {
-		return Result{}, &Error{
-			Code:    "bad_request",
-			Message: fmt.Sprintf("%s chưa có Base URL. Nhập Base URL trong Cài đặt → Nhà cung cấp.", display),
-		}
-	}
-
-	key := strings.TrimSpace(cfg.APIKey)
-	if key == "" {
-		key = strings.TrimSpace(record.APIKey)
-	}
-	if key == "" {
-		return Result{}, &Error{
-			Code:    "missing_key",
-			Message: fmt.Sprintf("Chưa có API key cho %s. Nhập key trong Cài đặt → Nhà cung cấp.", display),
-		}
+		return Result{}, err
 	}
 
 	input := analysis.Input{
@@ -141,7 +87,6 @@ func (g *Gateway) Analyze(ctx context.Context, req Request) (Result, error) {
 		Language:         req.Language,
 		IncludeQuestions: req.IncludeQuestions,
 	}
-	target := upstream{provider: display, baseURL: baseURL, key: key, modelID: record.ID}
 
 	var result model.Analysis
 	switch providerKey {
@@ -158,7 +103,119 @@ func (g *Gateway) Analyze(ctx context.Context, req Request) (Result, error) {
 		return Result{}, err
 	}
 
-	return Result{Analysis: result, Provider: display}, nil
+	return Result{Analysis: result, Provider: target.provider}, nil
+}
+
+// resolveUpstream kiểm tra model đã chọn rồi gom Base URL và API key từ cấu hình provider.
+func (g *Gateway) resolveUpstream(ctx context.Context, modelID string) (string, upstream, error) {
+	modelID = strings.TrimSpace(modelID)
+	if modelID == "" {
+		return "", upstream{}, &Error{Code: "bad_request", Message: "Chưa chọn model phân tích. Chọn model ở màn hình Phân tích CV."}
+	}
+
+	record, err := g.configs.ModelByID(ctx, modelID)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return "", upstream{}, &Error{
+				Code:    "bad_request",
+				Message: fmt.Sprintf("Model phân tích %q không tồn tại. Chọn lại trong Cài đặt → AI models.", modelID),
+			}
+		}
+		return "", upstream{}, &Error{Code: "server_error", Message: "Không đọc được cấu hình model phân tích. Vui lòng thử lại."}
+	}
+	if !record.Active {
+		return "", upstream{}, &Error{
+			Code:    "bad_request",
+			Message: fmt.Sprintf("Model %q đang tắt. Bật lại trong Cài đặt → AI models hoặc chọn model khác.", modelID),
+		}
+	}
+
+	providerKey, providerLabel, supported := resolveProvider(record.Provider)
+	if !supported {
+		return "", upstream{}, &Error{
+			Code:    "bad_request",
+			Message: fmt.Sprintf("Provider %q chưa được hỗ trợ. Chỉ hỗ trợ Google, OpenAI, Anthropic và Self-hosted.", record.Provider),
+		}
+	}
+
+	cfg, err := g.configs.ServiceConfig(ctx, providerKey)
+	if err != nil && !errors.Is(err, store.ErrNotFound) {
+		return "", upstream{}, &Error{Code: "server_error", Message: "Không đọc được cấu hình provider. Vui lòng thử lại."}
+	}
+
+	display := strings.TrimSpace(cfg.Name)
+	if display == "" {
+		display = providerLabel
+	}
+
+	baseURL := strings.TrimSpace(cfg.BaseURL)
+	if baseURL == "" {
+		baseURL = defaultBaseURLs[providerKey]
+	}
+	if baseURL == "" {
+		return "", upstream{}, &Error{
+			Code:    "bad_request",
+			Message: fmt.Sprintf("%s chưa có Base URL. Nhập Base URL trong Cài đặt → Nhà cung cấp.", display),
+		}
+	}
+
+	key := strings.TrimSpace(cfg.APIKey)
+	if key == "" {
+		key = strings.TrimSpace(record.APIKey)
+	}
+	if key == "" {
+		return "", upstream{}, &Error{
+			Code:    "missing_key",
+			Message: fmt.Sprintf("Chưa có API key cho %s. Nhập key trong Cài đặt → Nhà cung cấp.", display),
+		}
+	}
+
+	return providerKey, upstream{provider: display, baseURL: baseURL, key: key, modelID: record.ID}, nil
+}
+
+// LinkFile giữ tệp PDF đã tải lên Gemini Files API để bước phân tích dùng lại,
+// tránh tải cùng một tệp hai lần.
+type LinkFile struct {
+	URI  string
+	Mime string
+}
+
+// ExtractLinks đọc link GitHub trực tiếp từ tệp PDF bằng một lượt AI nhỏ,
+// dùng khi văn bản trích xuất không còn link nào để quét. Chỉ Google và
+// Anthropic đọc được PDF; provider khác trả về rỗng để phân tích đi tiếp.
+func (g *Gateway) ExtractLinks(ctx context.Context, modelID string, cvFile []byte, fileName string) ([]string, LinkFile, error) {
+	if len(cvFile) == 0 {
+		return nil, LinkFile{}, nil
+	}
+
+	providerKey, target, err := g.resolveUpstream(ctx, modelID)
+	if err != nil {
+		return nil, LinkFile{}, err
+	}
+
+	name := strings.TrimSpace(fileName)
+	if name == "" {
+		name = "cv.pdf"
+	}
+
+	switch providerKey {
+	case "google":
+		client := gemini.New(target.baseURL, target.key)
+		uploaded, err := client.UploadFile(ctx, name, "application/pdf", cvFile)
+		if err != nil {
+			return nil, LinkFile{}, fromGeminiError(err)
+		}
+		urls, err := client.ExtractLinks(ctx, target.modelID, uploaded.URI, uploaded.MimeType)
+		if err != nil {
+			return nil, LinkFile{}, fromGeminiError(err)
+		}
+		return urls, LinkFile{URI: uploaded.URI, Mime: uploaded.MimeType}, nil
+	case "anthropic":
+		urls, err := extractLinksAnthropic(ctx, target, cvFile)
+		return urls, LinkFile{}, err
+	default:
+		return nil, LinkFile{}, nil
+	}
 }
 
 func resolveProvider(name string) (key, label string, ok bool) {

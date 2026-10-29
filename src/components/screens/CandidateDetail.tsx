@@ -19,7 +19,7 @@ import {
   getSkills,
   severityMeta,
 } from "@/data/codecv";
-import { patchCandidate, useCandidate } from "@/lib/api";
+import { candidateCvUrl, patchCandidate, useCandidate } from "@/lib/api";
 import { useT, type MessageKey } from "@/lib/i18n";
 import {
   Avatar,
@@ -201,6 +201,16 @@ export default function CandidateDetail({
         })}
         actions={
           <>
+            {candidate.hasCv ? (
+              <a
+                className="btn btn-ghost"
+                href={candidateCvUrl(candidate.id)}
+                download
+              >
+                <Download size={15} aria-hidden="true" />
+                {t("candidate.downloadCv")}
+              </a>
+            ) : null}
             <button
               type="button"
               className="btn btn-ghost"

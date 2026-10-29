@@ -5,12 +5,15 @@ import (
 	"errors"
 	"io"
 	"log"
+	"mime"
 	"net/http"
+	"path"
 	"strconv"
 	"strings"
 
 	"codecv/backend/internal/gemini"
 	"codecv/backend/internal/model"
+	"codecv/backend/internal/storage"
 	"codecv/backend/internal/store"
 )
 
@@ -58,6 +61,23 @@ func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, dashboard)
+}
+
+func (s *Server) handleAnalysisQueue(w http.ResponseWriter, r *http.Request) {
+	limit := queryInt(r, "limit", 5)
+	if limit < 1 {
+		limit = 1
+	}
+	if limit > 20 {
+		limit = 20
+	}
+
+	items, err := s.store.AnalysisQueue(r.Context(), limit)
+	if err != nil {
+		s.storeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": items})
 }
 
 func (s *Server) handleCandidates(w http.ResponseWriter, r *http.Request) {
@@ -116,6 +136,62 @@ func (s *Server) handleCandidate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, candidate)
+}
+
+// handleCandidateCV stream bản gốc CV từ bucket private; frontend không bao giờ thấy key hay credential.
+func (s *Server) handleCandidateCV(w http.ResponseWriter, r *http.Request) {
+	if s.cvStorage == nil {
+		s.fail(w, http.StatusServiceUnavailable, "storage_unavailable", "Máy chủ chưa cấu hình kho lưu CV. Kiểm tra AWS_ENDPOINT_URL_S3, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY và S3_BUCKET.")
+		return
+	}
+
+	key, fileName, err := s.store.CandidateCV(r.Context(), r.PathValue("id"))
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			s.fail(w, http.StatusNotFound, "not_found", "Không tìm thấy ứng viên.")
+			return
+		}
+		s.storeError(w, err)
+		return
+	}
+	if key == "" {
+		s.fail(w, http.StatusNotFound, "no_cv", "Hồ sơ này chưa có bản CV gốc được lưu.")
+		return
+	}
+
+	object, err := s.cvStorage.Get(r.Context(), key)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			s.fail(w, http.StatusNotFound, "no_cv", "Không tìm thấy bản CV gốc trên kho lưu trữ.")
+			return
+		}
+		log.Printf("[api] cv download failed: %v", err)
+		s.fail(w, http.StatusBadGateway, "storage_error", "Không đọc được bản CV gốc. Vui lòng thử lại.")
+		return
+	}
+	defer object.Body.Close()
+
+	if fileName == "" {
+		fileName = path.Base(key)
+	}
+	contentType := object.ContentType
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	disposition := mime.FormatMediaType("attachment", map[string]string{"filename": fileName})
+	if disposition == "" {
+		disposition = "attachment"
+	}
+
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Disposition", disposition)
+	w.Header().Set("Cache-Control", "private, no-store")
+	if object.Size > 0 {
+		w.Header().Set("Content-Length", strconv.FormatInt(object.Size, 10))
+	}
+	if _, err := io.Copy(w, object.Body); err != nil {
+		log.Printf("[api] cv stream failed: %v", err)
+	}
 }
 
 func (s *Server) handleRepository(w http.ResponseWriter, r *http.Request) {

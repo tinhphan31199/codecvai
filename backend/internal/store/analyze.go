@@ -16,6 +16,8 @@ type SaveAnalysisInput struct {
 	Position string // position title shown on the card
 	Level    string
 	Model    string
+	FileName string // original CV file name shown in the analysis queue
+	CVKey    string // object key of the stored original CV; empty when storage is off
 	Analysis model.Analysis
 }
 
@@ -105,13 +107,13 @@ func (s *Store) SaveAnalysis(ctx context.Context, in SaveAnalysisInput) (string,
 		})
 	}
 
-	if err := s.insertAnalysisCandidate(ctx, candidate, criteria, questions); err != nil {
+	if err := s.insertAnalysisCandidate(ctx, candidate, criteria, questions, in.FileName, in.CVKey, now); err != nil {
 		return "", err
 	}
 	return id, nil
 }
 
-func (s *Store) insertAnalysisCandidate(ctx context.Context, candidate model.CandidateRecord, criteria []model.Criterion, questions []model.Question) error {
+func (s *Store) insertAnalysisCandidate(ctx context.Context, candidate model.CandidateRecord, criteria []model.Criterion, questions []model.Question, fileName, cvKey string, analyzedAt time.Time) error {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -125,11 +127,13 @@ func (s *Store) insertAnalysisCandidate(ctx context.Context, candidate model.Can
 		INSERT INTO candidates (
 			id, name, initials, hue, role, position, level, status, updated, updated_at,
 			email, phone, location, years, created_at, source, reviewer, summary,
-			strengths, verify, repo, repo_branch, commit, repo_state, notes, stage_index
+			strengths, verify, repo, repo_branch, commit, repo_state, notes, stage_index,
+			cv_file, cv_key, analyzed_at
 		) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
 			$11, $12, $13, $14, $15, $16, $17, $18,
-			$19, $20, $21, $22, $23, $24, $25, $26
+			$19, $20, $21, $22, $23, $24, $25, $26,
+			$27, $28, $29
 		)`,
 		candidate.ID, candidate.Name, candidate.Initials, candidate.Hue,
 		candidate.Role, candidate.Position, candidate.Level, candidate.Status,
@@ -137,7 +141,7 @@ func (s *Store) insertAnalysisCandidate(ctx context.Context, candidate model.Can
 		candidate.Location, candidate.Years, candidate.CreatedAt, candidate.Source,
 		candidate.Reviewer, candidate.Summary, strengths, verify, candidate.Repo,
 		candidate.RepoBranch, candidate.Commit, candidate.RepoState, candidate.Notes,
-		candidate.StageIndex,
+		candidate.StageIndex, fileName, cvKey, analyzedAt,
 	); err != nil {
 		return fmt.Errorf("store: save candidate: %w", err)
 	}
@@ -171,6 +175,43 @@ func (s *Store) insertAnalysisCandidate(ctx context.Context, candidate model.Can
 	}
 
 	return tx.Commit(ctx)
+}
+
+// AnalysisQueue lists completed CV analyses, newest first, with their criteria count.
+func (s *Store) AnalysisQueue(ctx context.Context, limit int) ([]model.AnalysisQueueItem, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT c.id, c.cv_file, c.name, c.position, c.level, c.status, c.analyzed_at,
+		       count(cr.id)
+		FROM candidates c
+		LEFT JOIN criteria cr ON cr.candidate_id = c.id
+		WHERE c.analyzed_at IS NOT NULL
+		GROUP BY c.id
+		ORDER BY c.analyzed_at DESC
+		LIMIT $1`, limit)
+	if err != nil {
+		return nil, fmt.Errorf("store: analysis queue: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]model.AnalysisQueueItem, 0, limit)
+	for rows.Next() {
+		var item model.AnalysisQueueItem
+		if err := rows.Scan(
+			&item.ID, &item.File, &item.Candidate, &item.Position, &item.Level,
+			&item.Status, &item.AnalyzedAt, &item.Criteria,
+		); err != nil {
+			return nil, fmt.Errorf("store: analysis queue scan: %w", err)
+		}
+		items = append(items, item)
+	}
+	return items, rows.Err()
+}
+
+func nonNil[T any](slice []T) []T {
+	if slice == nil {
+		return []T{}
+	}
+	return slice
 }
 
 func slugify(name string) string {

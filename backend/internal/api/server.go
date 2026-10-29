@@ -18,6 +18,7 @@ import (
 	"codecv/backend/internal/links"
 	"codecv/backend/internal/model"
 	"codecv/backend/internal/positions"
+	"codecv/backend/internal/storage"
 	"codecv/backend/internal/store"
 )
 
@@ -31,12 +32,14 @@ var defaultLevels = []string{"Junior", "Middle", "Senior"}
 type Config struct {
 	AllowedOrigins []string
 	Store          *store.Store
+	Storage        *storage.Client
 }
 
 type Server struct {
 	gateway        *gateway.Gateway
 	allowedOrigins []string
 	store          *store.Store
+	cvStorage      *storage.Client
 }
 
 func New(cfg Config) http.Handler {
@@ -44,11 +47,13 @@ func New(cfg Config) http.Handler {
 		gateway:        gateway.New(cfg.Store),
 		allowedOrigins: cfg.AllowedOrigins,
 		store:          cfg.Store,
+		cvStorage:      cfg.Storage,
 	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", server.handleHealth)
 	mux.HandleFunc("POST /api/analyze-cv", server.handleAnalyze)
+	mux.HandleFunc("GET /api/analysis-queue", withStore(server, server.handleAnalysisQueue))
 
 	mux.HandleFunc("GET /api/workspace", withStore(server, server.handleWorkspace))
 	mux.HandleFunc("PUT /api/workspace", withStore(server, server.handleWorkspace))
@@ -57,6 +62,7 @@ func New(cfg Config) http.Handler {
 	mux.HandleFunc("GET /api/candidates", withStore(server, server.handleCandidates))
 	mux.HandleFunc("GET /api/candidates/{id}", withStore(server, server.handleCandidate))
 	mux.HandleFunc("PATCH /api/candidates/{id}", withStore(server, server.handleCandidate))
+	mux.HandleFunc("GET /api/candidates/{id}/cv", withStore(server, server.handleCandidateCV))
 	mux.HandleFunc("GET /api/candidates/{id}/repository", withStore(server, server.handleRepository))
 	mux.HandleFunc("GET /api/candidates/{id}/questions", withStore(server, server.handleQuestions))
 	mux.HandleFunc("PATCH /api/candidates/{id}/findings/{findingId}", withStore(server, server.handleFinding))
@@ -216,12 +222,30 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 	}
 
 	extraction := links.Extract(extracted.Text)
+	var (
+		cvFileURI  string
+		cvFileMime string
+	)
+	if len(extraction.Targets) == 0 && modelID != "" && len(cvFile) > 0 {
+		aiLinks, uploaded, err := s.gateway.ExtractLinks(r.Context(), modelID, cvFile, header.Filename)
+		if err != nil {
+			log.Printf("[analyze-cv] link fallback failed: %v", err)
+		} else {
+			cvFileURI, cvFileMime = uploaded.URI, uploaded.Mime
+			if len(aiLinks) > 0 {
+				extraction = links.Merge(extraction, links.Extract(strings.Join(aiLinks, "\n")))
+				log.Printf("[analyze-cv] link fallback links=%d targets=%d", len(aiLinks), len(extraction.Targets))
+			}
+		}
+	}
 	evidence := s.githubEvidence(r.Context(), extraction)
 
 	result, err := s.gateway.Analyze(r.Context(), gateway.Request{
 		ModelID:          modelID,
 		CVText:           extracted.Text,
 		CVFile:           cvFile,
+		CVFileURI:        cvFileURI,
+		CVFileMime:       cvFileMime,
 		CVFileName:       header.Filename,
 		Repositories:     evidence.Repositories,
 		GithubContext:    evidence.Context,
@@ -250,10 +274,14 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 		time.Since(startedAt).Round(time.Millisecond),
 	)
 
+	cvKey := s.storeCV(r.Context(), fileType, header.Filename, buffer)
+
 	if _, err := s.store.SaveAnalysis(r.Context(), store.SaveAnalysisInput{
 		Position: position.Title,
 		Level:    level,
 		Model:    modelID,
+		FileName: header.Filename,
+		CVKey:    cvKey,
 		Analysis: result.Analysis,
 	}); err != nil {
 		log.Printf("[analyze-cv] persist failed: %v", err)
@@ -270,6 +298,33 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 			Github:     evidence.Meta,
 		},
 	})
+}
+
+// storeCV lưu bản gốc CV lên bucket private; lỗi chỉ log để phân tích vẫn thành công.
+func (s *Server) storeCV(ctx context.Context, fileType cvextract.Type, fileName string, data []byte) string {
+	if s.cvStorage == nil {
+		return ""
+	}
+	key, err := storage.Key(fileName)
+	if err != nil {
+		log.Printf("[analyze-cv] cv key failed: %v", err)
+		return ""
+	}
+	uploadCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+	defer cancel()
+	if err := s.cvStorage.Put(uploadCtx, key, cvContentType(fileType), data); err != nil {
+		log.Printf("[analyze-cv] cv upload failed: %v", err)
+		return ""
+	}
+	log.Printf("[analyze-cv] cv stored bytes=%d", len(data))
+	return key
+}
+
+func cvContentType(fileType cvextract.Type) string {
+	if fileType == cvextract.TypeDOCX {
+		return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+	}
+	return "application/pdf"
 }
 
 // GitHub đọc cấu hình từ DB mỗi lần phân tích; thiếu cấu hình thì dùng mặc định công khai.

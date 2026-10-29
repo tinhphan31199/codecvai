@@ -1,0 +1,29 @@
+DEBUG: argv[0]="cupsfilter"
+DEBUG: argv[1]="1"
+DEBUG: argv[2]="phantrongtinh"
+DEBUG: argv[3]="cv-source.txt"
+DEBUG: argv[4]="1"
+DEBUG: argv[5]=""
+DEBUG: argv[6]="tmpverify/cv-source.txt"
+DEBUG: envp[0]="<CFProcessPath>"
+DEBUG: envp[1]="CONTENT_TYPE=text/plain"
+DEBUG: envp[2]="CUPS_DATADIR=/usr/share/cups"
+DEBUG: envp[3]="CUPS_FONTPATH=/usr/share/cups/fonts"
+DEBUG: envp[4]="CUPS_SERVERBIN=/usr/libexec/cups"
+DEBUG: envp[5]="CUPS_SERVERROOT=/private/etc/cups"
+DEBUG: envp[6]="LANG=en_US.UTF8"
+DEBUG: envp[7]="PATH=/usr/libexec/cups/filter:/usr/bin:/usr/sbin:/bin:/usr/bin"
+DEBUG: envp[8]="PPD=/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/PrintCore.framework/Versions/A/Resources/Generic.ppd"
+DEBUG: envp[9]="PRINTER_INFO=cupsfilter"
+DEBUG: envp[10]="PRINTER_LOCATION=Unknown"
+DEBUG: envp[11]="PRINTER=cupsfilter"
+DEBUG: envp[12]="RIP_MAX_CACHE=128m"
+DEBUG: envp[13]="USER=phantrongtinh"
+DEBUG: envp[14]="CHARSET=utf-8"
+DEBUG: envp[15]="FINAL_CONTENT_TYPE=application/pdf"
+INFO: cgtexttopdf (PID 18638) started.
+DEBUG: Page = 612x792; 17,19 to 595,773
+DEBUG: No italic font!
+DEBUG: No bold-italic font!
+DEBUG: No bold font!
+INFO: cgtexttopdf (PID 18638) exited with no errors.

@@ -107,6 +107,7 @@ export interface Candidate {
   notes?: string;
   createdAtLabel?: string;
   stageIndex?: number;
+  hasCv?: boolean;
 }
 
 export interface Position {

@@ -259,13 +259,13 @@ export function EmptyState({
   action,
 }: {
   title: string;
-  detail: string;
+  detail?: string;
   action?: ReactNode;
 }) {
   return (
     <div className="empty-state">
       <p className="empty-title">{title}</p>
-      <p className="empty-detail">{detail}</p>
+      {detail ? <p className="empty-detail">{detail}</p> : null}
       {action ? <div className="empty-action">{action}</div> : null}
     </div>
   );

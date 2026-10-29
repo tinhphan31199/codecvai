@@ -64,10 +64,13 @@ func Extract(cvText string) Extraction {
 			name = name[:len(name)-4]
 		}
 
-		canonical := strings.ToLower(hostLabel + "/" + owner)
+		// Key chuẩn hoá toàn bộ về chữ thường để khớp label khi đọc GitHub,
+		// tránh bỏ sót repo có chữ hoa như VietJob_FrontEnd.
+		canonical := hostLabel + "/" + owner
 		if name != "" {
 			canonical += "/" + name
 		}
+		canonical = strings.ToLower(canonical)
 		if _, exists := seen[canonical]; exists {
 			return
 		}
@@ -175,12 +178,52 @@ func isWordByte(char byte) bool {
 		char == '_' || char == '.' || char == '-'
 }
 
+// Merge ghép link đọc từ AI (extra) vào kết quả trích từ văn bản (base).
+// Link GitHub đứng trước để phản ánh đúng repo sẽ được quét, bỏ trùng theo label.
+func Merge(base, extra Extraction) Extraction {
+	if len(extra.Targets) == 0 && len(extra.Repositories) == 0 {
+		return base
+	}
+
+	merged := Extraction{
+		Repositories: make([]model.Repository, 0, len(extra.Repositories)+len(base.Repositories)),
+		Targets:      make([]Target, 0, len(extra.Targets)+len(base.Targets)),
+	}
+	seenRepositories := make(map[string]struct{}, len(base.Repositories))
+	for _, repository := range base.Repositories {
+		seenRepositories[repository.Label] = struct{}{}
+	}
+	seenTargets := make(map[string]struct{}, len(base.Targets))
+	for _, target := range base.Targets {
+		seenTargets[target.Key] = struct{}{}
+	}
+
+	for _, repository := range extra.Repositories {
+		if _, exists := seenRepositories[repository.Label]; exists {
+			continue
+		}
+		seenRepositories[repository.Label] = struct{}{}
+		merged.Repositories = append(merged.Repositories, repository)
+	}
+	for _, target := range extra.Targets {
+		if _, exists := seenTargets[target.Key]; exists {
+			continue
+		}
+		seenTargets[target.Key] = struct{}{}
+		merged.Targets = append(merged.Targets, target)
+	}
+
+	merged.Repositories = append(merged.Repositories, base.Repositories...)
+	merged.Targets = append(merged.Targets, base.Targets...)
+	return merged
+}
+
 func boundaryAfter(text string, index int) bool {
 	if index >= len(text) {
 		return true
 	}
 	switch text[index] {
-	case ' ', '\t', '\r', '\n', ',', ';', ')', ']', '}', '>', '\'', '"':
+	case ' ', '\t', '\r', '\n', ',', ';', ')', ']', '}', '>', '\'', '"', '?', '#':
 		return true
 	}
 	return false

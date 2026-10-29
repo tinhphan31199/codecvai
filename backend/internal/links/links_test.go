@@ -115,3 +115,61 @@ func TestExtractNormalizesProfilePunctuation(t *testing.T) {
 		t.Fatalf("unexpected detail: %s", result.Repositories[0].Detail)
 	}
 }
+
+func TestMergePutsAiLinksFirstAndKeepsTextLinks(t *testing.T) {
+	base := Extract("https://gitlab.com/acme/internal-tools")
+	extra := Extract("https://github.com/luankat0306/VietJob_FrontEnd\nhttps://github.com/luankat0306")
+
+	merged := Merge(base, extra)
+
+	if len(merged.Targets) != 2 {
+		t.Fatalf("expected 2 github targets, got %+v", merged.Targets)
+	}
+	if len(merged.Repositories) != 3 {
+		t.Fatalf("expected 3 repositories, got %+v", merged.Repositories)
+	}
+	if merged.Repositories[0].Label != "github.com/luankat0306/VietJob_FrontEnd" {
+		t.Fatalf("github repositories should come first, got %+v", merged.Repositories)
+	}
+	last := merged.Repositories[2]
+	if last.Label != "gitlab.com/acme/internal-tools" || last.Status != model.RepositorySkipped {
+		t.Fatalf("text-only links should be kept, got %+v", last)
+	}
+}
+
+func TestMergeDropsDuplicatesFromAiLinks(t *testing.T) {
+	base := Extract("github.com/octocat")
+
+	merged := Merge(base, Extract("https://github.com/octocat"))
+
+	if len(merged.Repositories) != 1 {
+		t.Fatalf("expected one repository, got %+v", merged.Repositories)
+	}
+	if len(merged.Targets) != 1 {
+		t.Fatalf("expected one target, got %+v", merged.Targets)
+	}
+}
+
+func TestExtractProfileWithQueryOrFragment(t *testing.T) {
+	for _, candidate := range []string{
+		"https://github.com/luankat0306?tab=repositories",
+		"https://github.com/luankat0306#readme",
+		"https://github.com/luankat0306/?tab=repositories",
+	} {
+		result := Extract(candidate)
+
+		if len(result.Targets) != 1 {
+			t.Fatalf("%s: expected 1 target, got %+v", candidate, result.Targets)
+		}
+		target := result.Targets[0]
+		if target.Kind != model.RepositoryProfile || target.Login != "luankat0306" {
+			t.Fatalf("%s: unexpected target: %+v", candidate, target)
+		}
+		if !strings.HasPrefix(target.URL, "https://github.com/luankat0306") {
+			t.Fatalf("%s: unexpected url: %s", candidate, target.URL)
+		}
+		if strings.ContainsAny(target.URL, "?#") {
+			t.Fatalf("%s: url should drop query/fragment: %s", candidate, target.URL)
+		}
+	}
+}

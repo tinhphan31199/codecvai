@@ -358,8 +358,6 @@ type geminiResponse struct {
 }
 
 func (c *Client) Analyze(ctx context.Context, input Input) (model.Analysis, error) {
-	endpoint := c.baseURL + "/models/" + url.PathEscape(input.Model) + ":generateContent"
-
 	parts := make([]map[string]any, 0, 2)
 	if input.CVFileURI != "" {
 		parts = append(parts, map[string]any{
@@ -390,53 +388,7 @@ func (c *Client) Analyze(ctx context.Context, input Input) (model.Analysis, erro
 		},
 	}
 
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return model.Analysis{}, &Error{Code: "server_error", Message: "Không dựng được yêu cầu phân tích."}
-	}
-
-	requestCtx, cancel := context.WithTimeout(ctx, requestTimeout)
-	defer cancel()
-
-	request, err := http.NewRequestWithContext(requestCtx, http.MethodPost, endpoint, bytes.NewReader(body))
-	if err != nil {
-		return model.Analysis{}, &Error{Code: "server_error", Message: "Không dựng được yêu cầu phân tích."}
-	}
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("x-goog-api-key", c.apiKey)
-
-	response, err := c.http.Do(request)
-	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			return model.Analysis{}, &Error{
-				Code:    "upstream_error",
-				Message: "Gemini phản hồi quá lâu (quá 90 giây). Thử lại hoặc chọn Gemini 3.1 Flash Lite.",
-			}
-		}
-		return model.Analysis{}, &Error{
-			Code:    "upstream_error",
-			Message: "Không kết nối được tới Gemini API. Kiểm tra mạng của máy chủ rồi thử lại.",
-		}
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		detail, _ := io.ReadAll(io.LimitReader(response.Body, 1024))
-		fmt.Printf("[analyze-cv] Gemini error %d: %.300s\n", response.StatusCode, string(detail))
-		return model.Analysis{}, upstreamError(response.StatusCode, input.Model)
-	}
-
-	raw, err := io.ReadAll(io.LimitReader(response.Body, maxResponseBytes))
-	if err != nil {
-		return model.Analysis{}, &Error{Code: "invalid_output", Message: "Không đọc được kết quả từ Gemini."}
-	}
-
-	var payloadResponse geminiResponse
-	if err := json.Unmarshal(raw, &payloadResponse); err != nil {
-		return model.Analysis{}, &Error{Code: "invalid_output", Message: "Gemini trả về dữ liệu không hợp lệ. Vui lòng thử lại."}
-	}
-
-	text, err := extractJsonText(payloadResponse)
+	text, err := c.generate(ctx, input.Model, payload)
 	if err != nil {
 		return model.Analysis{}, err
 	}
@@ -450,6 +402,114 @@ func (c *Client) Analyze(ctx context.Context, input Input) (model.Analysis, erro
 	}
 
 	return analysisResult, nil
+}
+
+// ExtractLinks đọc link GitHub trực tiếp từ tệp CV đã tải lên Files API,
+// dùng khi văn bản trích xuất không còn link nào để quét.
+func (c *Client) ExtractLinks(ctx context.Context, modelID, fileURI, mimeType string) ([]string, error) {
+	parts := make([]map[string]any, 0, 2)
+	if fileURI != "" {
+		parts = append(parts, map[string]any{
+			"file_data": map[string]any{
+				"mime_type": mimeType,
+				"file_uri":  fileURI,
+			},
+		})
+	}
+	parts = append(parts, map[string]any{"text": analysis.LinkPrompt})
+
+	payload := map[string]any{
+		"contents": []map[string]any{
+			{"role": "user", "parts": parts},
+		},
+		"generationConfig": map[string]any{
+			"temperature":      0,
+			"maxOutputTokens":  1024,
+			"responseMimeType": "application/json",
+			"responseSchema": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"links": map[string]any{
+						"type":  "array",
+						"items": map[string]any{"type": "string"},
+					},
+				},
+				"required": []string{"links"},
+			},
+		},
+	}
+
+	text, err := c.generate(ctx, modelID, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	var parsed struct {
+		Links []string `json:"links"`
+	}
+	if err := json.Unmarshal([]byte(text), &parsed); err != nil {
+		return nil, &Error{Code: "invalid_output", Message: "Gemini trả về danh sách link không hợp lệ. Vui lòng thử lại."}
+	}
+
+	urls := make([]string, 0, len(parsed.Links))
+	for _, link := range parsed.Links {
+		if trimmed := strings.TrimSpace(link); trimmed != "" {
+			urls = append(urls, trimmed)
+		}
+	}
+	return urls, nil
+}
+
+func (c *Client) generate(ctx context.Context, modelID string, payload map[string]any) (string, error) {
+	endpoint := c.baseURL + "/models/" + url.PathEscape(modelID) + ":generateContent"
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return "", &Error{Code: "server_error", Message: "Không dựng được yêu cầu phân tích."}
+	}
+
+	requestCtx, cancel := context.WithTimeout(ctx, requestTimeout)
+	defer cancel()
+
+	request, err := http.NewRequestWithContext(requestCtx, http.MethodPost, endpoint, bytes.NewReader(body))
+	if err != nil {
+		return "", &Error{Code: "server_error", Message: "Không dựng được yêu cầu phân tích."}
+	}
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("x-goog-api-key", c.apiKey)
+
+	response, err := c.http.Do(request)
+	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return "", &Error{
+				Code:    "upstream_error",
+				Message: "Gemini phản hồi quá lâu (quá 90 giây). Thử lại hoặc chọn Gemini 3.1 Flash Lite.",
+			}
+		}
+		return "", &Error{
+			Code:    "upstream_error",
+			Message: "Không kết nối được tới Gemini API. Kiểm tra mạng của máy chủ rồi thử lại.",
+		}
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		detail, _ := io.ReadAll(io.LimitReader(response.Body, 1024))
+		fmt.Printf("[analyze-cv] Gemini error %d: %.300s\n", response.StatusCode, string(detail))
+		return "", upstreamError(response.StatusCode, modelID)
+	}
+
+	raw, err := io.ReadAll(io.LimitReader(response.Body, maxResponseBytes))
+	if err != nil {
+		return "", &Error{Code: "invalid_output", Message: "Không đọc được kết quả từ Gemini."}
+	}
+
+	var payloadResponse geminiResponse
+	if err := json.Unmarshal(raw, &payloadResponse); err != nil {
+		return "", &Error{Code: "invalid_output", Message: "Gemini trả về dữ liệu không hợp lệ. Vui lòng thử lại."}
+	}
+
+	return extractJsonText(payloadResponse)
 }
 
 func upstreamError(status int, modelID string) *Error {

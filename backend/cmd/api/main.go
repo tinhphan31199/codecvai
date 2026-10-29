@@ -13,6 +13,7 @@ import (
 
 	"codecv/backend/internal/api"
 	"codecv/backend/internal/config"
+	"codecv/backend/internal/storage"
 	"codecv/backend/internal/store"
 )
 
@@ -41,11 +42,19 @@ func main() {
 		}
 	}
 
+	cvStorage := storage.FromEnv(context.Background())
+	if cvStorage != nil {
+		log.Print("CV storage ready (S3-compatible, private bucket)")
+	} else {
+		log.Print("CV storage disabled: set AWS_ENDPOINT_URL_S3, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET to keep CV originals")
+	}
+
 	server := &http.Server{
 		Addr: ":" + port,
 		Handler: api.New(api.Config{
 			AllowedOrigins: splitList(env("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")),
 			Store:          dataStore,
+			Storage:        cvStorage,
 		}),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       60 * time.Second,

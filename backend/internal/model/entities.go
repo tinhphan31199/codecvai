@@ -76,6 +76,7 @@ type CandidateRecord struct {
 	Questions  []Question  `json:"questions,omitempty"`
 	Notes      string      `json:"notes,omitempty"`
 	StageIndex int         `json:"stageIndex,omitempty"`
+	HasCV      bool        `json:"hasCv"`
 }
 
 type PositionCriterion struct {

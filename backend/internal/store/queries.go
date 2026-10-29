@@ -25,7 +25,7 @@ type CandidateFilter struct {
 const candidateCols = `
 	id, name, initials, hue, role, position, level, status, updated, updated_at,
 	email, phone, location, years, created_at, source, reviewer, summary,
-	strengths, verify, repo, repo_branch, commit, repo_state, notes, stage_index`
+	strengths, verify, repo, repo_branch, commit, repo_state, notes, stage_index, cv_key`
 
 func (s *Store) Workspace(ctx context.Context) (model.Workspace, error) {
 	rows, err := s.pool.Query(ctx, `SELECT key, value FROM workspace_settings`)
@@ -909,18 +909,33 @@ func (s *Store) Dashboard(ctx context.Context) (model.Dashboard, error) {
 func scanCandidate(row pgx.Row) (model.CandidateRecord, error) {
 	var candidate model.CandidateRecord
 	var strengthsRaw, verifyRaw []byte
+	var cvKey string
 	if err := row.Scan(&candidate.ID, &candidate.Name, &candidate.Initials, &candidate.Hue,
 		&candidate.Role, &candidate.Position, &candidate.Level, &candidate.Status,
 		&candidate.Updated, &candidate.UpdatedAt, &candidate.Email, &candidate.Phone,
 		&candidate.Location, &candidate.Years, &candidate.CreatedAt, &candidate.Source,
 		&candidate.Reviewer, &candidate.Summary, &strengthsRaw, &verifyRaw,
 		&candidate.Repo, &candidate.RepoBranch, &candidate.Commit, &candidate.RepoState,
-		&candidate.Notes, &candidate.StageIndex); err != nil {
+		&candidate.Notes, &candidate.StageIndex, &cvKey); err != nil {
 		return model.CandidateRecord{}, err
 	}
+	candidate.HasCV = cvKey != ""
 	candidate.Strengths = scanStringSlice(strengthsRaw)
 	candidate.Verify = scanStringSlice(verifyRaw)
 	return candidate, nil
+}
+
+// CandidateCV trả object key trên bucket và tên tệp gốc để backend stream CV.
+func (s *Store) CandidateCV(ctx context.Context, id string) (key, fileName string, err error) {
+	err = s.pool.QueryRow(ctx, `SELECT cv_key, cv_file FROM candidates WHERE id = $1`, id).
+		Scan(&key, &fileName)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", "", ErrNotFound
+	}
+	if err != nil {
+		return "", "", fmt.Errorf("store: candidate cv %s: %w", id, err)
+	}
+	return key, fileName, nil
 }
 
 func (s *Store) attachCriteriaSkills(ctx context.Context, candidate *model.CandidateRecord) error {

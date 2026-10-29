@@ -533,3 +533,161 @@ func TestAnalyzeRejectsNonJSONProviderOutput(t *testing.T) {
 
 	expectError(t, mustAnalyze(t, gateway, "gemini-3.5-flash-lite"), "invalid_output")
 }
+
+func TestAnalyzeReusesUploadedPDF(t *testing.T) {
+	fake := newFakeProvider(t)
+	gateway := newTestGateway(fake, model.AIModel{
+		ID: "gemini-3.5-flash-lite", Name: "Gemini", Provider: "Google", Active: true,
+	})
+
+	request := testRequest(t, "gemini-3.5-flash-lite")
+	request.CVText = ""
+	request.CVFile = []byte("%PDF-1.4 scanned cv")
+	request.CVFileURI = "https://example.test/v1beta/files/reused"
+	request.CVFileMime = "application/pdf"
+
+	if _, err := gateway.Analyze(context.Background(), request); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(fake.requests) != 1 {
+		t.Fatalf("expected only the generate call, got %d upstream calls", len(fake.requests))
+	}
+	contents := fake.requests[0].body["contents"].([]any)
+	parts := contents[0].(map[string]any)["parts"].([]any)
+	filePart := parts[0].(map[string]any)["file_data"].(map[string]any)
+	if filePart["file_uri"] != "https://example.test/v1beta/files/reused" {
+		t.Fatalf("expected reused file uri, got %+v", filePart)
+	}
+}
+
+func TestExtractLinksUploadsPDFAndReturnsLinks(t *testing.T) {
+	var paths []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		paths = append(paths, r.URL.Path)
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/upload/v1beta/files"):
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"file": map[string]any{
+					"name":     "files/abc123",
+					"uri":      "https://example.test/v1beta/files/abc123",
+					"mimeType": "application/pdf",
+					"state":    "ACTIVE",
+				},
+			})
+		case strings.HasSuffix(r.URL.Path, ":generateContent"):
+			var body map[string]any
+			_ = json.NewDecoder(r.Body).Decode(&body)
+			contents, ok := body["contents"].([]any)
+			if !ok || len(contents) != 1 {
+				t.Errorf("unexpected contents: %+v", body["contents"])
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			parts := contents[0].(map[string]any)["parts"].([]any)
+			filePart, ok := parts[0].(map[string]any)["file_data"].(map[string]any)
+			if !ok || filePart["file_uri"] != "https://example.test/v1beta/files/abc123" {
+				t.Errorf("generate call should reference the uploaded file: %+v", parts[0])
+			}
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"candidates": []any{map[string]any{
+					"content":      map[string]any{"parts": []any{map[string]any{"text": `{"links":["https://github.com/luankat0306"]}`}}},
+					"finishReason": "STOP",
+				}},
+			})
+		default:
+			t.Errorf("unexpected provider path: %s", r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	gateway := New(&fakeStore{
+		models: map[string]model.AIModel{
+			"gemini-3.5-flash-lite": {ID: "gemini-3.5-flash-lite", Name: "Gemini", Provider: "Google", Active: true},
+		},
+		configs: map[string]model.ServiceConfig{
+			"google": {ID: "google", Kind: "ai", Name: "Google", BaseURL: server.URL + "/v1beta", APIKey: "provider-google-key"},
+		},
+	})
+
+	urls, file, err := gateway.ExtractLinks(context.Background(), "gemini-3.5-flash-lite", []byte("%PDF-1.4 scanned cv"), "cv.pdf")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(urls) != 1 || urls[0] != "https://github.com/luankat0306" {
+		t.Fatalf("unexpected links: %+v", urls)
+	}
+	if file.URI != "https://example.test/v1beta/files/abc123" || file.Mime != "application/pdf" {
+		t.Fatalf("uploaded file should be reusable, got %+v", file)
+	}
+	if len(paths) != 2 {
+		t.Fatalf("expected upload then generate, got %+v", paths)
+	}
+}
+
+func TestExtractLinksAnthropicSendsDocumentBlock(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/messages" {
+			t.Errorf("unexpected provider path: %s", r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		var body map[string]any
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		messages, ok := body["messages"].([]any)
+		if !ok || len(messages) != 1 {
+			t.Errorf("unexpected messages: %+v", body["messages"])
+		} else {
+			blocks := messages[0].(map[string]any)["content"].([]any)
+			if len(blocks) != 2 || blocks[0].(map[string]any)["type"] != "document" {
+				t.Errorf("first block should be a document: %+v", blocks)
+			}
+			if text, ok := blocks[1].(map[string]any)["text"].(string); !ok || !strings.Contains(text, "GitHub") {
+				t.Errorf("text block should ask for GitHub links: %+v", blocks[1])
+			}
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"content":     []any{map[string]any{"type": "text", "text": `{"links":["https://github.com/luankat0306"]}`}},
+			"stop_reason": "end_turn",
+		})
+	}))
+	defer server.Close()
+
+	gateway := New(&fakeStore{
+		models: map[string]model.AIModel{
+			"claude-sonnet-4-5": {ID: "claude-sonnet-4-5", Name: "Claude", Provider: "Anthropic", Active: true},
+		},
+		configs: map[string]model.ServiceConfig{
+			"anthropic": {ID: "anthropic", Kind: "ai", Name: "Anthropic", BaseURL: server.URL, APIKey: "provider-anthropic-key"},
+		},
+	})
+
+	urls, file, err := gateway.ExtractLinks(context.Background(), "claude-sonnet-4-5", []byte("%PDF-1.4 scanned cv"), "cv.pdf")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(urls) != 1 || urls[0] != "https://github.com/luankat0306" {
+		t.Fatalf("unexpected links: %+v", urls)
+	}
+	if file.URI != "" {
+		t.Fatalf("anthropic does not upload files, got %+v", file)
+	}
+}
+
+func TestExtractLinksSkipsTextOnlyProviders(t *testing.T) {
+	fake := newFakeProvider(t)
+	gateway := newTestGateway(fake, model.AIModel{
+		ID: "gpt-4o-mini", Name: "GPT", Provider: "OpenAI", Active: true,
+	})
+
+	urls, file, err := gateway.ExtractLinks(context.Background(), "gpt-4o-mini", []byte("%PDF-1.4 scanned cv"), "cv.pdf")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(urls) != 0 || file.URI != "" {
+		t.Fatalf("text-only providers should return nothing, got %+v %+v", urls, file)
+	}
+	if len(fake.requests) != 0 {
+		t.Fatalf("no upstream call should happen, got %d", len(fake.requests))
+	}
+}

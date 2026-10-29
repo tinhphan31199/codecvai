@@ -10,6 +10,7 @@ const vi = {
   "candidate.sub":
     "{role} · {years} năm kinh nghiệm · {location} · {email}",
   "candidate.exportReport": "Xuất báo cáo",
+  "candidate.downloadCv": "Tải CV gốc",
   "candidate.toInterview": "Chuyển sang phỏng vấn",
   "candidate.source": "Nguồn: {source}",
   "candidate.reviewerMeta": "Người review {reviewer} · cập nhật {updated}",
@@ -112,6 +113,7 @@ const en: Record<keyof typeof vi, Message> = {
   "candidate.sub":
     "{role} · {years} years of experience · {location} · {email}",
   "candidate.exportReport": "Export report",
+  "candidate.downloadCv": "Download original CV",
   "candidate.toInterview": "Move to interview",
   "candidate.source": "Source: {source}",
   "candidate.reviewerMeta": "Reviewer {reviewer} · updated {updated}",

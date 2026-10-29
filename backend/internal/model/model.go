@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 const (
 	CriterionMust = "must"
 	CriterionNice = "nice"
@@ -63,6 +65,18 @@ type GithubMeta struct {
 	Targets     int `json:"targets"`
 	Analyzed    int `json:"analyzed"`
 	PublicRepos int `json:"publicRepos"`
+}
+
+// AnalysisQueueItem is one completed CV analysis shown in the upload queue.
+type AnalysisQueueItem struct {
+	ID         string    `json:"id"`
+	File       string    `json:"file"`
+	Candidate  string    `json:"candidate"`
+	Position   string    `json:"position"`
+	Level      string    `json:"level"`
+	Status     string    `json:"status"`
+	Criteria   int       `json:"criteria"`
+	AnalyzedAt time.Time `json:"analyzedAt"`
 }
 
 type Meta struct {

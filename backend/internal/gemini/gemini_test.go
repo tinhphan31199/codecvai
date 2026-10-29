@@ -228,3 +228,84 @@ func TestUploadFileMapsHTTPError(t *testing.T) {
 		t.Fatalf("unexpected code: %s", geminiErr.Code)
 	}
 }
+
+func TestExtractLinksSendsFileAndParsesLinks(t *testing.T) {
+	var captured map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if got := r.URL.Path; got != "/v1beta/models/gemini-3.5-flash-lite:generateContent" {
+			t.Errorf("unexpected path: %s", got)
+		}
+		if key := r.Header.Get("x-goog-api-key"); key != "test-key" {
+			t.Errorf("unexpected api key: %q", key)
+		}
+		if err := json.NewDecoder(r.Body).Decode(&captured); err != nil {
+			t.Errorf("decode request: %v", err)
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"candidates": []any{map[string]any{
+				"content": map[string]any{"parts": []any{map[string]any{
+					"text": `{"links":["https://github.com/luankat0306","","https://github.com/luankat0306/VietJob_FrontEnd"]}`,
+				}}},
+				"finishReason": "STOP",
+			}},
+		})
+	}))
+	defer server.Close()
+
+	client := New(server.URL+"/v1beta", "test-key")
+	urls, err := client.ExtractLinks(
+		context.Background(),
+		"gemini-3.5-flash-lite",
+		"https://example.test/v1beta/files/abc123",
+		"application/pdf",
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(urls) != 2 || urls[0] != "https://github.com/luankat0306" {
+		t.Fatalf("unexpected links: %+v", urls)
+	}
+
+	contents, ok := captured["contents"].([]any)
+	if !ok || len(contents) != 1 {
+		t.Fatalf("unexpected contents: %+v", captured["contents"])
+	}
+	parts := contents[0].(map[string]any)["parts"].([]any)
+	if len(parts) != 2 {
+		t.Fatalf("expected file_data and text parts, got %+v", parts)
+	}
+	filePart := parts[0].(map[string]any)["file_data"].(map[string]any)
+	if filePart["file_uri"] != "https://example.test/v1beta/files/abc123" {
+		t.Fatalf("unexpected file_uri: %v", filePart["file_uri"])
+	}
+	if filePart["mime_type"] != "application/pdf" {
+		t.Fatalf("unexpected mime_type: %v", filePart["mime_type"])
+	}
+	text, ok := parts[1].(map[string]any)["text"].(string)
+	if !ok || !strings.Contains(text, "GitHub") {
+		t.Fatalf("text part should ask for GitHub links, got %+v", parts[1])
+	}
+}
+
+func TestExtractLinksRejectsMalformedOutput(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"candidates": []any{map[string]any{
+				"content":      map[string]any{"parts": []any{map[string]any{"text": "not json"}}},
+				"finishReason": "STOP",
+			}},
+		})
+	}))
+	defer server.Close()
+
+	client := New(server.URL+"/v1beta", "test-key")
+	_, err := client.ExtractLinks(context.Background(), "gemini-3.5-flash-lite", "https://example.test/files/abc", "application/pdf")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+
+	var geminiErr *Error
+	if !errors.As(err, &geminiErr) || geminiErr.Code != "invalid_output" {
+		t.Fatalf("expected invalid_output, got %v", err)
+	}
+}
