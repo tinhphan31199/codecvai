@@ -5,54 +5,63 @@ import {
   FileText,
   GraduationCap,
   ListOrdered,
-  SlidersHorizontal,
+  PlugZap,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 import type { Screen } from "@/data/codecv";
+import { useT } from "@/lib/i18n";
 import { PageHead } from "../ui";
-import WorkspaceTab from "./settings/WorkspaceTab";
+import SecurityTab from "./settings/SecurityTab";
 import TeamTab from "./settings/TeamTab";
 import LevelsTab from "./settings/LevelsTab";
 import PositionsTab from "./settings/PositionsTab";
 import ModelsTab from "./settings/ModelsTab";
+import ProvidersTab from "./settings/ProvidersTab";
 import StagesTab from "./settings/StagesTab";
 
 const TABS = [
   {
-    key: "workspace",
-    label: "Workspace",
-    icon: SlidersHorizontal,
-    sub: "Tên workspace, reviewer, mô hình phân tích và các chỉ số hiển thị.",
+    key: "security",
+    labelKey: "settings.tab.security",
+    icon: ShieldCheck,
+    subKey: "settings.tab.securitySub",
   },
   {
     key: "team",
-    label: "Thành viên",
+    labelKey: "settings.tab.team",
     icon: Users,
-    sub: "Danh mục thành viên dùng cho reviewer và phân quyền hiển thị.",
+    subKey: "settings.tab.teamSub",
   },
   {
     key: "levels",
-    label: "Cấp bậc",
+    labelKey: "settings.tab.levels",
     icon: GraduationCap,
-    sub: "Cấp bậc dùng chung cho vị trí, Upload CV và phân tích hồ sơ.",
+    subKey: "settings.tab.levelsSub",
   },
   {
     key: "positions",
-    label: "Vị trí",
+    labelKey: "settings.tab.positions",
     icon: FileText,
-    sub: "Vị trí và bộ tiêu chí dùng khi phân tích CV.",
+    subKey: "settings.tab.positionsSub",
   },
   {
     key: "models",
-    label: "AI models",
+    labelKey: "settings.tab.models",
     icon: Cpu,
-    sub: "Catalog model phân tích và trạng thái bật/tắt.",
+    subKey: "settings.tab.modelsSub",
+  },
+  {
+    key: "providers",
+    labelKey: "settings.tab.providers",
+    icon: PlugZap,
+    subKey: "settings.tab.providersSub",
   },
   {
     key: "stages",
-    label: "Công đoạn",
+    labelKey: "settings.tab.stages",
     icon: ListOrdered,
-    sub: "Các bước hiển thị trong luồng phân tích CV.",
+    subKey: "settings.tab.stagesSub",
   },
 ] as const;
 
@@ -65,6 +74,7 @@ export default function SettingsScreen({
   tab?: string;
   go: (screen: Screen, id?: string) => void;
 }) {
+  const t = useT();
   const active: SettingsTabKey = TABS.some((item) => item.key === tab)
     ? (tab as SettingsTabKey)
     : TABS[0].key;
@@ -72,9 +82,9 @@ export default function SettingsScreen({
 
   return (
     <div className="screen">
-      <PageHead title="Settings" sub={meta.sub} />
+      <PageHead title={t("screen.settings")} sub={t(meta.subKey)} />
 
-      <nav className="settings-tabs" aria-label="Trang cấu hình">
+      <nav className="settings-tabs" aria-label={t("settings.tabsAria")}>
         {TABS.map((item) => {
           const Icon = item.icon;
           const on = item.key === active;
@@ -90,17 +100,18 @@ export default function SettingsScreen({
               }}
             >
               <Icon size={14} aria-hidden="true" />
-              {item.label}
+              {t(item.labelKey)}
             </a>
           );
         })}
       </nav>
 
-      {active === "workspace" ? <WorkspaceTab /> : null}
+      {active === "security" ? <SecurityTab /> : null}
       {active === "team" ? <TeamTab /> : null}
       {active === "levels" ? <LevelsTab /> : null}
       {active === "positions" ? <PositionsTab /> : null}
       {active === "models" ? <ModelsTab /> : null}
+      {active === "providers" ? <ProvidersTab /> : null}
       {active === "stages" ? <StagesTab /> : null}
     </div>
   );

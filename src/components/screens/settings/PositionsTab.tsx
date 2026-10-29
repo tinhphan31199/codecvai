@@ -9,8 +9,11 @@ import {
   updatePosition,
   useLevels,
   usePositions,
+  useTeam,
 } from "@/lib/api";
+import { useT } from "@/lib/i18n";
 import { CardHead, LoadError, Loading } from "../../ui";
+import { RichTextEditor } from "../../RichTextEditor";
 import { ConfirmDelete, FormStatus, RowActions } from "./shared";
 
 type CriterionDraft = {
@@ -64,12 +67,17 @@ function toDraft(position: Position): Draft {
 }
 
 export default function PositionsTab() {
+  const t = useT();
   const { data, loading, error, refetch } = usePositions();
   const { data: levelData } = useLevels();
+  const { data: teamData } = useTeam();
   const positions = data ?? [];
   const levelOptions = levelData?.length
     ? levelData.map((level) => level.name)
     : FALLBACK_LEVELS;
+  const ownerOptions = (teamData ?? [])
+    .map((member) => member.name)
+    .filter(Boolean);
   const [editing, setEditing] = useState<Position | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(EMPTY);
@@ -83,9 +91,19 @@ export default function PositionsTab() {
       ? [draft.level, ...levelOptions]
       : levelOptions;
 
+  const ownerChoices =
+    draft.owner && !ownerOptions.includes(draft.owner)
+      ? [draft.owner, ...ownerOptions]
+      : ownerOptions;
+
   const openCreate = () => {
     setEditing(null);
-    setDraft({ ...EMPTY, level: levelOptions[0], criteria: [] });
+    setDraft({
+      ...EMPTY,
+      level: levelOptions[0],
+      owner: ownerOptions[0] ?? EMPTY.owner,
+      criteria: [],
+    });
     setFormOpen(true);
     setFormError(null);
     setNote(null);
@@ -144,16 +162,20 @@ export default function PositionsTab() {
     try {
       if (editing) {
         await updatePosition(position);
-        setNote(`Đã cập nhật ${position.title}.`);
+        setNote(t("settingsCrud.positions.updated", { name: position.title }));
       } else {
         await createPosition(position);
-        setNote(`Đã tạo ${position.title}.`);
+        setNote(t("settingsCrud.positions.created", { name: position.title }));
       }
       setFormOpen(false);
       setEditing(null);
       await refetch();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Không lưu được vị trí.");
+      setFormError(
+        err instanceof Error
+          ? err.message
+          : t("settingsCrud.positions.saveError"),
+      );
     } finally {
       setBusy(false);
     }
@@ -170,10 +192,14 @@ export default function PositionsTab() {
         setEditing(null);
       }
       setConfirming(null);
-      setNote(`Đã xoá ${position.title}.`);
+      setNote(t("settingsCrud.positions.deleted", { name: position.title }));
       await refetch();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Không xoá được vị trí.");
+      setFormError(
+        err instanceof Error
+          ? err.message
+          : t("settingsCrud.positions.deleteError"),
+      );
     } finally {
       setBusy(false);
     }
@@ -182,12 +208,12 @@ export default function PositionsTab() {
   return (
     <section className="card crud-card">
       <CardHead
-        title="Vị trí & tiêu chí"
-        meta={`${positions.length} vị trí · positions + position_criteria`}
+        title={t("settingsCrud.positions.title")}
+        meta={t("settingsCrud.positions.meta", { count: positions.length })}
         action={
           <button type="button" className="btn btn-ghost btn-sm" onClick={openCreate}>
             <Plus size={14} aria-hidden="true" />
-            Thêm vị trí
+            {t("settingsCrud.positions.add")}
           </button>
         }
       />
@@ -202,17 +228,23 @@ export default function PositionsTab() {
         <form className="crud-form" onSubmit={submit}>
           <div className="crud-grid">
             <label className="field is-span-2">
-              <span className="field-label">Tên vị trí</span>
+              <span className="field-label">
+                {t("settingsCrud.positions.field.title")}
+              </span>
               <input
                 type="text"
                 value={draft.title}
                 onChange={(event) => patchDraft({ title: event.target.value })}
-                placeholder="Ví dụ: Staff Backend Engineer"
+                placeholder={t(
+                  "settingsCrud.positions.field.titlePlaceholder",
+                )}
                 required
               />
             </label>
             <label className="field">
-              <span className="field-label">Team</span>
+              <span className="field-label">
+                {t("settingsCrud.positions.field.team")}
+              </span>
               <input
                 type="text"
                 value={draft.team}
@@ -220,7 +252,9 @@ export default function PositionsTab() {
               />
             </label>
             <label className="field">
-              <span className="field-label">Cấp bậc</span>
+              <span className="field-label">
+                {t("settingsCrud.positions.field.level")}
+              </span>
               <select
                 value={draft.level}
                 onChange={(event) => patchDraft({ level: event.target.value })}
@@ -231,7 +265,9 @@ export default function PositionsTab() {
               </select>
             </label>
             <label className="field">
-              <span className="field-label">Địa điểm</span>
+              <span className="field-label">
+                {t("settingsCrud.positions.field.location")}
+              </span>
               <input
                 type="text"
                 value={draft.location}
@@ -239,15 +275,22 @@ export default function PositionsTab() {
               />
             </label>
             <label className="field">
-              <span className="field-label">Owner</span>
-              <input
-                type="text"
+              <span className="field-label">
+                {t("settingsCrud.positions.field.owner")}
+              </span>
+              <select
                 value={draft.owner}
                 onChange={(event) => patchDraft({ owner: event.target.value })}
-              />
+              >
+                {ownerChoices.map((name) => (
+                  <option key={name}>{name}</option>
+                ))}
+              </select>
             </label>
             <label className="field">
-              <span className="field-label">Số lượng tuyển</span>
+              <span className="field-label">
+                {t("settingsCrud.positions.field.open")}
+              </span>
               <input
                 type="text"
                 value={draft.open}
@@ -255,7 +298,9 @@ export default function PositionsTab() {
               />
             </label>
             <label className="field">
-              <span className="field-label">Ứng viên hiện có</span>
+              <span className="field-label">
+                {t("settingsCrud.positions.field.candidates")}
+              </span>
               <input
                 type="number"
                 min={0}
@@ -266,29 +311,30 @@ export default function PositionsTab() {
               />
             </label>
             <label className="field">
-              <span className="field-label">Cập nhật</span>
+              <span className="field-label">
+                {t("settingsCrud.positions.field.updated")}
+              </span>
               <input
                 type="text"
                 value={draft.updated}
                 onChange={(event) => patchDraft({ updated: event.target.value })}
               />
             </label>
-            <label className="field is-span-full">
-              <span className="field-label">Mô tả</span>
-              <textarea
-                rows={2}
+            <div className="field is-span-full">
+              <span className="field-label">
+                {t("settingsCrud.field.description")}
+              </span>
+              <RichTextEditor
                 value={draft.description}
-                onChange={(event) =>
-                  patchDraft({ description: event.target.value })
-                }
+                onChange={(html) => patchDraft({ description: html })}
               />
-            </label>
+            </div>
           </div>
 
           <div className="criteria-editor">
             <div className="criteria-editor-head">
               <span>
-                Tiêu chí tuyển dụng{" "}
+                {t("settingsCrud.positions.criteriaHeading")}{" "}
                 <span className="num">({draft.criteria.length})</span>
               </span>
               <button
@@ -304,25 +350,31 @@ export default function PositionsTab() {
                 }
               >
                 <Plus size={13} aria-hidden="true" />
-                Thêm tiêu chí
+                {t("settingsCrud.positions.criteriaAdd")}
               </button>
             </div>
             {draft.criteria.length ? (
               draft.criteria.map((criterion, index) => (
                 <div className="criteria-row" key={index}>
                   <label className="field">
-                    <span className="field-label">Tiêu chí</span>
+                    <span className="field-label">
+                      {t("settingsCrud.positions.criteria.label")}
+                    </span>
                     <input
                       type="text"
                       value={criterion.label}
                       onChange={(event) =>
                         patchCriterion(index, { label: event.target.value })
                       }
-                      placeholder="Ví dụ: Kinh nghiệm thiết kế hệ thống"
+                      placeholder={t(
+                        "settingsCrud.positions.criteria.labelPlaceholder",
+                      )}
                     />
                   </label>
                   <label className="field">
-                    <span className="field-label">Loại</span>
+                    <span className="field-label">
+                      {t("settingsCrud.positions.criteria.kind")}
+                    </span>
                     <select
                       value={criterion.kind}
                       onChange={(event) =>
@@ -331,12 +383,18 @@ export default function PositionsTab() {
                         })
                       }
                     >
-                      <option value="must">Bắt buộc</option>
-                      <option value="nice">Ưu tiên</option>
+                      <option value="must">
+                        {t("settingsCrud.positions.criteria.kindMust")}
+                      </option>
+                      <option value="nice">
+                        {t("settingsCrud.positions.criteria.kindNice")}
+                      </option>
                     </select>
                   </label>
                   <label className="field">
-                    <span className="field-label">Trọng số</span>
+                    <span className="field-label">
+                      {t("settingsCrud.positions.criteria.weight")}
+                    </span>
                     <input
                       type="number"
                       min={0}
@@ -349,21 +407,28 @@ export default function PositionsTab() {
                     />
                   </label>
                   <label className="field">
-                    <span className="field-label">Cách xác minh</span>
+                    <span className="field-label">
+                      {t("settingsCrud.positions.criteria.verify")}
+                    </span>
                     <input
                       type="text"
                       value={criterion.verify}
                       onChange={(event) =>
                         patchCriterion(index, { verify: event.target.value })
                       }
-                      placeholder="CV, repository, phỏng vấn…"
+                      placeholder={t(
+                        "settingsCrud.positions.criteria.verifyPlaceholder",
+                      )}
                     />
                   </label>
                   <button
                     type="button"
                     className="icon-btn"
-                    aria-label={`Xoá tiêu chí ${index + 1}`}
-                    title="Xoá tiêu chí"
+                    aria-label={t(
+                      "settingsCrud.positions.criteria.deleteAria",
+                      { index: index + 1 },
+                    )}
+                    title={t("settingsCrud.positions.criteria.delete")}
                     onClick={() =>
                       patchDraft({
                         criteria: draft.criteria.filter(
@@ -378,8 +443,7 @@ export default function PositionsTab() {
               ))
             ) : (
               <p className="crud-note">
-                Chưa có tiêu chí. Tiêu chí dùng chung cho đối chiếu CV và
-                repository.
+                {t("settingsCrud.positions.criteria.empty")}
               </p>
             )}
           </div>
@@ -391,7 +455,9 @@ export default function PositionsTab() {
               ) : (
                 <Check size={15} aria-hidden="true" />
               )}
-              {editing ? "Lưu thay đổi" : "Tạo vị trí"}
+              {editing
+                ? t("settingsCrud.saveChanges")
+                : t("settingsCrud.positions.create")}
             </button>
             <button
               type="button"
@@ -403,14 +469,14 @@ export default function PositionsTab() {
               disabled={busy}
             >
               <X size={15} aria-hidden="true" />
-              Hủy
+              {t("action.cancel")}
             </button>
           </div>
         </form>
       ) : null}
 
       {loading && !positions.length ? (
-        <Loading label="Đang tải vị trí…" />
+        <Loading label={t("settingsCrud.positions.loading")} />
       ) : error ? (
         <LoadError message={error} onRetry={refetch} />
       ) : (
@@ -418,11 +484,15 @@ export default function PositionsTab() {
           <table className="table">
             <thead>
               <tr>
-                <th>Vị trí</th>
-                <th>Địa điểm</th>
-                <th className="num">Ứng viên</th>
-                <th className="num">Tiêu chí</th>
-                <th aria-label="Thao tác" />
+                <th>{t("settingsCrud.positions.col.position")}</th>
+                <th>{t("settingsCrud.positions.col.location")}</th>
+                <th className="num">
+                  {t("settingsCrud.positions.col.candidates")}
+                </th>
+                <th className="num">
+                  {t("settingsCrud.positions.col.criteria")}
+                </th>
+                <th aria-label={t("settingsCrud.table.actions")} />
               </tr>
             </thead>
             <tbody>
@@ -436,17 +506,29 @@ export default function PositionsTab() {
                       </span>
                     </span>
                   </td>
-                  <td data-label="Địa điểm">{position.location || "—"}</td>
-                  <td className="num" data-label="Ứng viên">
+                  <td data-label={t("settingsCrud.positions.col.location")}>
+                    {position.location || "—"}
+                  </td>
+                  <td
+                    className="num"
+                    data-label={t("settingsCrud.positions.col.candidates")}
+                  >
                     {position.candidates}
                   </td>
-                  <td className="num" data-label="Tiêu chí">
+                  <td
+                    className="num"
+                    data-label={t("settingsCrud.positions.col.criteria")}
+                  >
                     {position.criteria.length}
                   </td>
                   <td className="c-go">
                     <RowActions
-                      editLabel={`Sửa ${position.title}`}
-                      deleteLabel={`Xoá ${position.title}`}
+                      editLabel={t("settingsCrud.rowAction.edit", {
+                        name: position.title,
+                      })}
+                      deleteLabel={t("settingsCrud.rowAction.delete", {
+                        name: position.title,
+                      })}
                       onEdit={() => openEdit(position)}
                       onDelete={() => {
                         setConfirming(position);
@@ -464,17 +546,16 @@ export default function PositionsTab() {
 
       {confirming ? (
         <ConfirmDelete
-          message={`Xoá vị trí ${confirming.title}? Hồ sơ ứng viên vẫn giữ tên vị trí dạng văn bản.`}
+          message={t("settingsCrud.positions.confirmDelete", {
+            name: confirming.title,
+          })}
           busy={busy}
           onConfirm={() => remove(confirming)}
           onCancel={() => setConfirming(null)}
         />
       ) : null}
 
-      <p className="crud-note">
-        Vị trí tạo ở đây được dùng ngay khi phân tích CV. Xoá vị trí không xoá
-        hồ sơ ứng viên.
-      </p>
+      <p className="crud-note">{t("settingsCrud.positions.note")}</p>
     </section>
   );
 }

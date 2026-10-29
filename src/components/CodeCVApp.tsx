@@ -25,14 +25,15 @@ import {
   X,
 } from "lucide-react";
 import type { Screen } from "@/data/codecv";
-import { useWorkspace } from "@/lib/api";
+import { useModels, useStats } from "@/lib/api";
+import { setLang, translate, useLang, useT, type MessageKey } from "@/lib/i18n";
 import { Avatar, LogoMark } from "./ui";
 import Dashboard from "./screens/Dashboard";
 import UploadCV from "./screens/UploadCV";
 import Candidates from "./screens/Candidates";
 import CandidateDetail from "./screens/CandidateDetail";
 import RepositoryScreen from "./screens/Repository";
-import InterviewStudio from "./screens/Interview";
+import InterviewStudio, { InterviewPicker } from "./screens/Interview";
 import Jobs from "./screens/Jobs";
 import Reports from "./screens/Reports";
 import SettingsScreen from "./screens/Settings";
@@ -68,27 +69,32 @@ const subscribeHash = (onChange: () => void) => {
 const getHash = () => window.location.hash;
 const getServerHash = () => "";
 
-const navItems = [
-  { key: "overview", label: "Dashboard", icon: LayoutDashboard, count: null },
-  { key: "candidates", label: "Candidates", icon: Users, count: 0 },
-  { key: "upload", label: "CV Analysis", icon: UploadCloud, count: null },
-  { key: "repository", label: "Repository Analysis", icon: FolderGit2, count: null },
-  { key: "interview", label: "Interview Studio", icon: MessagesSquare, count: null },
-  { key: "jobs", label: "Job Descriptions", icon: FileText, count: null },
-  { key: "reports", label: "Reports", icon: BarChart3, count: null },
-  { key: "settings", label: "Settings", icon: SettingsIcon, count: null },
+const navItems: {
+  key: Screen;
+  labelKey: MessageKey;
+  icon: typeof LayoutDashboard;
+  count: number | null;
+}[] = [
+  { key: "overview", labelKey: "nav.dashboard", icon: LayoutDashboard, count: null },
+  { key: "candidates", labelKey: "nav.candidates", icon: Users, count: 0 },
+  { key: "upload", labelKey: "nav.upload", icon: UploadCloud, count: null },
+  { key: "repository", labelKey: "nav.repository", icon: FolderGit2, count: null },
+  { key: "interview", labelKey: "nav.interview", icon: MessagesSquare, count: null },
+  { key: "jobs", labelKey: "nav.jobs", icon: FileText, count: null },
+  { key: "reports", labelKey: "nav.reports", icon: BarChart3, count: null },
+  { key: "settings", labelKey: "nav.settings", icon: SettingsIcon, count: null },
 ];
 
-const screenTitles: Record<Screen, string> = {
-  overview: "Dashboard",
-  upload: "CV Analysis",
-  candidates: "Candidates",
-  candidate: "Candidate",
-  repository: "Repository Analysis",
-  interview: "Interview Studio",
-  jobs: "Job Descriptions",
-  reports: "Reports",
-  settings: "Settings",
+const screenTitles: Record<Screen, MessageKey> = {
+  overview: "screen.dashboard",
+  upload: "screen.upload",
+  candidates: "screen.candidates",
+  candidate: "screen.candidate",
+  repository: "screen.repository",
+  interview: "screen.interview",
+  jobs: "screen.jobs",
+  reports: "screen.reports",
+  settings: "screen.settings",
 };
 
 const activeKey = (screen: Screen) =>
@@ -97,7 +103,13 @@ const activeKey = (screen: Screen) =>
 export default function CodeCVApp() {
   const hash = useSyncExternalStore(subscribeHash, getHash, getServerHash);
   const route = useMemo(() => parseHash(hash), [hash]);
-  const workspace = useWorkspace();
+  const stats = useStats();
+  const models = useModels();
+  const activeModels = (models.data ?? []).filter((model) => model.active);
+  const activeModel =
+    activeModels.find((model) => model.apiKeySet) ?? activeModels[0];
+  const t = useT();
+  const lang = useLang();
   const [navOpen, setNavOpen] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [teamName, setTeamName] = useState("Product Engineering");
@@ -105,6 +117,17 @@ export default function CodeCVApp() {
   const [searchValue, setSearchValue] = useState("");
   const sheetRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
+  useEffect(() => {
+    document.title = `${translate(lang, screenTitles[route.screen])} · CodeCV AI`;
+    document
+      .querySelector('meta[name="description"]')
+      ?.setAttribute("content", translate(lang, "shell.metaDescription"));
+  }, [lang, route.screen]);
 
   useEffect(() => {
     const onHash = () => {
@@ -162,7 +185,7 @@ export default function CodeCVApp() {
           type="button"
           className="icon-btn side-close"
           onClick={() => setNavOpen(false)}
-          aria-label="Đóng menu"
+          aria-label={t("shell.closeMenu")}
         >
           <X size={18} />
         </button>
@@ -178,7 +201,9 @@ export default function CodeCVApp() {
         >
           <span className="workspace-main">
             <span className="workspace-name">{teamName}</span>
-            <span className="workspace-sub">{workspace.positions} vị trí đang mở</span>
+            <span className="workspace-sub">
+              {t("shell.positionsOpen", { count: stats.positions })}
+            </span>
           </span>
           <ChevronDown size={15} aria-hidden="true" />
         </button>
@@ -202,12 +227,12 @@ export default function CodeCVApp() {
         ) : null}
       </div>
 
-      <nav className="side-nav" aria-label="Điều hướng chính">
-        <span className="nav-group">Workspace</span>
+      <nav className="side-nav" aria-label={t("shell.mainNav")}>
+        <span className="nav-group">{t("shell.workspaceGroup")}</span>
         {navItems.map((item) => {
           const Icon = item.icon;
           const on = current === item.key;
-          const count = item.key === "candidates" ? workspace.review : item.count;
+          const count = item.key === "candidates" ? stats.review : item.count;
           return (
             <a
               key={item.key}
@@ -220,11 +245,11 @@ export default function CodeCVApp() {
               }}
             >
               <Icon size={16} aria-hidden="true" />
-              <span className="nav-label">{item.label}</span>
+              <span className="nav-label">{t(item.labelKey)}</span>
               {count ? (
                 <span
                   className="nav-count"
-                  aria-label={`${count} hồ sơ chờ review`}
+                  aria-label={t("shell.reviewAria", { count })}
                 >
                   {count}
                 </span>
@@ -235,15 +260,35 @@ export default function CodeCVApp() {
       </nav>
 
       <div className="side-foot">
+        <div className="lang-switch" role="group" aria-label={t("shell.language")}>
+          <button
+            type="button"
+            className={`lang-option${lang === "vi" ? " is-on" : ""}`}
+            aria-pressed={lang === "vi"}
+            aria-label={t("shell.langVi")}
+            onClick={() => setLang("vi")}
+          >
+            VI
+          </button>
+          <button
+            type="button"
+            className={`lang-option${lang === "en" ? " is-on" : ""}`}
+            aria-pressed={lang === "en"}
+            aria-label={t("shell.langEn")}
+            onClick={() => setLang("en")}
+          >
+            EN
+          </button>
+        </div>
         <a className="nav-item" href="#settings" onClick={(e) => { e.preventDefault(); go("settings"); }}>
           <HelpCircle size={16} aria-hidden="true" />
-          <span className="nav-label">Trợ giúp & tài liệu</span>
+          <span className="nav-label">{t("shell.helpDocs")}</span>
         </a>
         <div className="account-row">
           <Avatar initials="MA" hue={243} size={30} name="Minh Anh" />
           <span className="account-main">
             <span className="account-name">Minh Anh</span>
-            <span className="account-sub">Recruiter · Owner</span>
+            <span className="account-sub">{t("shell.accountRole")}</span>
           </span>
         </div>
       </div>
@@ -258,7 +303,7 @@ export default function CodeCVApp() {
         <button
           type="button"
           className="nav-scrim"
-          aria-label="Đóng menu"
+          aria-label={t("shell.closeMenu")}
           onClick={() => setNavOpen(false)}
         />
       ) : null}
@@ -271,20 +316,20 @@ export default function CodeCVApp() {
             type="search"
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
-            placeholder="Tìm ứng viên, repository, báo cáo…"
-            aria-label="Tìm kiếm toàn workspace"
+            placeholder={t("shell.searchPlaceholder")}
+            aria-label={t("shell.searchAria")}
           />
           <kbd>/</kbd>
         </form>
         <div className="topbar-right">
           <span className="model-status">
             <span className="model-dot" aria-hidden="true" />
-            {workspace.analysisModel}
+            {activeModel?.name ?? t("shell.modelFallback")}
           </span>
-          <button type="button" className="icon-btn" aria-label="Thông báo">
+          <button type="button" className="icon-btn" aria-label={t("shell.notifications")}>
             <Bell size={17} />
           </button>
-          <button type="button" className="icon-btn" aria-label="Trợ giúp">
+          <button type="button" className="icon-btn" aria-label={t("shell.help")}>
             <HelpCircle size={17} />
           </button>
           <Avatar initials="MA" hue={243} size={28} name="Minh Anh" />
@@ -297,7 +342,7 @@ export default function CodeCVApp() {
             <button
               type="button"
               className="icon-btn"
-              aria-label="Mở menu"
+              aria-label={t("shell.openMenu")}
               aria-expanded={navOpen}
               onClick={() => setNavOpen(true)}
             >
@@ -305,7 +350,7 @@ export default function CodeCVApp() {
             </button>
             <span className="mobile-title">
               <LogoMark size={20} />
-              {screenTitles[route.screen]}
+              {t(screenTitles[route.screen])}
             </span>
             <Avatar initials="MA" hue={243} size={26} name="Minh Anh" />
           </header>
@@ -331,11 +376,11 @@ export default function CodeCVApp() {
               />
             ) : null}
             {route.screen === "interview" ? (
-              <InterviewStudio
-                key={route.id ?? "an"}
-                id={route.id ?? "an"}
-                go={go}
-              />
+              route.id ? (
+                <InterviewStudio key={route.id} id={route.id} go={go} />
+              ) : (
+                <InterviewPicker go={go} />
+              )
             ) : null}
             {route.screen === "jobs" ? <Jobs go={go} /> : null}
             {route.screen === "reports" ? <Reports go={go} /> : null}

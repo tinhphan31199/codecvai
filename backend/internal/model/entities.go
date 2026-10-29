@@ -86,17 +86,18 @@ type PositionCriterion struct {
 }
 
 type Position struct {
-	ID          string              `json:"id"`
-	Title       string              `json:"title"`
-	Team        string              `json:"team"`
-	Level       string              `json:"level"`
-	Open        string              `json:"open"`
-	Candidates  int                 `json:"candidates"`
-	Updated     string              `json:"updated"`
-	Owner       string              `json:"owner"`
-	Location    string              `json:"location"`
-	Description string              `json:"description"`
-	Criteria    []PositionCriterion `json:"criteria"`
+	ID             string              `json:"id"`
+	Title          string              `json:"title"`
+	Team           string              `json:"team"`
+	Level          string              `json:"level"`
+	Open           string              `json:"open"`
+	Candidates     int                 `json:"candidates"`
+	CandidateCount int                 `json:"candidateCount"`
+	Updated        string              `json:"updated"`
+	Owner          string              `json:"owner"`
+	Location       string              `json:"location"`
+	Description    string              `json:"description"`
+	Criteria       []PositionCriterion `json:"criteria"`
 }
 
 type Report struct {
@@ -119,11 +120,14 @@ type TeamMember struct {
 }
 
 type AIModel struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Provider string `json:"provider"`
-	Note     string `json:"note"`
-	Active   bool   `json:"active"`
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Provider   string `json:"provider"`
+	Note       string `json:"note"`
+	Active     bool   `json:"active"`
+	APIKey     string `json:"apiKey,omitempty"`
+	APIKeySet  bool   `json:"apiKeySet"`
+	APIKeyHint string `json:"apiKeyHint,omitempty"`
 }
 
 type UploadStage struct {
@@ -132,24 +136,40 @@ type UploadStage struct {
 	Detail string `json:"detail"`
 }
 
+type ServiceConfig struct {
+	ID         string `json:"id"`
+	Kind       string `json:"kind"`
+	Name       string `json:"name"`
+	BaseURL    string `json:"baseUrl"`
+	APIKey     string `json:"apiKey,omitempty"`
+	APIKeySet  bool   `json:"apiKeySet"`
+	APIKeyHint string `json:"apiKeyHint,omitempty"`
+	Sort       int    `json:"sort"`
+}
+
 type Level struct {
 	Name string `json:"name"`
 	Rank int    `json:"rank"`
 }
 
+type Stats struct {
+	Total      int    `json:"total"`
+	Completed  int    `json:"completed"`
+	Review     int    `json:"review"`
+	Processing int    `json:"processing"`
+	Failed     int    `json:"failed"`
+	Archived   int    `json:"archived"`
+	Positions  int    `json:"positions"`
+	Updated    string `json:"updated"`
+	UpdatedAt  string `json:"updatedAt"`
+}
+
 type Workspace struct {
-	Name          string `json:"name"`
-	Total         int    `json:"total"`
-	Completed     int    `json:"completed"`
-	Review        int    `json:"review"`
-	Processing    int    `json:"processing"`
-	Failed        int    `json:"failed"`
-	Archived      int    `json:"archived"`
-	Positions     int    `json:"positions"`
-	Updated       string `json:"updated"`
-	UpdatedAt     string `json:"updatedAt"`
-	Reviewer      string `json:"reviewer"`
-	AnalysisModel string `json:"analysisModel"`
+	TwoFactor    bool `json:"twoFactor"`
+	SessionHours int  `json:"sessionHours"`
+	NotifyReview bool `json:"notifyReview"`
+	NotifyDone   bool `json:"notifyDone"`
+	NotifyDigest bool `json:"notifyDigest"`
 }
 
 // RepoAnalysis bundles everything the Repository Analysis screen renders.
@@ -166,7 +186,6 @@ type RepoAnalysis struct {
 
 // Dashboard is the aggregate payload for the overview screen.
 type Dashboard struct {
-	Workspace  Workspace         `json:"workspace"`
 	Review     []CandidateRecord `json:"review"`
 	Processing []CandidateRecord `json:"processing"`
 	Recent     []CandidateRecord `json:"recent"`

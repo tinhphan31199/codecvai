@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"codecv/backend/internal/gemini"
 	"codecv/backend/internal/model"
 	"codecv/backend/internal/store"
 )
@@ -39,6 +40,15 @@ func (s *Server) handleWorkspace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, workspace)
+}
+
+func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
+	stats, err := s.store.Stats(r.Context())
+	if err != nil {
+		s.storeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, stats)
 }
 
 func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
@@ -328,6 +338,7 @@ func (s *Server) handleModels(w http.ResponseWriter, r *http.Request) {
 			s.configError(w, err, "Không tìm thấy model.", "Mã model đã tồn tại.")
 			return
 		}
+		store.HideModelKey(&m)
 		writeJSON(w, http.StatusCreated, m)
 		return
 	}
@@ -358,6 +369,10 @@ func (s *Server) handleModel(w http.ResponseWriter, r *http.Request) {
 			s.configError(w, err, "Không tìm thấy model.", "Mã model đã tồn tại.")
 			return
 		}
+		if key, err := s.store.ModelAPIKey(r.Context(), m.ID); err == nil {
+			m.APIKey = key
+		}
+		store.HideModelKey(&m)
 		writeJSON(w, http.StatusOK, m)
 	case http.MethodDelete:
 		if err := s.store.DeleteModel(r.Context(), id); err != nil {
@@ -366,6 +381,70 @@ func (s *Server) handleModel(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusNoContent)
 	}
+}
+
+func (s *Server) handleGeminiModels(w http.ResponseWriter, r *http.Request) {
+	var payload struct {
+		APIKey  string `json:"apiKey"`
+		ModelID string `json:"modelId"`
+	}
+	if err := decodeJSON(r, &payload); err != nil {
+		s.fail(w, http.StatusBadRequest, "bad_request", "Không đọc được dữ liệu gửi lên.")
+		return
+	}
+
+	baseURL, providerKey := s.serviceConfig(r.Context(), "google", "https://generativelanguage.googleapis.com/v1beta")
+	key := strings.TrimSpace(payload.APIKey)
+	if key == "" {
+		key = providerKey
+	}
+	if key == "" && strings.TrimSpace(payload.ModelID) != "" && s.store != nil {
+		if stored, err := s.store.ModelAPIKey(r.Context(), payload.ModelID); err == nil {
+			key = strings.TrimSpace(stored)
+		}
+	}
+
+	models, err := gemini.New(baseURL, key).ListModels(r.Context())
+	if err != nil {
+		var geminiErr *gemini.Error
+		if errors.As(err, &geminiErr) {
+			s.fail(w, errorStatus(geminiErr.Code), geminiErr.Code, geminiErr.Message)
+			return
+		}
+		s.fail(w, http.StatusBadGateway, "upstream_error", "Không lấy được danh sách model từ Google.")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"models": models})
+}
+
+func (s *Server) handleServiceConfigs(w http.ResponseWriter, r *http.Request) {
+	configs, err := s.store.ServiceConfigs(r.Context())
+	if err != nil {
+		s.storeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"configs": configs})
+}
+
+func (s *Server) handleServiceConfig(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+
+	var payload model.ServiceConfig
+	if err := decodeJSON(r, &payload); err != nil {
+		s.fail(w, http.StatusBadRequest, "bad_request", "Không đọc được dữ liệu gửi lên.")
+		return
+	}
+	if err := s.store.UpdateServiceConfig(r.Context(), id, payload); err != nil {
+		s.configError(w, err, "Không tìm thấy nhà cung cấp.", "")
+		return
+	}
+	record, err := s.store.ServiceConfig(r.Context(), id)
+	if err != nil {
+		s.storeError(w, err)
+		return
+	}
+	store.HideServiceKey(&record)
+	writeJSON(w, http.StatusOK, record)
 }
 
 func (s *Server) handleStages(w http.ResponseWriter, r *http.Request) {

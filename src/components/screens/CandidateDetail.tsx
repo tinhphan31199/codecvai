@@ -20,6 +20,7 @@ import {
   severityMeta,
 } from "@/data/codecv";
 import { patchCandidate, useCandidate } from "@/lib/api";
+import { useT, type MessageKey } from "@/lib/i18n";
 import {
   Avatar,
   CardHead,
@@ -35,12 +36,12 @@ import {
 
 type TabKey = "overview" | "evidence" | "repository" | "questions" | "history";
 
-const tabs: { key: TabKey; label: string }[] = [
-  { key: "overview", label: "Tổng quan" },
-  { key: "evidence", label: "Bằng chứng" },
-  { key: "repository", label: "Repository" },
-  { key: "questions", label: "Câu hỏi" },
-  { key: "history", label: "Lịch sử" },
+const tabs: { key: TabKey; labelKey: MessageKey }[] = [
+  { key: "overview", labelKey: "candidate.tabOverview" },
+  { key: "evidence", labelKey: "candidate.tabEvidence" },
+  { key: "repository", labelKey: "candidate.tabRepository" },
+  { key: "questions", labelKey: "candidate.tabQuestions" },
+  { key: "history", labelKey: "candidate.tabHistory" },
 ];
 
 export default function CandidateDetail({
@@ -50,6 +51,7 @@ export default function CandidateDetail({
   id: string;
   go: (screen: Screen, id?: string) => void;
 }) {
+  const t = useT();
   const { data: candidate, loading, error, refetch } = useCandidate(id);
   const overviewRef = useRef<HTMLDivElement>(null);
   const evidenceRef = useRef<HTMLDivElement>(null);
@@ -69,13 +71,13 @@ export default function CandidateDetail({
   }, [candidate]);
 
   if (loading) {
-    return <ScreenLoader title="Ứng viên" />;
+    return <ScreenLoader title={t("screen.candidate")} />;
   }
 
   if (error) {
     return (
       <div className="screen">
-        <PageHead title="Ứng viên" />
+        <PageHead title={t("screen.candidate")} />
         <LoadError message={error} onRetry={refetch} />
       </div>
     );
@@ -85,15 +87,15 @@ export default function CandidateDetail({
     return (
       <div className="screen">
         <EmptyState
-          title="Không tìm thấy hồ sơ"
-          detail="Hồ sơ có thể đã bị lưu trữ hoặc đường dẫn không đúng."
+          title={t("candidate.notFoundTitle")}
+          detail={t("candidate.notFoundDetail")}
           action={
             <button
               type="button"
               className="btn btn-ghost"
               onClick={() => go("candidates")}
             >
-              Về danh sách ứng viên
+              {t("candidate.backToList")}
             </button>
           }
         />
@@ -132,30 +134,40 @@ export default function CandidateDetail({
 
   const exportReport = () => {
     const lines = [
-      `# CodeCV AI — Báo cáo ứng viên`,
+      `# CodeCV AI — ${t("candidate.mdTitle")}`,
       ``,
       `**${candidate.name}** · ${candidate.position} · ${candidate.level}`,
       `${candidate.email} · ${candidate.phone} · ${candidate.location}`,
       ``,
-      `## Tóm tắt`,
+      `## ${t("candidate.mdSummary")}`,
       candidate.summary,
       ``,
-      `## Bảng bằng chứng (${ev.covered}/${ev.total} tiêu chí có bằng chứng)`,
+      `## ${t("candidate.mdEvidence", {
+        covered: ev.covered,
+        total: ev.total,
+      })}`,
       ...candidate.criteria.map(
         (item) =>
-          `- [${evidenceMeta[item.state].label}] ${item.label} — ${item.evidence} bằng chứng · ${item.note}`,
+          `- [${t(evidenceMeta[item.state].labelKey)}] ${item.label} — ${t(
+            "candidate.mdEvidenceCount",
+            { count: item.evidence },
+          )} · ${item.note}`,
       ),
       ``,
-      `## Điểm mạnh`,
+      `## ${t("candidate.mdStrengths")}`,
       ...candidate.strengths.map((item) => `- ${item}`),
       ``,
-      `## Cần xác minh`,
+      `## ${t("candidate.mdVerify")}`,
       ...candidate.verify.map((item) => `- ${item}`),
       ``,
-      `## Ghi chú của reviewer`,
-      note.trim() || "Chưa có ghi chú.",
+      `## ${t("candidate.mdNotes")}`,
+      note.trim() || t("candidate.mdNoNote"),
       ``,
-      `Nguồn: ${candidate.source}${candidate.repo ? ` · ${candidate.repo}@${candidate.commit}` : ""}`,
+      t("candidate.source", {
+        source: candidate.repo
+          ? `${candidate.source} · ${candidate.repo}@${candidate.commit}`
+          : candidate.source,
+      }),
     ];
     const blob = new Blob([lines.join("\n")], {
       type: "text/markdown;charset=utf-8",
@@ -176,12 +188,17 @@ export default function CandidateDetail({
         onClick={() => go("candidates")}
       >
         <ArrowLeft size={14} aria-hidden="true" />
-        Danh sách ứng viên
+        {t("candidate.backLink")}
       </button>
 
       <PageHead
         title={candidate.name}
-        sub={`${candidate.role} · ${candidate.years} năm kinh nghiệm · ${candidate.location} · ${candidate.email}`}
+        sub={t("candidate.sub", {
+          role: candidate.role,
+          years: candidate.years,
+          location: candidate.location,
+          email: candidate.email,
+        })}
         actions={
           <>
             <button
@@ -190,7 +207,7 @@ export default function CandidateDetail({
               onClick={exportReport}
             >
               <Download size={15} aria-hidden="true" />
-              Xuất báo cáo
+              {t("candidate.exportReport")}
             </button>
             <button
               type="button"
@@ -199,7 +216,7 @@ export default function CandidateDetail({
               onClick={() => go("interview", candidate.id)}
             >
               <MessageSquare size={15} aria-hidden="true" />
-              Chuyển sang phỏng vấn
+              {t("candidate.toInterview")}
             </button>
           </>
         }
@@ -218,15 +235,20 @@ export default function CandidateDetail({
               <StatusPill status={candidate.status} />
               <span className="level-tag">{candidate.level}</span>
               <span className="dot-sep" aria-hidden="true" />
-              <span className="muted">Nguồn: {candidate.source}</span>
+              <span className="muted">
+                {t("candidate.source", { source: candidate.source })}
+              </span>
             </span>
             <span className="detail-person-sub">
-              Người review {candidate.reviewer ?? "—"} · cập nhật {candidate.updated}
+              {t("candidate.reviewerMeta", {
+                reviewer: candidate.reviewer ?? "—",
+                updated: candidate.updated,
+              })}
             </span>
           </div>
         </div>
         <div className="detail-health">
-          <span className="health-label">Bằng chứng</span>
+          <span className="health-label">{t("candidate.tabEvidence")}</span>
           <span className="health-value num">
             {ev.covered}/{ev.total}
           </span>
@@ -239,7 +261,7 @@ export default function CandidateDetail({
         </div>
       </div>
 
-      <nav className="detail-tabs" aria-label="Các phần của hồ sơ">
+      <nav className="detail-tabs" aria-label={t("candidate.tabsAria")}>
         {tabs.map((item) => (
           <button
             key={item.key}
@@ -257,7 +279,7 @@ export default function CandidateDetail({
               jump(item.key, map[item.key]);
             }}
           >
-            {item.label}
+            {t(item.labelKey)}
             {item.key === "evidence" ? (
               <span className="tab-count num">{ev.total}</span>
             ) : null}
@@ -266,7 +288,9 @@ export default function CandidateDetail({
             ) : null}
           </button>
         ))}
-        <span className="tabs-meta">Báo cáo v3 · {candidate.updatedAt}</span>
+        <span className="tabs-meta">
+          {t("candidate.tabsMeta", { time: candidate.updatedAt })}
+        </span>
       </nav>
 
       <div className="detail-grid">
@@ -275,18 +299,15 @@ export default function CandidateDetail({
             <div className="callout callout-negative" role="status">
               <ShieldAlert size={17} aria-hidden="true" />
               <div>
-                <p className="callout-title">Repository chưa truy cập được</p>
-                <p className="callout-body">
-                  Báo cáo mới dựa trên CV. Cấp lại quyền repository để phân tích
-                  mã nguồn và tạo bằng chứng đầy đủ.
-                </p>
+                <p className="callout-title">{t("candidate.failedTitle")}</p>
+                <p className="callout-body">{t("candidate.failedBody")}</p>
               </div>
               <button
                 type="button"
                 className="btn btn-ghost"
                 onClick={() => go("upload")}
               >
-                Phân tích lại
+                {t("candidate.reanalyze")}
               </button>
             </div>
           ) : null}
@@ -295,11 +316,8 @@ export default function CandidateDetail({
             <div className="callout" role="status">
               <Sparkles size={17} aria-hidden="true" />
               <div className="callout-grow">
-                <p className="callout-title">Đang phân tích hồ sơ</p>
-                <p className="callout-body">
-                  Bằng chứng bên dưới là kết quả tạm thời và sẽ được cập nhật khi
-                  hoàn tất.
-                </p>
+                <p className="callout-title">{t("candidate.processingTitle")}</p>
+                <p className="callout-body">{t("candidate.processingBody")}</p>
                 <StageLadder step={candidate.stageIndex ?? 1} />
               </div>
             </div>
@@ -311,14 +329,18 @@ export default function CandidateDetail({
             aria-labelledby="overview-title"
           >
             <CardHead
-              title="Tóm tắt của CodeCV"
-              meta={`${ev.verified} đã xác minh · ${ev.inferred} suy luận · ${ev.missing} chưa đủ`}
+              title={t("candidate.summaryTitle")}
+              meta={t("evidence.legend", {
+                verified: ev.verified,
+                inferred: ev.inferred,
+                missing: ev.missing,
+              })}
             />
             <div className="overview-body">
               <p className="lede">{candidate.summary.split(". ")[0]}.</p>
               <div className="split-lists">
                 <div className="split-col">
-                  <h3 className="mini-title">Điểm mạnh có bằng chứng</h3>
+                  <h3 className="mini-title">{t("candidate.strengthsTitle")}</h3>
                   <ul className="plain-list">
                     {candidate.strengths.map((item) => (
                       <li key={item}>{item}</li>
@@ -326,7 +348,7 @@ export default function CandidateDetail({
                   </ul>
                 </div>
                 <div className="split-col">
-                  <h3 className="mini-title">Cần xác minh</h3>
+                  <h3 className="mini-title">{t("candidate.verifyTitle")}</h3>
                   <ul className="plain-list is-warn">
                     {candidate.verify.map((item) => (
                       <li key={item}>{item}</li>
@@ -344,23 +366,26 @@ export default function CandidateDetail({
             aria-labelledby="evidence-title"
           >
             <CardHead
-              title="Bảng bằng chứng"
-              meta={`${ev.total} tiêu chí · ${ev.missing} cần xác minh`}
+              title={t("candidate.evidenceTableTitle")}
+              meta={t("candidate.evidenceTableMeta", {
+                total: ev.total,
+                missing: ev.missing,
+              })}
               action={
                 <span className="legend-inline">
                   <span className="legend-dot is-verified" />
-                  Đã xác minh
+                  {t("evidence.verified")}
                   <span className="legend-dot is-inferred" />
-                  Suy luận
+                  {t("evidence.inferredShort")}
                   <span className="legend-dot is-missing" />
-                  Chưa đủ
+                  {t("evidence.missingShort")}
                 </span>
               }
             />
             <div className="criterion-head">
-              <span>Tiêu chí & nguồn</span>
-              <span>Trạng thái</span>
-              <span className="num">Bằng chứng</span>
+              <span>{t("candidate.criterionColLabel")}</span>
+              <span>{t("candidate.criterionColState")}</span>
+              <span className="num">{t("candidate.criterionColEvidence")}</span>
             </div>
             <div className="criterion-list">
               {candidate.criteria.map((item) => (
@@ -369,15 +394,14 @@ export default function CandidateDetail({
             </div>
             <div className="card-foot">
               <span className="foot-note">
-                Mỗi tiêu chí chỉ được coi là đã xác minh khi có nguồn cụ thể từ
-                CV, repository hoặc phỏng vấn.
+                {t("candidate.evidenceFootNote")}
               </span>
               <button
                 type="button"
                 className="card-link"
                 onClick={() => jump("repository", repoRef)}
               >
-                Xem phát hiện repository
+                {t("candidate.viewRepoFindings")}
                 <ChevronRight size={13} aria-hidden="true" />
               </button>
             </div>
@@ -389,11 +413,15 @@ export default function CandidateDetail({
             aria-labelledby="repo-title"
           >
             <CardHead
-              title="Phát hiện từ repository"
+              title={t("candidate.repoFindingsTitle")}
               meta={
                 candidate.repo
-                  ? `${candidate.repo} · ${candidate.commit ?? "—"} · ${findings.length} phát hiện`
-                  : "Chưa kết nối repository"
+                  ? t("candidate.repoFindingsMeta", {
+                      repo: candidate.repo,
+                      commit: candidate.commit ?? "—",
+                      count: findings.length,
+                    })
+                  : t("candidate.repoNotConnected")
               }
               action={
                 candidate.repo ? (
@@ -402,7 +430,7 @@ export default function CandidateDetail({
                     className="card-link"
                     onClick={() => go("repository", candidate.id)}
                   >
-                    Mở phân tích
+                    {t("candidate.openAnalysis")}
                     <ChevronRight size={13} aria-hidden="true" />
                   </button>
                 ) : null
@@ -414,14 +442,18 @@ export default function CandidateDetail({
                   <div className="finding-row" key={finding.id}>
                     <span
                       className={`sev-dot ${severityMeta[finding.severity].className}`}
-                      aria-label={`Mức ${severityMeta[finding.severity].label}`}
-                      title={`Mức ${severityMeta[finding.severity].label}`}
+                      aria-label={t("candidate.severityLabel", {
+                        level: t(severityMeta[finding.severity].labelKey),
+                      })}
+                      title={t("candidate.severityLabel", {
+                        level: t(severityMeta[finding.severity].labelKey),
+                      })}
                     />
                     <div className="finding-main">
                       <div className="finding-title-row">
                         <span className="finding-title">{finding.title}</span>
                         <span className={`pill ${findingStateMeta[finding.state].className}`}>
-                          {findingStateMeta[finding.state].label}
+                          {t(findingStateMeta[finding.state].labelKey)}
                         </span>
                       </div>
                       <span className="finding-loc">
@@ -432,7 +464,9 @@ export default function CandidateDetail({
                     <button
                       type="button"
                       className="icon-btn"
-                      aria-label={`Mở phát hiện ${finding.title}`}
+                      aria-label={t("candidate.openFindingAria", {
+                        title: finding.title,
+                      })}
                       onClick={() => go("repository", candidate.id)}
                     >
                       <ChevronRight size={16} />
@@ -442,15 +476,15 @@ export default function CandidateDetail({
               </div>
             ) : (
               <EmptyState
-                title="Chưa có phát hiện repository"
-                detail="Kết nối repository công khai để đối chiếu code với tiêu chí tuyển dụng."
+                title={t("candidate.repoEmptyTitle")}
+                detail={t("candidate.repoEmptyDetail")}
                 action={
                   <button
                     type="button"
                     className="btn btn-ghost"
                     onClick={() => go("upload")}
                   >
-                    Kết nối repository
+                    {t("candidate.connectRepo")}
                   </button>
                 }
               />
@@ -458,7 +492,7 @@ export default function CandidateDetail({
             {findings.length > 3 ? (
               <div className="card-foot">
                 <span className="foot-note">
-                  Còn {findings.length - 3} phát hiện khác trong phân tích đầy đủ.
+                  {t("candidate.moreFindings", { count: findings.length - 3 })}
                 </span>
               </div>
             ) : null}
@@ -470,15 +504,15 @@ export default function CandidateDetail({
             aria-labelledby="questions-title"
           >
             <CardHead
-              title="Câu hỏi phỏng vấn"
-              meta={`${questions.length} câu · bám theo bằng chứng`}
+              title={t("candidate.questionsTitle")}
+              meta={t("candidate.questionsMeta", { count: questions.length })}
               action={
                 <button
                   type="button"
                   className="card-link"
                   onClick={() => go("interview", candidate.id)}
                 >
-                  Mở Interview Studio
+                  {t("candidate.openInterview")}
                   <ChevronRight size={13} aria-hidden="true" />
                 </button>
               }
@@ -500,8 +534,10 @@ export default function CandidateDetail({
             <div className="card-foot">
               <span className="foot-note">
                 {questions.length - 3 > 0
-                  ? `Còn ${questions.length - 3} câu hỏi và hướng dẫn đáp án trong Interview Studio.`
-                  : "Toàn bộ câu hỏi đã hiển thị."}
+                  ? t("candidate.moreQuestions", {
+                      count: questions.length - 3,
+                    })
+                  : t("candidate.allQuestionsShown")}
               </span>
             </div>
           </section>
@@ -511,7 +547,10 @@ export default function CandidateDetail({
             ref={historyRef}
             aria-labelledby="history-title"
           >
-            <CardHead title="Lịch sử hồ sơ" meta={`${history.length} sự kiện`} />
+            <CardHead
+              title={t("candidate.historyTitle")}
+              meta={t("candidate.historyMeta", { count: history.length })}
+            />
             <ol className="timeline timeline-wide">
               {history.map((event, index) => (
                 <li key={`${event.at}-${index}`}>
@@ -530,41 +569,44 @@ export default function CandidateDetail({
 
         <aside className="detail-rail">
           <section className="card">
-            <CardHead title="Thông tin hồ sơ" />
+            <CardHead title={t("candidate.infoTitle")} />
             <dl className="info-list">
               <div>
-                <dt>Vị trí</dt>
+                <dt>{t("candidate.infoPosition")}</dt>
                 <dd>{candidate.position}</dd>
               </div>
               <div>
-                <dt>Kinh nghiệm</dt>
-                <dd>{candidate.years} năm</dd>
+                <dt>{t("candidate.infoExperience")}</dt>
+                <dd>{t("candidate.infoYears", { years: candidate.years })}</dd>
               </div>
               <div>
-                <dt>Địa điểm</dt>
+                <dt>{t("candidate.infoLocation")}</dt>
                 <dd>{candidate.location}</dd>
               </div>
               <div>
-                <dt>Nguồn</dt>
+                <dt>{t("candidate.infoSource")}</dt>
                 <dd>{candidate.source}</dd>
               </div>
               <div>
-                <dt>Người review</dt>
-                <dd>{candidate.reviewer ?? "Chưa chỉ định"}</dd>
+                <dt>{t("candidate.infoReviewer")}</dt>
+                <dd>{candidate.reviewer ?? t("candidate.unassigned")}</dd>
               </div>
               <div>
-                <dt>Ngày tạo</dt>
+                <dt>{t("candidate.infoCreated")}</dt>
                 <dd className="num">{candidate.createdAt}</dd>
               </div>
               <div>
-                <dt>Liên hệ</dt>
+                <dt>{t("candidate.infoContact")}</dt>
                 <dd className="num">{candidate.phone}</dd>
               </div>
             </dl>
           </section>
 
           <section className="card">
-            <CardHead title="Kỹ năng & độ tin cậy" meta={`${skills.length} kỹ năng`} />
+            <CardHead
+              title={t("candidate.skillsTitle")}
+              meta={t("candidate.skillsMeta", { count: skills.length })}
+            />
             <div className="skill-list">
               {skills.slice(0, 7).map((skill) => (
                 <div className="skill-row" key={skill.name}>
@@ -592,14 +634,13 @@ export default function CandidateDetail({
             </div>
             <div className="card-foot">
               <span className="foot-note">
-                {missing.length} tiêu chí chưa đủ dữ liệu; không suy đoán thay
-                bằng chứng.
+                {t("candidate.skillsFootNote", { count: missing.length })}
               </span>
             </div>
           </section>
 
           <section className="card">
-            <CardHead title="Ghi chú reviewer" />
+            <CardHead title={t("candidate.noteTitle")} />
             <textarea
               className="note-input"
               value={note}
@@ -608,8 +649,8 @@ export default function CandidateDetail({
                 setNoteSaved(false);
               }}
               rows={4}
-              placeholder="Ghi lại điều cần kiểm tra hoặc ấn tượng ban đầu…"
-              aria-label="Ghi chú reviewer"
+              placeholder={t("candidate.notePlaceholder")}
+              aria-label={t("candidate.noteAria")}
             />
             <div className="note-foot">
               <button
@@ -618,14 +659,14 @@ export default function CandidateDetail({
                 disabled={!note.trim() || saving}
                 onClick={saveNote}
               >
-                {saving ? "Đang lưu…" : "Lưu ghi chú"}
+                {saving ? t("candidate.saving") : t("candidate.saveNote")}
               </button>
               {noteSaved ? (
                 <span className="save-state" role="status">
-                  Đã lưu trong workspace
+                  {t("candidate.noteSaved")}
                 </span>
               ) : (
-                <span className="foot-note">Chỉ hiển thị với người review.</span>
+                <span className="foot-note">{t("candidate.notePrivate")}</span>
               )}
             </div>
           </section>

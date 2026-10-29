@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { Candidate, Finding, Position } from "@/data/codecv";
+import { getLang, translate } from "@/lib/i18n";
 
 const API_BASE = (
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080"
@@ -9,8 +10,7 @@ const API_BASE = (
 
 // ---- Types ----
 
-export interface Workspace {
-  name: string;
+export interface Stats {
   total: number;
   completed: number;
   review: number;
@@ -20,8 +20,14 @@ export interface Workspace {
   positions: number;
   updated: string;
   updatedAt: string;
-  reviewer: string;
-  analysisModel: string;
+}
+
+export interface Workspace {
+  twoFactor: boolean;
+  sessionHours: number;
+  notifyReview: boolean;
+  notifyDone: boolean;
+  notifyDigest: boolean;
 }
 
 export interface Report {
@@ -49,6 +55,25 @@ export interface AIModel {
   provider: string;
   note: string;
   active: boolean;
+  apiKey?: string;
+  apiKeySet?: boolean;
+  apiKeyHint?: string;
+}
+
+export interface GeminiModel {
+  id: string;
+  displayName: string;
+}
+
+export interface ServiceConfig {
+  id: string;
+  kind: string;
+  name: string;
+  baseUrl: string;
+  apiKey?: string;
+  apiKeySet?: boolean;
+  apiKeyHint?: string;
+  sort: number;
 }
 
 export interface UploadStage {
@@ -90,15 +115,13 @@ export interface RepoAnalysis {
 }
 
 export interface Dashboard {
-  workspace: Workspace;
   review: Candidate[];
   processing: Candidate[];
   recent: Candidate[];
   positions: Position[];
 }
 
-const EMPTY_WORKSPACE: Workspace = {
-  name: "",
+const EMPTY_STATS: Stats = {
   total: 0,
   completed: 0,
   review: 0,
@@ -108,8 +131,14 @@ const EMPTY_WORKSPACE: Workspace = {
   positions: 0,
   updated: "",
   updatedAt: "",
-  reviewer: "",
-  analysisModel: "",
+};
+
+const EMPTY_WORKSPACE: Workspace = {
+  twoFactor: false,
+  sessionHours: 0,
+  notifyReview: false,
+  notifyDone: false,
+  notifyDigest: false,
 };
 
 // ---- Cache & fetch ----
@@ -132,7 +161,9 @@ async function requestJSON<T>(path: string, init?: RequestInit): Promise<T> {
     },
   });
   if (!response.ok) {
-    let message = `Máy chủ trả lời lỗi ${response.status}.`;
+    let message = translate(getLang(), "state.serverError", {
+      status: response.status,
+    });
     try {
       const body = (await response.json()) as {
         error?: { message?: string };
@@ -228,6 +259,15 @@ export function useWorkspace(): Workspace {
   return data ?? EMPTY_WORKSPACE;
 }
 
+export function useStatsQuery(): QueryResult<Stats> {
+  return useQuery<Stats>("/api/stats");
+}
+
+export function useStats(): Stats {
+  const { data } = useStatsQuery();
+  return data ?? EMPTY_STATS;
+}
+
 export function useDashboard(): QueryResult<Dashboard> {
   return useQuery<Dashboard>("/api/dashboard");
 }
@@ -267,6 +307,11 @@ export function useTeam(): QueryResult<TeamMember[]> {
 export function useModels(): QueryResult<AIModel[]> {
   const result = useQuery<{ models: AIModel[] }>("/api/models");
   return { ...result, data: result.data ? result.data.models : null };
+}
+
+export function useServiceConfigs(): QueryResult<ServiceConfig[]> {
+  const result = useQuery<{ configs: ServiceConfig[] }>("/api/service-configs");
+  return { ...result, data: result.data ? result.data.configs : null };
 }
 
 export function useStages(): QueryResult<UploadStage[]> {
@@ -377,6 +422,30 @@ export async function deleteModel(id: string): Promise<void> {
     method: "DELETE",
   });
   invalidate("/api/models");
+}
+
+export async function updateServiceConfig(
+  id: string,
+  config: Pick<ServiceConfig, "baseUrl" | "apiKey">,
+): Promise<ServiceConfig> {
+  const updated = await requestJSON<ServiceConfig>(
+    `/api/service-configs/${encodeURIComponent(id)}`,
+    { method: "PUT", body: JSON.stringify(config) },
+  );
+  invalidate("/api/service-configs");
+  invalidate("/api/models");
+  return updated;
+}
+
+export async function listGeminiModels(input: {
+  apiKey?: string;
+  modelId?: string;
+}): Promise<GeminiModel[]> {
+  const result = await requestJSON<{ models: GeminiModel[] }>(
+    "/api/gemini/models",
+    { method: "POST", body: JSON.stringify(input) },
+  );
+  return result.models;
 }
 
 export async function createStage(stage: UploadStage): Promise<UploadStage> {

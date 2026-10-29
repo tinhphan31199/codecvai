@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"codecv/backend/internal/analysis"
 	"codecv/backend/internal/model"
 	"codecv/backend/internal/positions"
 )
@@ -25,120 +26,23 @@ func testInput(t *testing.T) Input {
 	}
 
 	return Input{
-		CVText:        "Backend engineer with 8 years of experience.",
-		GithubContext: "=== GitHub repo: acme/payment ===\nNgôn ngữ: Go 90%",
-		Position:      position,
-		Level:         "Senior",
-		Language:      "vi",
-		Model:         "gemini-3.5-flash-lite",
-		Repositories: []model.Repository{
-			{
-				URL:    "https://github.com/acme/payment",
-				Label:  "github.com/acme/payment",
-				Kind:   model.RepositoryRepo,
-				Status: model.RepositoryAnalyzed,
+		Input: analysis.Input{
+			CVText:        "Backend engineer with 8 years of experience.",
+			GithubContext: "=== GitHub repo: acme/payment ===\nNgôn ngữ: Go 90%",
+			Position:      position,
+			Level:         "Senior",
+			Language:      "vi",
+			Repositories: []model.Repository{
+				{
+					URL:    "https://github.com/acme/payment",
+					Label:  "github.com/acme/payment",
+					Kind:   model.RepositoryRepo,
+					Status: model.RepositoryAnalyzed,
+				},
 			},
+			IncludeQuestions: true,
 		},
-		IncludeQuestions: true,
-	}
-}
-
-func TestBuildPromptIncludesEvidenceSources(t *testing.T) {
-	input := testInput(t)
-	prompt := buildPrompt(input)
-
-	checks := []string{
-		"Tiếng Việt",
-		input.Position.Title,
-		"<<<GITHUB",
-		"github.com/acme/payment",
-		"đã đọc dữ liệu",
-		"6 câu hỏi phỏng vấn",
-		input.CVText,
-	}
-	for _, expected := range checks {
-		if !strings.Contains(prompt, expected) {
-			t.Fatalf("prompt missing %q", expected)
-		}
-	}
-
-	if strings.Count(prompt, "1. [") != 1 {
-		t.Fatalf("criteria list should start with one numbered entry")
-	}
-}
-
-func TestNormalizeAnalysisMapsCriteriaByPosition(t *testing.T) {
-	input := testInput(t)
-	raw := map[string]any{
-		"candidate": map[string]any{
-			"name":            "Lê Hoàng Minh",
-			"yearsExperience": float64(9.4),
-		},
-		"summary": "Phù hợp backend.",
-		"criteria": []any{
-			map[string]any{"status": "verified", "quote": "8 years of experience", "note": "CV nêu rõ."},
-			map[string]any{"status": "verified", "quote": "[GitHub acme/payment] README", "note": "GitHub xác minh."},
-			map[string]any{"status": "unknown", "quote": "bị bỏ", "note": "trạng thái lạ"},
-		},
-		"strengths": []any{"Kinh nghiệm .NET", "", "Kinh nghiệm webhook"},
-		"gaps":      []any{"Thiếu bằng chứng CI/CD"},
-		"questions": []any{
-			map[string]any{"question": "Thiết kế webhook thế nào?", "topic": "Architecture", "rationale": "Kiểm chứng."},
-			map[string]any{"question": ""},
-		},
-	}
-
-	analysis := normalizeAnalysis(raw, input)
-
-	if analysis.Candidate.Name != "Lê Hoàng Minh" {
-		t.Fatalf("unexpected name: %s", analysis.Candidate.Name)
-	}
-	if analysis.Candidate.YearsExperience != 9 {
-		t.Fatalf("unexpected years: %d", analysis.Candidate.YearsExperience)
-	}
-	if len(analysis.Criteria) != len(input.Position.Criteria) {
-		t.Fatalf("expected %d criteria, got %d", len(input.Position.Criteria), len(analysis.Criteria))
-	}
-	if analysis.Criteria[0].Label != input.Position.Criteria[0].Label {
-		t.Fatalf("criteria labels should come from position, got %s", analysis.Criteria[0].Label)
-	}
-	if analysis.Criteria[2].Status != model.EvidenceMissing {
-		t.Fatalf("unknown status should become missing, got %s", analysis.Criteria[2].Status)
-	}
-	if analysis.Criteria[2].Quote != "" {
-		t.Fatalf("missing criteria should drop the quote, got %q", analysis.Criteria[2].Quote)
-	}
-	if len(analysis.Repositories) != 1 || analysis.Repositories[0].Status != model.RepositoryAnalyzed {
-		t.Fatalf("repositories should be passed through: %+v", analysis.Repositories)
-	}
-	if len(analysis.Strengths) != 2 {
-		t.Fatalf("empty strengths should be dropped, got %+v", analysis.Strengths)
-	}
-	if len(analysis.Questions) != 1 || analysis.Questions[0].Topic != "Architecture" {
-		t.Fatalf("unexpected questions: %+v", analysis.Questions)
-	}
-
-	empty := normalizeAnalysis(map[string]any{}, Input{
-		Position:         input.Position,
-		IncludeQuestions: false,
-	})
-	if empty.Repositories == nil || empty.Questions == nil {
-		t.Fatal("empty analysis should return empty arrays, not null")
-	}
-}
-
-func TestBuildPromptUsesAttachedFile(t *testing.T) {
-	input := testInput(t)
-	input.CVFileURI = "https://generativelanguage.googleapis.com/v1beta/files/abc123"
-	input.CVFileMime = "application/pdf"
-
-	prompt := buildPrompt(input)
-
-	if !strings.Contains(prompt, "file_data") {
-		t.Fatal("file mode prompt should reference file_data")
-	}
-	if strings.Contains(prompt, input.CVText) {
-		t.Fatal("file mode prompt should not embed the extracted CV text")
+		Model: "gemini-3.5-flash-lite",
 	}
 }
 

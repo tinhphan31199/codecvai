@@ -16,11 +16,10 @@ import {
   X,
 } from "lucide-react";
 import type { Screen } from "@/data/codecv";
-import { useLevels, usePositions, useStages } from "@/lib/api";
+import { useLevels, useModels, usePositions, useStages } from "@/lib/api";
+import { useLang, useNumberFormat, useT, type MessageKey } from "@/lib/i18n";
 import {
-  ANALYSIS_MODELS,
   MAX_FILE_BYTES,
-  modelLabel,
   type AnalyzeCvErrorBody,
   type CvAnalysisResponse,
 } from "@/lib/cv-analysis";
@@ -38,7 +37,7 @@ import {
 type PickedFile = {
   file: File;
   name: string;
-  size: string;
+  bytes: number;
 };
 
 type Phase = "idle" | "uploading" | "analyzing" | "done" | "error";
@@ -50,13 +49,22 @@ const API_BASE = (
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080"
 ).replace(/\/+$/, "");
 
-const formatSize = (bytes: number) => {
+const formatSize = (bytes: number, locale: string) => {
   const kb = bytes / 1024;
   const value = kb < 1000 ? kb : kb / 1024;
   const unit = kb < 1000 ? "KB" : "MB";
   const digits = value >= 100 ? 0 : 1;
-  return `${value.toFixed(digits).replace(".", ",")} ${unit}`;
+  return `${new Intl.NumberFormat(locale, {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(value)} ${unit}`;
 };
+
+const formatSeconds = (milliseconds: number, locale: string) =>
+  new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(milliseconds / 1000);
 
 const initialsOf = (name: string) =>
   name
@@ -72,13 +80,20 @@ const hueOf = (name: string) => {
   return hue;
 };
 
+const languageOptions: { value: string; labelKey: MessageKey }[] = [
+  { value: "Tiếng Việt", labelKey: "upload.langVi" },
+  { value: "English", labelKey: "upload.langEn" },
+];
+
 type QueueItem = {
   key: string;
   name: string;
   role: string;
-  stage: string;
+  stageKey: MessageKey;
+  stageVars?: Record<string, string | number>;
   step: number;
-  time: string;
+  timeKey: MessageKey;
+  timeVars?: Record<string, string | number>;
   state: "done" | "running" | "queued";
 };
 
@@ -87,27 +102,31 @@ const initialQueue: QueueItem[] = [
     key: "an",
     name: "Pham_Minh_An_CV.pdf",
     role: "Senior Backend Engineer",
-    stage: "Hoàn tất · 8 tiêu chí",
+    stageKey: "upload.queueStageDone",
+    stageVars: { count: 8 },
     step: 6,
-    time: "2 phút trước",
+    timeKey: "upload.queueTimeMinutesAgo",
+    timeVars: { count: 2 },
     state: "done",
   },
   {
     key: "minh",
     name: "Le_Hoang_Minh_CV.pdf",
     role: "Backend Engineer",
-    stage: "Đang trích xuất bằng chứng",
+    stageKey: "upload.queueStageExtracting",
     step: 3,
-    time: "4 phút trước",
+    timeKey: "upload.queueTimeMinutesAgo",
+    timeVars: { count: 4 },
     state: "running",
   },
   {
     key: "ha",
     name: "Nguyen_Thu_Ha_CV.pdf",
     role: "Product Designer",
-    stage: "Hoàn tất · 6 tiêu chí",
+    stageKey: "upload.queueStageDone",
+    stageVars: { count: 6 },
     step: 6,
-    time: "Hôm qua",
+    timeKey: "upload.queueTimeYesterday",
     state: "done",
   },
 ];
@@ -117,6 +136,9 @@ export default function UploadCV({
 }: {
   go: (screen: Screen, id?: string) => void;
 }) {
+  const t = useT();
+  const lang = useLang();
+  const numberFormat = useNumberFormat();
   const inputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLElement>(null);
   const [file, setFile] = useState<PickedFile | null>(null);
@@ -132,7 +154,7 @@ export default function UploadCV({
   const [positionId, setPositionId] = useState("be-dotnet");
   const [level, setLevel] = useState("Senior");
   const [language, setLanguage] = useState("Tiếng Việt");
-  const [model, setModel] = useState("gemini-3.5-flash-lite");
+  const [modelChoice, setModelChoice] = useState("");
   const [queued, setQueued] = useState(false);
   const [queue, setQueue] = useState<QueueItem[]>(initialQueue);
   const {
@@ -143,6 +165,7 @@ export default function UploadCV({
   } = usePositions();
   const { data: stagesData, loading: stagesLoading } = useStages();
   const { data: levelData } = useLevels();
+  const { data: modelsData } = useModels();
   const positions = positionsData ?? [];
   const uploadStages = stagesData ?? [];
   const levelOptions = levelData?.length
@@ -151,6 +174,25 @@ export default function UploadCV({
   const levelChoices = levelOptions.includes(level)
     ? levelOptions
     : [level, ...levelOptions];
+  const allModels = modelsData ?? [];
+  const activeModels = allModels.filter((item) => item.active);
+  const defaultModel =
+    activeModels.find((item) => item.apiKeySet) ?? activeModels[0];
+  const model = activeModels.some((item) => item.id === modelChoice)
+    ? modelChoice
+    : (defaultModel?.id ?? "");
+  const modelName = (id: string) =>
+    allModels.find((item) => item.id === id)?.name ?? id;
+  const duplicateModelNames = new Set(
+    activeModels
+      .filter(
+        (item) =>
+          activeModels.filter((other) => other.name === item.name).length > 1,
+      )
+      .map((item) => item.name),
+  );
+  const modelOptionLabel = (item: (typeof activeModels)[number]) =>
+    `${item.name}${duplicateModelNames.has(item.name) ? ` (${item.id})` : ""} · ${item.provider}`;
   const position = positions.find((item) => item.id === positionId) ?? positions[0];
   const running = phase === "uploading" || phase === "analyzing";
   const isPdf = Boolean(
@@ -184,8 +226,8 @@ export default function UploadCV({
   if ((positionsLoading || stagesLoading) && !positions.length) {
     return (
       <ScreenLoader
-        title="CV Analysis"
-        label="Đang tải vị trí và công đoạn phân tích…"
+        title={t("screen.upload")}
+        label={t("upload.loading")}
       />
     );
   }
@@ -193,7 +235,7 @@ export default function UploadCV({
   if (positionsError) {
     return (
       <div className="screen">
-        <PageHead title="CV Analysis" />
+        <PageHead title={t("screen.upload")} />
         <LoadError message={positionsError} onRetry={refetchPositions} />
       </div>
     );
@@ -233,21 +275,21 @@ export default function UploadCV({
 
     if (!typeOk) {
       setFile(null);
-      setError("Chỉ hỗ trợ CV định dạng PDF hoặc DOCX. Chọn tệp khác.");
+      setError(t("upload.error.type"));
       return;
     }
     if (selected.size === 0) {
       setFile(null);
-      setError("Tệp rỗng. Chọn tệp khác.");
+      setError(t("upload.error.empty"));
       return;
     }
     if (selected.size > MAX_FILE_BYTES) {
       setFile(null);
-      setError("Tệp vượt quá 10 MB. Nén hoặc xuất lại CV rồi thử lại.");
+      setError(t("upload.error.tooLarge"));
       return;
     }
 
-    setFile({ file: selected, name: selected.name, size: formatSize(selected.size) });
+    setFile({ file: selected, name: selected.name, bytes: selected.size });
   };
 
   const onDrop = (event: React.DragEvent) => {
@@ -258,7 +300,7 @@ export default function UploadCV({
   };
 
   const start = () => {
-    if (!file || running || !position) return;
+    if (!file || running || !position || !model) return;
     const pos = position;
 
     const form = new FormData();
@@ -296,9 +338,10 @@ export default function UploadCV({
             key: `live-${Date.now()}`,
             name: file.name,
             role: `${pos.title} · ${level}`,
-            stage: `Hoàn tất · ${body.analysis.criteria.length} tiêu chí`,
+            stageKey: "upload.queueStageDone",
+            stageVars: { count: body.analysis.criteria.length },
             step: 6,
-            time: "Vừa xong",
+            timeKey: "upload.queueTimeJustNow",
             state: "done",
           },
           ...prev.filter((item) => !item.key.startsWith("live-")),
@@ -319,21 +362,17 @@ export default function UploadCV({
       setError(
         body && "error" in body
           ? body.error.message
-          : `Máy chủ trả lời lỗi ${xhr.status}. Thử lại sau.`,
+          : t("upload.error.server", { status: xhr.status }),
       );
     };
 
     xhr.onerror = () => {
       setPhase("error");
-      setError(
-        "Không kết nối được máy chủ phân tích. Kiểm tra kết nối mạng rồi thử lại.",
-      );
+      setError(t("upload.error.network"));
     };
     xhr.ontimeout = () => {
       setPhase("error");
-      setError(
-        "Phân tích vượt quá 150 giây. Thử lại hoặc dùng Gemini 3.1 Flash Lite.",
-      );
+      setError(t("upload.error.timeout"));
     };
 
     xhr.send(form);
@@ -386,33 +425,43 @@ export default function UploadCV({
 
   const fileNote =
     phase === "done" && result
-      ? `${result.meta.pages ? `${result.meta.pages} trang · ` : ""}${result.analysis.criteria.length} tiêu chí đã đối chiếu`
+      ? result.meta.pages
+        ? t("upload.fileNote.donePages", {
+            pages: result.meta.pages,
+            count: result.analysis.criteria.length,
+          })
+        : t("upload.fileNote.done", {
+            count: result.analysis.criteria.length,
+          })
       : phase === "uploading"
-        ? "đang tải lên máy chủ"
+        ? t("upload.fileNote.uploading")
         : phase === "analyzing"
-          ? "đang phân tích bằng Gemini"
+          ? t("upload.fileNote.analyzing")
           : phase === "error"
-            ? "phân tích chưa hoàn tất"
-            : "sẵn sàng phân tích";
+            ? t("upload.fileNote.error")
+            : t("upload.fileNote.idle");
 
   const criteria = result?.analysis.criteria ?? [];
   const verifiedCount = criteria.filter((item) => item.status === "verified").length;
   const inferredCount = criteria.filter((item) => item.status === "inferred").length;
   const missingCount = criteria.filter((item) => item.status === "missing").length;
   const coveredCount = verifiedCount + inferredCount;
+  const languageLabelKey = languageOptions.find(
+    (item) => item.value === language,
+  )?.labelKey;
 
   return (
     <div className="screen">
       <PageHead
-        title="CV Analysis"
-        sub="Tải CV, đối chiếu với mô tả công việc và tạo bằng chứng có thể kiểm chứng."
+        title={t("screen.upload")}
+        sub={t("upload.sub")}
         actions={
           <button
             type="button"
             className="btn btn-ghost"
             onClick={() => go("candidates")}
           >
-            Lịch sử phân tích
+            {t("upload.history")}
             <ChevronRight size={14} aria-hidden="true" />
           </button>
         }
@@ -422,7 +471,7 @@ export default function UploadCV({
         <div className="callout callout-negative analyze-error" role="alert">
           <CircleAlert size={17} aria-hidden="true" />
           <div>
-            <p className="callout-title">Không thể phân tích CV</p>
+            <p className="callout-title">{t("upload.errorTitle")}</p>
             <p className="callout-body">{error}</p>
           </div>
           {file ? (
@@ -432,7 +481,7 @@ export default function UploadCV({
               onClick={start}
               disabled={running}
             >
-              Thử lại
+              {t("action.retry")}
             </button>
           ) : null}
         </div>
@@ -440,7 +489,10 @@ export default function UploadCV({
 
       <div className="upload-grid">
         <section className="card">
-          <CardHead title="Tải hồ sơ" meta="PDF, DOCX · tối đa 10 MB" />
+          <CardHead
+            title={t("upload.uploadCardTitle")}
+            meta={t("upload.uploadCardMeta")}
+          />
           <input
             ref={inputRef}
             type="file"
@@ -464,14 +516,14 @@ export default function UploadCV({
               <div className="file-main">
                 <span className="file-name">{file.name}</span>
                 <span className="file-meta">
-                  {file.size} · {fileNote}
+                  {formatSize(file.bytes, lang)} · {fileNote}
                 </span>
               </div>
               {isPdf ? (
                 <button
                   type="button"
                   className="icon-btn"
-                  aria-label="Xem trước PDF"
+                  aria-label={t("upload.previewPdfAria")}
                   onClick={openPreview}
                 >
                   <Eye size={16} />
@@ -480,7 +532,7 @@ export default function UploadCV({
               <button
                 type="button"
                 className="icon-btn"
-                aria-label="Bỏ file đã chọn"
+                aria-label={t("upload.clearFileAria")}
                 disabled={running}
                 onClick={reset}
               >
@@ -493,7 +545,7 @@ export default function UploadCV({
             className={`dropzone${dragging ? " is-drag" : ""}`}
             role="button"
             tabIndex={0}
-            aria-label="Chọn hoặc kéo thả file CV"
+            aria-label={t("upload.dropAria")}
             onClick={() => inputRef.current?.click()}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
@@ -509,15 +561,13 @@ export default function UploadCV({
             onDrop={onDrop}
           >
             <UploadCloud size={20} aria-hidden="true" />
-            <p className="drop-title">Kéo thả CV vào đây</p>
-            <p className="drop-sub">
-              hoặc chọn file từ máy · PDF, DOCX · tối đa 10 MB
-            </p>
+            <p className="drop-title">{t("upload.dropTitle")}</p>
+            <p className="drop-sub">{t("upload.dropSub")}</p>
           </div>
 
           <div className="form-stack upload-foot">
             <label className="field">
-              <span className="field-label">Cấp bậc đánh giá</span>
+              <span className="field-label">{t("upload.levelLabel")}</span>
               <select
                 value={level}
                 onChange={(event) => setLevel(event.target.value)}
@@ -531,37 +581,34 @@ export default function UploadCV({
             </label>
 
             <span className="repo-extract-note">
-              <GitBranch size={12} aria-hidden="true" /> Link GitHub trong CV
-              được đọc qua GitHub API: repo công khai sẽ phân tích mã nguồn, hồ
-              sơ cá nhân sẽ quét toàn bộ repo công khai.
+              <GitBranch size={12} aria-hidden="true" /> {t("upload.repoNote")}
             </span>
           </div>
 
           <div className="upload-foot">
-            <span className="foot-note">
-              File được lưu trong workspace Product Engineering và chỉ dùng để
-              đánh giá tuyển dụng.
-            </span>
+            <span className="foot-note">{t("upload.filePolicy")}</span>
           </div>
         </section>
 
         <section className="card">
-          <CardHead title="Cấu hình phân tích" />
+          <CardHead title={t("upload.configTitle")} />
           {queued && result ? (
             <div className="queue-confirm" role="status">
               <Check size={15} aria-hidden="true" />
               <span>
-                Đã phân tích <strong>{file?.name}</strong>.
+                {t("upload.queuedLead")}
+                <strong>{file?.name}</strong>
+                {t("upload.queuedTail")}
               </span>
               <button type="button" className="card-link" onClick={scrollToResult}>
-                Xem kết quả
+                {t("upload.viewResult")}
                 <ChevronRight size={13} aria-hidden="true" />
               </button>
             </div>
           ) : null}
           <div className="form-stack">
             <label className="field">
-              <span className="field-label">Vị trí đối chiếu</span>
+              <span className="field-label">{t("upload.positionLabel")}</span>
               <select
                 value={positionId}
                 onChange={(event) => setPositionId(event.target.value)}
@@ -576,27 +623,34 @@ export default function UploadCV({
 
             <div className="form-grid">
               <label className="field">
-                <span className="field-label">Ngôn ngữ đánh giá</span>
+                <span className="field-label">{t("upload.languageLabel")}</span>
                 <select
                   value={language}
                   onChange={(event) => setLanguage(event.target.value)}
                 >
-                  <option>Tiếng Việt</option>
-                  <option>English</option>
+                  {languageOptions.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {t(item.labelKey)}
+                    </option>
+                  ))}
                 </select>
               </label>
 
               <label className="field">
-                <span className="field-label">Model phân tích</span>
+                <span className="field-label">{t("upload.modelLabel")}</span>
                 <select
                   value={model}
-                  onChange={(event) => setModel(event.target.value)}
+                  onChange={(event) => setModelChoice(event.target.value)}
                 >
-                  {ANALYSIS_MODELS.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.label}
-                    </option>
-                  ))}
+                  {activeModels.length ? (
+                    activeModels.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {modelOptionLabel(item)}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">{t("upload.noModelOption")}</option>
+                  )}
                 </select>
               </label>
             </div>
@@ -604,16 +658,14 @@ export default function UploadCV({
             <div className="switch-stack">
               <div className="switch-row">
                 <span className="switch-main">
-                  <span className="switch-label">Đối chiếu với JD</span>
-                  <span className="switch-sub">
-                    Chỉ ra tiêu chí đáp ứng và phần còn thiếu.
-                  </span>
+                  <span className="switch-label">{t("upload.jdLabel")}</span>
+                  <span className="switch-sub">{t("upload.jdHint")}</span>
                 </span>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={analysis.jd}
-                  aria-label="Đối chiếu với JD"
+                  aria-label={t("upload.jdLabel")}
                   className={`switch${analysis.jd ? " is-on" : ""}`}
                   onClick={() =>
                     setAnalysis((prev) => ({ ...prev, jd: !prev.jd }))
@@ -624,16 +676,18 @@ export default function UploadCV({
               </div>
               <div className="switch-row">
                 <span className="switch-main">
-                  <span className="switch-label">Tạo câu hỏi phỏng vấn</span>
+                  <span className="switch-label">
+                    {t("upload.questionsLabel")}
+                  </span>
                   <span className="switch-sub">
-                    Câu hỏi bám theo bằng chứng, không hỏi chung chung.
+                    {t("upload.questionsHint")}
                   </span>
                 </span>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={analysis.questions}
-                  aria-label="Tạo câu hỏi phỏng vấn"
+                  aria-label={t("upload.questionsLabel")}
                   className={`switch${analysis.questions ? " is-on" : ""}`}
                   onClick={() =>
                     setAnalysis((prev) => ({
@@ -649,7 +703,7 @@ export default function UploadCV({
 
             <div className="stage-preview">
               <span className="stage-preview-label">
-                {uploadStages.length} công đoạn phân tích
+                {t("upload.stageCount", { count: uploadStages.length })}
               </span>
               <div className="stage-preview-list">
                 {uploadStages.map((stage, index) => (
@@ -670,11 +724,13 @@ export default function UploadCV({
                 >
                   <span className="progress-marker" aria-hidden="true" />
                   <span className="progress-main">
-                    <span className="progress-title">Tải hồ sơ</span>
+                    <span className="progress-title">
+                      {t("upload.progressUploadTitle")}
+                    </span>
                     <span className="progress-detail">
                       {phase === "uploading"
-                        ? "Đang gửi tệp lên máy chủ"
-                        : "Đã nhận tệp"}
+                        ? t("upload.progressUploading")
+                        : t("upload.progressReceived")}
                     </span>
                   </span>
                 </div>
@@ -685,24 +741,24 @@ export default function UploadCV({
                 >
                   <span className="progress-marker" aria-hidden="true" />
                   <span className="progress-main">
-                    <span className="progress-title">Phân tích với Gemini</span>
+                    <span className="progress-title">
+                      {t("upload.progressAnalyzeTitle")}
+                    </span>
                     <span className="progress-detail">
-                      Trích xuất nội dung và đối chiếu{" "}
-                      {position?.criteria.length ?? 0} tiêu chí
+                      {t("upload.progressAnalyzeDetail", {
+                        count: position?.criteria.length ?? 0,
+                      })}
                     </span>
                   </span>
                 </div>
-                <p className="progress-note">
-                  Không hiển thị phần trăm ước lượng; thời gian phụ thuộc độ dài
-                  CV và model.
-                </p>
+                <p className="progress-note">{t("upload.progressNote")}</p>
               </div>
             ) : null}
 
             <button
               type="button"
               className="btn btn-primary btn-block"
-              disabled={!file || running}
+              disabled={!file || running || !model}
               onClick={start}
             >
               {running ? (
@@ -711,20 +767,23 @@ export default function UploadCV({
                 <UploadCloud size={15} aria-hidden="true" />
               )}
               {phase === "uploading"
-                ? "Đang tải CV…"
+                ? t("upload.submitUploading")
                 : phase === "analyzing"
-                  ? "Gemini đang phân tích…"
-                  : "Bắt đầu phân tích"}
+                  ? t("upload.submitAnalyzing")
+                  : t("upload.submit")}
             </button>
             {!file ? (
-              <span className="field-hint">Chọn một CV để bắt đầu.</span>
+              <span className="field-hint">{t("upload.hintPick")}</span>
+            ) : !model ? (
+              <span className="field-hint">{t("upload.hintNoModel")}</span>
             ) : running ? (
               <span className="field-hint">
-                Đang xử lý với {modelLabel(model)}. Không đóng tab.
+                {t("upload.hintRunning", { model: modelName(model) })}
               </span>
             ) : (
               <span className="field-hint">
-                {language} · {level} · {modelLabel(model)}
+                {languageLabelKey ? t(languageLabelKey) : language} · {level} ·{" "}
+                {modelName(model)}
               </span>
             )}
           </div>
@@ -738,8 +797,11 @@ export default function UploadCV({
           aria-labelledby="analysis-result-title"
         >
           <CardHead
-            title="Kết quả phân tích"
-            meta={`${criteria.length} tiêu chí · ${modelLabel(result.meta.model)}`}
+            title={t("upload.resultTitle")}
+            meta={t("upload.resultMeta", {
+              count: criteria.length,
+              model: modelName(result.meta.model),
+            })}
             action={
               <div className="result-actions">
                 {isPdf ? (
@@ -749,7 +811,7 @@ export default function UploadCV({
                     onClick={openPreview}
                   >
                     <Eye size={14} aria-hidden="true" />
-                    Xem PDF
+                    {t("upload.viewPdf")}
                   </button>
                 ) : null}
                 <button
@@ -758,10 +820,10 @@ export default function UploadCV({
                   onClick={downloadJson}
                 >
                   <Download size={14} aria-hidden="true" />
-                  Tải JSON
+                  {t("upload.downloadJson")}
                 </button>
                 <button type="button" className="btn btn-ghost" onClick={reset}>
-                  Phân tích CV khác
+                  {t("upload.analyzeAnother")}
                 </button>
               </div>
             }
@@ -779,18 +841,22 @@ export default function UploadCV({
                 <h3 id="analysis-result-title">
                   {result.analysis.candidate.name}
                 </h3>
-                <span className="pill pill-positive">Đã phân tích</span>
+                <span className="pill pill-positive">
+                  {t("upload.statusAnalyzed")}
+                </span>
               </div>
               <p className="result-role">
                 {[
                   result.analysis.candidate.currentTitle,
                   result.analysis.candidate.yearsExperience
-                    ? `${result.analysis.candidate.yearsExperience} năm kinh nghiệm`
+                    ? t("upload.yearsExperience", {
+                        count: result.analysis.candidate.yearsExperience,
+                      })
                     : "",
                   result.analysis.candidate.location,
                 ]
                   .filter(Boolean)
-                  .join(" · ") || "Chưa nhận diện được vị trí hiện tại"}
+                  .join(" · ") || t("upload.roleUnknown")}
               </p>
               {result.analysis.candidate.email ||
               result.analysis.candidate.phone ? (
@@ -807,14 +873,19 @@ export default function UploadCV({
           <div className="result-repos">
             <span className="result-repos-label">
               <GitBranch size={13} aria-hidden="true" />
-              Repository &amp; GitHub
+              {t("upload.reposLabel")}
               {result.meta.github.targets > 0 ? (
                 <span className="result-repos-meta">
-                  Đã đọc {result.meta.github.analyzed}/
-                  {result.meta.github.targets} mục GitHub
                   {result.meta.github.publicRepos > 0
-                    ? ` · ${result.meta.github.publicRepos} repo công khai`
-                    : ""}
+                    ? t("upload.githubMetaPublic", {
+                        analyzed: result.meta.github.analyzed,
+                        targets: result.meta.github.targets,
+                        public: result.meta.github.publicRepos,
+                      })
+                    : t("upload.githubMeta", {
+                        analyzed: result.meta.github.analyzed,
+                        targets: result.meta.github.targets,
+                      })}
                 </span>
               ) : null}
             </span>
@@ -845,10 +916,10 @@ export default function UploadCV({
                       className={`result-repo-status is-${repository.status}`}
                     >
                       {repository.status === "analyzed"
-                        ? "Đã đọc"
+                        ? t("upload.repoRead")
                         : repository.status === "skipped"
-                          ? "Bỏ qua"
-                          : "Chưa đọc"}
+                          ? t("upload.repoSkipped")
+                          : t("upload.repoUnread")}
                     </span>
                     <ExternalLink size={12} aria-hidden="true" />
                   </a>
@@ -856,7 +927,7 @@ export default function UploadCV({
               </div>
             ) : (
               <span className="result-repos-empty">
-                CV không đề cập repository công khai.
+                {t("upload.reposEmpty")}
               </span>
             )}
           </div>
@@ -867,7 +938,7 @@ export default function UploadCV({
 
           <div className="result-evidence">
             <div className="result-evidence-head">
-              <span className="health-label">Bằng chứng</span>
+              <span className="health-label">{t("upload.evidenceLabel")}</span>
               <span className="health-value num">
                 {coveredCount}/{criteria.length}
               </span>
@@ -879,13 +950,16 @@ export default function UploadCV({
               total={criteria.length}
             />
             <span className="result-evidence-note">
-              {verifiedCount} đã xác minh · {inferredCount} suy luận ·{" "}
-              {missingCount} chưa đủ
+              {t("evidence.legend", {
+                verified: verifiedCount,
+                inferred: inferredCount,
+                missing: missingCount,
+              })}
             </span>
           </div>
 
           <div className="analysis-block">
-            <h3 className="mini-title">Đối chiếu tiêu chí</h3>
+            <h3 className="mini-title">{t("upload.criteriaTitle")}</h3>
             <ol className="analysis-criteria">
               {criteria.map((criterion) => (
                 <li className="analysis-criterion" key={criterion.label}>
@@ -894,7 +968,9 @@ export default function UploadCV({
                     <span
                       className={`criterion-kind${criterion.kind === "must" ? " is-must" : ""}`}
                     >
-                      {criterion.kind === "must" ? "Bắt buộc" : "Ưu tiên"}
+                      {criterion.kind === "must"
+                        ? t("upload.criteriaMust")
+                        : t("upload.criteriaNice")}
                     </span>
                     <EvidencePill state={criterion.status} />
                   </div>
@@ -915,7 +991,7 @@ export default function UploadCV({
           result.analysis.gaps.length ? (
             <div className="split-lists result-lists">
               <div className="split-col">
-                <h3 className="mini-title">Điểm mạnh có bằng chứng</h3>
+                <h3 className="mini-title">{t("upload.strengthsTitle")}</h3>
                 <ul className="plain-list">
                   {result.analysis.strengths.map((item) => (
                     <li key={item}>{item}</li>
@@ -923,7 +999,7 @@ export default function UploadCV({
                 </ul>
               </div>
               <div className="split-col">
-                <h3 className="mini-title">Cần xác minh</h3>
+                <h3 className="mini-title">{t("upload.gapsTitle")}</h3>
                 <ul className="plain-list is-warn">
                   {result.analysis.gaps.map((item) => (
                     <li key={item}>{item}</li>
@@ -935,7 +1011,7 @@ export default function UploadCV({
 
           {result.analysis.questions.length ? (
             <div className="analysis-block">
-              <h3 className="mini-title">Câu hỏi phỏng vấn gợi ý</h3>
+              <h3 className="mini-title">{t("upload.questionsTitle")}</h3>
               <ol className="analysis-questions">
                 {result.analysis.questions.map((item, index) => (
                   <li className="analysis-question" key={`${item.question}-${index}`}>
@@ -957,23 +1033,36 @@ export default function UploadCV({
 
           <div className="card-foot">
             <span className="foot-note">
-              <Info size={13} aria-hidden="true" /> Nguồn: nội dung CV
-              {result.meta.github.analyzed > 0
-                ? ` + ${result.meta.github.analyzed} mục GitHub công khai`
-                : ""}
-              {result.meta.pages ? ` · ${result.meta.pages} trang` : ""}
-              {result.meta.characters > 0
-                ? ` · ${result.meta.characters.toLocaleString("vi-VN")} ký tự`
-                : ""}{" "}
-              · {modelLabel(result.meta.model)} ·{" "}
-              {(result.meta.durationMs / 1000).toFixed(1)} giây
-              {result.meta.truncated ? " · CV đã được rút gọn" : ""}.{" "}
-              {result.meta.github.targets === 0
-                ? "Repository được trích tự động từ CV."
-                : result.meta.github.analyzed > 0
-                  ? "GitHub chỉ đọc dữ liệu công khai và có thể chậm hơn CV."
-                  : "Chưa đọc được dữ liệu GitHub; kết quả dựa trên CV."}{" "}
-              Kết quả do AI tạo; cần đối chiếu với CV gốc trước khi quyết định.
+              <Info size={13} aria-hidden="true" />{" "}
+              {t("upload.source", {
+                github:
+                  result.meta.github.analyzed > 0
+                    ? t("upload.source.github", {
+                        count: result.meta.github.analyzed,
+                      })
+                    : "",
+                pages: result.meta.pages
+                  ? t("upload.source.pages", { count: result.meta.pages })
+                  : "",
+                characters:
+                  result.meta.characters > 0
+                    ? t("upload.source.characters", {
+                        count: numberFormat(result.meta.characters),
+                      })
+                    : "",
+                model: modelName(result.meta.model),
+                seconds: formatSeconds(result.meta.durationMs, lang),
+                truncated: result.meta.truncated
+                  ? t("upload.source.truncated")
+                  : "",
+                githubNote:
+                  result.meta.github.targets === 0
+                    ? t("upload.source.githubAuto")
+                    : result.meta.github.analyzed > 0
+                      ? t("upload.source.githubPublicNote")
+                      : t("upload.source.githubFailed"),
+                aiNote: t("upload.source.aiNote"),
+              })}
             </span>
           </div>
         </section>
@@ -981,15 +1070,15 @@ export default function UploadCV({
 
       <section className="card">
         <CardHead
-          title="Hàng đợi phân tích"
-          meta={`${queue.length} hồ sơ gần đây`}
+          title={t("upload.queueTitle")}
+          meta={t("upload.queueMeta", { count: queue.length })}
           action={
             <button
               type="button"
               className="card-link"
               onClick={() => go("candidates")}
             >
-              Tất cả hồ sơ
+              {t("upload.allFiles")}
               <ChevronRight size={13} aria-hidden="true" />
             </button>
           }
@@ -998,12 +1087,12 @@ export default function UploadCV({
           <table className="table">
             <thead>
               <tr>
-                <th>Hồ sơ</th>
-                <th>Vị trí</th>
-                <th>Công đoạn</th>
-                <th className="num">Thời gian</th>
-                <th>Trạng thái</th>
-                <th aria-label="Mở hồ sơ" />
+                <th>{t("upload.colCandidate")}</th>
+                <th>{t("upload.colPosition")}</th>
+                <th>{t("upload.colStage")}</th>
+                <th className="num">{t("upload.colTime")}</th>
+                <th>{t("upload.colStatus")}</th>
+                <th aria-label={t("upload.colOpenAria")} />
               </tr>
             </thead>
             <tbody>
@@ -1015,21 +1104,21 @@ export default function UploadCV({
                       <span className="file-cell-name">{item.name}</span>
                     </div>
                   </td>
-                  <td className="c-role" data-label="Vị trí">
+                  <td className="c-role" data-label={t("upload.colPosition")}>
                     {item.role}
                   </td>
-                  <td className="c-stage" data-label="Công đoạn">
+                  <td className="c-stage" data-label={t("upload.colStage")}>
                     <div className="stage-cell">
-                      <span>{item.stage}</span>
+                      <span>{t(item.stageKey, item.stageVars)}</span>
                       {item.state === "running" ? (
                         <StageLadder step={item.step} labels={false} />
                       ) : null}
                     </div>
                   </td>
-                  <td className="num c-updated" data-label="Thời gian">
-                    {item.time}
+                  <td className="num c-updated" data-label={t("upload.colTime")}>
+                    {t(item.timeKey, item.timeVars)}
                   </td>
-                  <td className="c-status" data-label="Trạng thái">
+                  <td className="c-status" data-label={t("upload.colStatus")}>
                     <span
                       className={`pill ${
                         item.state === "done"
@@ -1040,17 +1129,17 @@ export default function UploadCV({
                       }`}
                     >
                       {item.state === "done"
-                        ? "Hoàn tất"
+                        ? t("status.completed")
                         : item.state === "running"
-                          ? "Đang phân tích"
-                          : "Chờ xử lý"}
+                          ? t("status.processing")
+                          : t("upload.queueStateQueued")}
                     </span>
                   </td>
                   <td className="c-go">
                     <button
                       type="button"
                       className="icon-btn"
-                      aria-label={`Mở ${item.name}`}
+                      aria-label={t("upload.queueOpenAria", { name: item.name })}
                       onClick={() => {
                         if (item.key.startsWith("live-")) {
                           scrollToResult();
@@ -1076,9 +1165,7 @@ export default function UploadCV({
         </div>
         <div className="card-foot">
           <span className="foot-note">
-            <Info size={13} aria-hidden="true" /> Phân tích gồm 6 công đoạn: đọc
-            CV, trích xuất kỹ năng, đọc GitHub công khai, đối chiếu JD, đánh giá
-            bằng chứng, tạo câu hỏi.
+            <Info size={13} aria-hidden="true" /> {t("upload.queueNote")}
           </span>
         </div>
       </section>
@@ -1089,7 +1176,7 @@ export default function UploadCV({
             className="pdf-dialog"
             role="dialog"
             aria-modal="true"
-            aria-label={`Xem trước ${file.name}`}
+            aria-label={t("upload.previewAria", { name: file.name })}
             onClick={(event) => event.stopPropagation()}
             onKeyDown={(event) => {
               if (event.key === "Escape") closePreview();
@@ -1106,14 +1193,14 @@ export default function UploadCV({
                   href={previewUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Mở PDF trong tab mới"
+                  aria-label={t("upload.openPdfTab")}
                 >
                   <ExternalLink size={15} aria-hidden="true" />
                 </a>
                 <button
                   type="button"
                   className="icon-btn"
-                  aria-label="Đóng xem trước"
+                  aria-label={t("upload.closePreview")}
                   autoFocus
                   onClick={closePreview}
                 >
@@ -1125,7 +1212,7 @@ export default function UploadCV({
               <iframe
                 className="pdf-frame"
                 src={previewUrl}
-                title={`Xem trước ${file.name}`}
+                title={t("upload.previewAria", { name: file.name })}
               />
             </div>
           </div>

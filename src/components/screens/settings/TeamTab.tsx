@@ -9,6 +9,7 @@ import {
   useTeam,
   type TeamMember,
 } from "@/lib/api";
+import { useT } from "@/lib/i18n";
 import {
   Avatar,
   CardHead,
@@ -30,6 +31,7 @@ const ROLES = ["Owner", "Recruiter", "Reviewer", "Viewer"];
 
 export default function TeamTab() {
   const { data, loading, error, refetch } = useTeam();
+  const t = useT();
   const members = data ?? [];
   const [editing, setEditing] = useState<TeamMember | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -74,10 +76,10 @@ export default function TeamTab() {
     try {
       if (editing) {
         await updateTeamMember(editing.name, member);
-        setNote(`Đã cập nhật ${member.name}.`);
+        setNote(t("settings.team.updated", { name: member.name }));
       } else {
         await createTeamMember(member);
-        setNote(`Đã thêm ${member.name}.`);
+        setNote(t("settings.team.created", { name: member.name }));
       }
       setFormOpen(false);
       setEditing(null);
@@ -85,7 +87,7 @@ export default function TeamTab() {
       await refetch();
     } catch (err) {
       setFormError(
-        err instanceof Error ? err.message : "Không lưu được thành viên.",
+        err instanceof Error ? err.message : t("settings.team.saveError"),
       );
     } finally {
       setBusy(false);
@@ -103,10 +105,12 @@ export default function TeamTab() {
         setEditing(null);
       }
       setConfirming(null);
-      setNote(`Đã xoá ${name}.`);
+      setNote(t("settings.team.deleted", { name }));
       await refetch();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Không xoá được.");
+      setFormError(
+        err instanceof Error ? err.message : t("settings.team.deleteError"),
+      );
     } finally {
       setBusy(false);
     }
@@ -115,12 +119,12 @@ export default function TeamTab() {
   return (
     <section className="card crud-card">
       <CardHead
-        title="Thành viên"
-        meta={`${members.length} người · team_members`}
+        title={t("settings.team.title")}
+        meta={t("settings.team.meta", { count: members.length })}
         action={
           <button type="button" className="btn btn-ghost btn-sm" onClick={openCreate}>
             <Plus size={14} aria-hidden="true" />
-            Thêm thành viên
+            {t("settings.team.add")}
           </button>
         }
       />
@@ -135,30 +139,30 @@ export default function TeamTab() {
         <form className="crud-form" onSubmit={submit}>
           <div className="crud-grid">
             <label className="field">
-              <span className="field-label">Họ tên</span>
+              <span className="field-label">{t("settings.team.name")}</span>
               <input
                 type="text"
                 value={draft.name}
                 onChange={(event) =>
                   setDraft((prev) => ({ ...prev, name: event.target.value }))
                 }
-                placeholder="Nguyễn Văn A"
+                placeholder={t("settings.team.namePlaceholder")}
                 required
               />
             </label>
             <label className="field">
-              <span className="field-label">Email</span>
+              <span className="field-label">{t("settings.team.email")}</span>
               <input
                 type="email"
                 value={draft.email}
                 onChange={(event) =>
                   setDraft((prev) => ({ ...prev, email: event.target.value }))
                 }
-                placeholder="ten@congty.vn"
+                placeholder={t("settings.team.emailPlaceholder")}
               />
             </label>
             <label className="field">
-              <span className="field-label">Vai trò</span>
+              <span className="field-label">{t("settings.team.role")}</span>
               <select
                 value={draft.role}
                 onChange={(event) =>
@@ -178,7 +182,7 @@ export default function TeamTab() {
               ) : (
                 <Check size={15} aria-hidden="true" />
               )}
-              {editing ? "Lưu thay đổi" : "Thêm thành viên"}
+              {editing ? t("settings.saveChanges") : t("settings.team.add")}
             </button>
             <button
               type="button"
@@ -190,14 +194,14 @@ export default function TeamTab() {
               disabled={busy}
             >
               <X size={15} aria-hidden="true" />
-              Hủy
+              {t("action.cancel")}
             </button>
           </div>
         </form>
       ) : null}
 
       {loading && !members.length ? (
-        <Loading label="Đang tải thành viên…" />
+        <Loading label={t("settings.team.loading")} />
       ) : error ? (
         <LoadError message={error} onRetry={refetch} />
       ) : (
@@ -205,10 +209,10 @@ export default function TeamTab() {
           <table className="table">
             <thead>
               <tr>
-                <th>Thành viên</th>
-                <th>Email</th>
-                <th>Vai trò</th>
-                <th aria-label="Thao tác" />
+                <th>{t("settings.team.colMember")}</th>
+                <th>{t("settings.team.colEmail")}</th>
+                <th>{t("settings.team.role")}</th>
+                <th aria-label={t("settings.actions")} />
               </tr>
             </thead>
             <tbody>
@@ -225,17 +229,25 @@ export default function TeamTab() {
                       <span className="person-main">
                         <span className="row-name">{member.name}</span>
                         <span className="person-sub">
-                          {member.role || "Thành viên"}
+                          {member.role || t("settings.team.defaultRole")}
                         </span>
                       </span>
                     </div>
                   </td>
-                  <td data-label="Email">{member.email || "—"}</td>
-                  <td data-label="Vai trò">{member.role || "—"}</td>
+                  <td data-label={t("settings.team.colEmail")}>
+                    {member.email || "—"}
+                  </td>
+                  <td data-label={t("settings.team.role")}>
+                    {member.role || "—"}
+                  </td>
                   <td className="c-go">
                     <RowActions
-                      editLabel={`Sửa ${member.name}`}
-                      deleteLabel={`Xoá ${member.name}`}
+                      editLabel={t("settings.team.editAria", {
+                        name: member.name,
+                      })}
+                      deleteLabel={t("settings.team.deleteAria", {
+                        name: member.name,
+                      })}
                       onEdit={() => openEdit(member)}
                       onDelete={() => {
                         setConfirming(member.name);
@@ -253,17 +265,14 @@ export default function TeamTab() {
 
       {confirming ? (
         <ConfirmDelete
-          message={`Xoá thành viên ${confirming}? Hồ sơ đã gán người này vẫn giữ tên dạng văn bản.`}
+          message={t("settings.team.confirm", { name: confirming })}
           busy={busy}
           onConfirm={() => remove(confirming)}
           onCancel={() => setConfirming(null)}
         />
       ) : null}
 
-      <p className="crud-note">
-        Ứng viên đang gán reviewer không bị thay đổi khi xoá thành viên; chỉ danh
-        mục thành viên bị cập nhật.
-      </p>
+      <p className="crud-note">{t("settings.team.footnote")}</p>
     </section>
   );
 }

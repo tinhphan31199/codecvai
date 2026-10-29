@@ -371,6 +371,44 @@ svg {
   gap: 6px;
 }
 
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  width: fit-content;
+  margin: 0 7px 4px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+}
+
+.lang-option {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.lang-option:hover {
+  color: var(--ink);
+}
+
+.lang-option.is-on {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.lang-option:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
 .account-row {
   display: flex;
   align-items: center;
@@ -1513,6 +1551,27 @@ button.row-name:hover {
   color: var(--muted);
 }
 
+.field-hint.is-error {
+  color: var(--negative-ink);
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-row input,
+.field-row select {
+  flex: 1;
+  min-width: 0;
+}
+
+.field-row .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .field-help {
   display: flex;
   flex-direction: column;
@@ -1560,6 +1619,53 @@ button.row-name:hover {
 .field input:disabled,
 .field select:disabled {
   background: var(--bg);
+  color: var(--muted);
+}
+
+.rich-editor {
+  --ck-border-radius: var(--radius-control);
+  --ck-color-base-border: var(--line);
+  --ck-color-base-background: #fff;
+  --ck-color-toolbar-background: #fff;
+  --ck-color-focus-border: var(--accent);
+  --ck-focus-ring: 0 0 0 3px rgba(2, 132, 199, 0.2);
+  --ck-font-face: var(--font-sans);
+}
+
+.rich-editor .ck.ck-editor__main > .ck-editor__editable {
+  min-height: 170px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.rich-editor .ck.ck-editor__main > .ck-editor__editable.ck-focused {
+  border-color: var(--accent);
+  box-shadow: var(--ring);
+}
+
+.rich-editor .ck.ck-toolbar {
+  border-bottom: 1px solid var(--line);
+}
+
+.rich-editor .ck.ck-toolbar .ck-toolbar__separator {
+  background: var(--line);
+}
+
+.rich-editor .ck.ck-button.ck-on {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.rich-editor-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 218px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: #fff;
+  font-size: 12px;
   color: var(--muted);
 }
 
@@ -1627,6 +1733,11 @@ button.row-name:hover {
 
 .switch.is-on span {
   transform: translateX(14px);
+}
+
+.switch:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .stage-preview {
@@ -4246,6 +4357,32 @@ button.row-name:hover {
   overflow: hidden;
 }
 
+.jd-desc p,
+.jd-desc ul,
+.jd-desc ol,
+.jd-desc blockquote {
+  margin: 0 0 4px;
+}
+
+.jd-desc > :last-child {
+  margin-bottom: 0;
+}
+
+.jd-desc ul,
+.jd-desc ol {
+  padding-left: 16px;
+}
+
+.jd-desc a {
+  color: var(--accent-ink);
+  text-decoration: underline;
+}
+
+.jd-desc blockquote {
+  border-left: 2px solid var(--line-strong);
+  padding-left: 8px;
+}
+
 .jd-facts {
   display: flex;
   align-items: center;
@@ -4703,23 +4840,74 @@ button.row-name:hover {
   line-height: 1.5;
 }
 
-.crud-confirm {
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-  padding: 8px 10px;
-  border: 1px solid var(--negative-line);
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.confirm-dialog {
+  width: min(420px, 100%);
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+  animation: confirm-in 0.14s ease;
+}
+
+@keyframes confirm-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+
+.confirm-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.confirm-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
   border-radius: 8px;
   background: var(--negative-bg);
-  font-size: 12px;
+  color: var(--negative-ink);
+}
+
+.confirm-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.confirm-message {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.55;
   color: var(--muted-strong);
 }
 
-.crud-confirm-text {
-  flex: 1;
-  min-width: 180px;
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirm-dialog {
+    animation: none;
+  }
 }
 
 .row-actions {
@@ -4943,6 +5131,10 @@ button.row-name:hover {
 
   .crud-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crud-grid .is-span-2 {
+    grid-column: auto;
   }
 
   .criteria-row {

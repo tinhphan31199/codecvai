@@ -21,7 +21,6 @@ type seedCandidate struct {
 }
 
 type seedData struct {
-	Workspace    model.Workspace     `json:"workspace"`
 	Positions    []model.Position    `json:"positions"`
 	Candidates   []seedCandidate     `json:"candidates"`
 	Reports      []model.Report      `json:"reports"`
@@ -43,27 +42,6 @@ func (s *Store) Seed(ctx context.Context) error {
 		return err
 	}
 	defer tx.Rollback(ctx)
-
-	for _, ws := range []struct {
-		key, value string
-	}{
-		{"name", data.Workspace.Name},
-		{"total", itoa(data.Workspace.Total)},
-		{"completed", itoa(data.Workspace.Completed)},
-		{"review", itoa(data.Workspace.Review)},
-		{"processing", itoa(data.Workspace.Processing)},
-		{"failed", itoa(data.Workspace.Failed)},
-		{"archived", itoa(data.Workspace.Archived)},
-		{"positions", itoa(data.Workspace.Positions)},
-		{"updated", data.Workspace.Updated},
-		{"updatedAt", data.Workspace.UpdatedAt},
-		{"reviewer", data.Workspace.Reviewer},
-		{"analysisModel", data.Workspace.AnalysisModel},
-	} {
-		if _, err := tx.Exec(ctx, `INSERT INTO workspace_settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`, ws.key, ws.value); err != nil {
-			return fmt.Errorf("store: seed settings: %w", err)
-		}
-	}
 
 	for _, pos := range data.Positions {
 		if err := insertPosition(ctx, tx, pos); err != nil {
@@ -256,26 +234,4 @@ func nonNil[T any](slice []T) []T {
 		return []T{}
 	}
 	return slice
-}
-
-func itoa(n int) string {
-	if n == 0 {
-		return "0"
-	}
-	negative := n < 0
-	if negative {
-		n = -n
-	}
-	var buf [24]byte
-	pos := len(buf)
-	for n > 0 {
-		pos--
-		buf[pos] = byte('0' + n%10)
-		n /= 10
-	}
-	if negative {
-		pos--
-		buf[pos] = '-'
-	}
-	return string(buf[pos:])
 }

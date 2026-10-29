@@ -1,3 +1,5 @@
+"use client";
+
 import type { CSSProperties, ReactNode } from "react";
 import {
   Check,
@@ -16,6 +18,7 @@ import {
   type Criterion,
   type EvidenceState,
 } from "@/data/codecv";
+import { useT } from "@/lib/i18n";
 
 export function LogoMark({ size = 26 }: { size?: number }) {
   return (
@@ -71,13 +74,15 @@ export function Avatar({
 }
 
 export function StatusPill({ status }: { status: CandidateStatus }) {
+  const t = useT();
   const meta = statusMeta[status];
-  return <span className={`pill ${meta.className}`}>{meta.label}</span>;
+  return <span className={`pill ${meta.className}`}>{t(meta.labelKey)}</span>;
 }
 
 export function EvidencePill({ state }: { state: EvidenceState }) {
+  const t = useT();
   const meta = evidenceMeta[state];
-  return <span className={`pill ${meta.className}`}>{meta.short}</span>;
+  return <span className={`pill ${meta.className}`}>{t(meta.shortKey)}</span>;
 }
 
 export function EvidenceMeter({
@@ -94,12 +99,18 @@ export function EvidenceMeter({
   showLegend?: boolean;
 }) {
   const safeTotal = Math.max(total, 1);
+  const t = useT();
   return (
     <div className="evidence">
       <div
         className="evidence-track"
         role="img"
-        aria-label={`${verified} tiêu chí đã xác minh, ${inferred} suy luận, ${missing} chưa đủ dữ liệu trên ${total}`}
+        aria-label={t("evidence.meterAria", {
+          verified,
+          inferred,
+          missing,
+          total,
+        })}
       >
         {verified > 0 ? (
           <span
@@ -122,7 +133,7 @@ export function EvidenceMeter({
       </div>
       {showLegend ? (
         <span className="evidence-legend">
-          {verified} đã xác minh · {inferred} suy luận · {missing} chưa đủ
+          {t("evidence.legend", { verified, inferred, missing })}
         </span>
       ) : null}
     </div>
@@ -133,19 +144,23 @@ export function StageLadder({
   step,
   failed = false,
   labels = true,
+  total = 6,
 }: {
   step: number;
   failed?: boolean;
   labels?: boolean;
+  total?: number;
 }) {
+  const t = useT();
+  const current = Math.min(step + 1, total);
   return (
     <div className="stage-ladder">
       <div
         className="stage-track"
         role="img"
-        aria-label={`${step} trên 6 công đoạn`}
+        aria-label={t("stage.aria", { current, total })}
       >
-        {[0, 1, 2, 3, 4, 5].map((i) => {
+        {Array.from({ length: total }, (_, i) => {
           const state =
             failed && i === 2
               ? "error"
@@ -159,7 +174,7 @@ export function StageLadder({
       </div>
       {labels ? (
         <span className="stage-count">
-          Bước {Math.min(step + 1, 6)}/6
+          {t("stage.step", { current, total })}
         </span>
       ) : null}
     </div>
@@ -289,18 +304,19 @@ export function ArrowLink({
   );
 }
 
-export function Loading({ label = "Đang tải dữ liệu…" }: { label?: string }) {
+export function Loading({ label }: { label?: string }) {
+  const t = useT();
   return (
     <div className="load-state" role="status" aria-live="polite">
       <Loader2 className="spin" size={20} aria-hidden="true" />
-      <span>{label}</span>
+      <span>{label ?? t("state.loading")}</span>
     </div>
   );
 }
 
 export function ScreenLoader({
   title,
-  label = "Đang tải dữ liệu…",
+  label,
 }: {
   title: string;
   label?: string;
@@ -320,17 +336,18 @@ export function LoadError({
   message: string;
   onRetry?: () => void;
 }) {
+  const t = useT();
   return (
     <div className="load-state is-error" role="alert">
       <CircleAlert size={18} aria-hidden="true" />
       <div className="load-state-text">
-        <span className="load-state-title">Không tải được dữ liệu</span>
+        <span className="load-state-title">{t("state.loadError")}</span>
         <span className="load-state-detail">{message}</span>
       </div>
       {onRetry ? (
         <button type="button" className="btn btn-ghost btn-sm" onClick={onRetry}>
           <RefreshCw size={14} aria-hidden="true" />
-          Thử lại
+          {t("action.retry")}
         </button>
       ) : null}
     </div>

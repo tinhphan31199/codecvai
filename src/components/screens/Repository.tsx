@@ -20,6 +20,7 @@ import {
   useCandidates,
   useRepository,
 } from "@/lib/api";
+import { useNumberFormat, useT } from "@/lib/i18n";
 import {
   Avatar,
   CardHead,
@@ -111,6 +112,7 @@ function RepositoryPicker({
   go: (screen: Screen, id?: string) => void;
 }) {
   const { data, loading, error, refetch } = useCandidates();
+  const t = useT();
   const candidates = data ?? [];
   const connected = candidates.filter(
     (item) => item.repoState === "connected",
@@ -120,19 +122,19 @@ function RepositoryPicker({
   return (
     <div className="screen">
       <PageHead
-        title="Repository Analysis"
-        sub="Chọn một ứng viên để xem cấu trúc mã nguồn và các phát hiện của họ."
+        title={t("screen.repository")}
+        sub={t("repository.pickerSub")}
       />
       {loading ? (
-        <Loading label="Đang tải danh sách ứng viên…" />
+        <Loading label={t("repository.pickerLoading")} />
       ) : error ? (
         <LoadError message={error} onRetry={refetch} />
       ) : connected.length ? (
         <>
           <section className="card repo-picker">
             <CardHead
-              title="Ứng viên đã kết nối repository"
-              meta={`${connected.length} hồ sơ`}
+              title={t("repository.connectedTitle")}
+              meta={t("repository.profilesCount", { count: connected.length })}
             />
             <ul className="picker-list">
               {connected.map((item) => (
@@ -170,23 +172,22 @@ function RepositoryPicker({
           </section>
           {unavailable > 0 ? (
             <p className="foot-note">
-              {unavailable} hồ sơ chưa kết nối repository — chỉ liệt kê ứng viên
-              đã kết nối để phân tích.
+              {t("repository.unavailableNote", { count: unavailable })}
             </p>
           ) : null}
         </>
       ) : (
         <section className="card">
           <EmptyState
-            title="Chưa có ứng viên nào kết nối repository"
-            detail="Tải CV lên và kết nối repository GitHub để bắt đầu phân tích mã nguồn."
+            title={t("repository.emptyTitle")}
+            detail={t("repository.emptyDetail")}
             action={
               <button
                 type="button"
                 className="btn btn-primary"
                 onClick={() => go("upload")}
               >
-                Tải CV lên
+                {t("repository.uploadCv")}
               </button>
             }
           />
@@ -205,6 +206,8 @@ function RepositoryAnalysis({
 }) {
   const { data: candidate, loading, error, refetch } = useCandidate(id);
   const { data: repo } = useRepository(id);
+  const t = useT();
+  const nf = useNumberFormat();
   const findings = candidate?.findings ?? [];
   const tree = repo?.tree ?? [];
   const layers = repo?.layers ?? [];
@@ -230,13 +233,13 @@ function RepositoryAnalysis({
   const layer = layers.find((item) => item.id === layerId) ?? null;
 
   if (loading) {
-    return <ScreenLoader title="Repository Analysis" />;
+    return <ScreenLoader title={t("screen.repository")} />;
   }
 
   if (error) {
     return (
       <div className="screen">
-        <PageHead title="Repository Analysis" />
+        <PageHead title={t("screen.repository")} />
         <LoadError message={error} onRetry={refetch} />
       </div>
     );
@@ -246,15 +249,15 @@ function RepositoryAnalysis({
     return (
       <div className="screen">
         <EmptyState
-          title="Không tìm thấy hồ sơ"
-          detail="Hồ sơ có thể đã bị lưu trữ hoặc đường dẫn không đúng."
+          title={t("repository.notFound")}
+          detail={t("repository.notFoundDetail")}
           action={
             <button
               type="button"
               className="btn btn-ghost"
               onClick={() => go("candidates")}
             >
-              Về danh sách ứng viên
+              {t("repository.backToCandidates")}
             </button>
           }
         />
@@ -266,17 +269,16 @@ function RepositoryAnalysis({
     return (
       <div className="screen">
         <PageHead
-          title="Repository Analysis"
+          title={t("screen.repository")}
           sub={`${candidate.name} · ${candidate.position}`}
         />
         <section className="card">
           <div className="callout callout-negative">
             <ShieldAlert size={17} aria-hidden="true" />
             <div>
-              <p className="callout-title">Repository chưa truy cập được</p>
+              <p className="callout-title">{t("repository.inaccessibleTitle")}</p>
               <p className="callout-body">
-                Repository riêng tư hoặc token đã hết hạn. Cấp lại quyền để đọc
-                commit, cấu trúc và kiểm thử.
+                {t("repository.inaccessibleBody")}
               </p>
             </div>
             <button
@@ -284,7 +286,7 @@ function RepositoryAnalysis({
               className="btn btn-ghost"
               onClick={() => go("upload")}
             >
-              Cấp lại quyền
+              {t("repository.regrant")}
             </button>
           </div>
         </section>
@@ -342,7 +344,7 @@ function RepositoryAnalysis({
   return (
     <div className="screen">
       <PageHead
-        title="Repository Analysis"
+        title={t("screen.repository")}
         sub={
           <>
             {candidate.name} · <span className="mono">{candidate.repo}</span> ·{" "}
@@ -350,7 +352,9 @@ function RepositoryAnalysis({
               {candidate.repoBranch}@{candidate.commit}
             </span>{" "}
             ·{" "}
-            <span className="nowrap">phân tích lúc 26/10 · 14:10</span>
+            <span className="nowrap">
+              {t("repository.analyzedAt", { date: "26/10 · 14:10" })}
+            </span>
           </>
         }
         actions={
@@ -360,7 +364,7 @@ function RepositoryAnalysis({
               className="btn btn-ghost"
               onClick={() => go("candidate", candidate.id)}
             >
-              Mở hồ sơ
+              {t("repository.openProfile")}
             </button>
             <button
               type="button"
@@ -368,48 +372,60 @@ function RepositoryAnalysis({
               onClick={() => go("interview", candidate.id)}
             >
               <MessageSquare size={15} aria-hidden="true" />
-              Dùng trong phỏng vấn
+              {t("repository.useInInterview")}
             </button>
           </>
         }
       />
 
-      <section className="repo-summary" aria-label="Tổng quan repository">
+      <section
+        className="repo-summary"
+        aria-label={t("repository.summaryAria")}
+      >
         <div className="repo-summary-main">
           <span className="repo-path mono">{candidate.repo}</span>
           <span className="repo-branch">
             <GitBranch size={13} aria-hidden="true" />
-            main · 318 commit · 42 tệp
+            {t("repository.branchMeta", {
+              branch: "main",
+              commits: nf(318),
+              files: nf(42),
+            })}
           </span>
         </div>
         <dl className="repo-facts">
           <div>
-            <dt>Ngôn ngữ</dt>
+            <dt>{t("repository.language")}</dt>
             <dd>C# · .NET 8</dd>
           </div>
           <div>
-            <dt>Kiểm thử</dt>
-            <dd className="num">12 test · 68%</dd>
+            <dt>{t("repository.tests")}</dt>
+            <dd className="num">{t("repository.testsValue")}</dd>
           </div>
           <div>
-            <dt>Phát hiện</dt>
+            <dt>{t("repository.findings")}</dt>
             <dd className="num">
-              {findings.length} · {needed} cần xem
+              {t("repository.findingsSummary", {
+                total: findings.length,
+                needed,
+              })}
             </dd>
           </div>
           <div>
-            <dt>Trạng thái</dt>
+            <dt>{t("repository.status")}</dt>
             <dd>
-              <span className="pill pill-positive">Đã kết nối</span>
+              <span className="pill pill-positive">
+                {t("repository.connected")}
+              </span>
             </dd>
           </div>
         </dl>
       </section>
 
       <div className="repo-layout">
-        <aside className="repo-tree card" aria-label="Cây thư mục">
+        <aside className="repo-tree card" aria-label={t("repository.tree")}>
           <div className="tree-head">
-            <span className="tree-title">Cây thư mục</span>
+            <span className="tree-title">{t("repository.tree")}</span>
             <span className="mono tree-branch">main</span>
           </div>
           <ul className="tree-root">
@@ -426,13 +442,17 @@ function RepositoryAnalysis({
           </ul>
           <div className="tree-foot">
             <span className="mono">{candidate.commit}</span>
-            <span>nhánh main</span>
+            <span>{t("repository.branchLabel", { branch: "main" })}</span>
           </div>
         </aside>
 
-        <section className="repo-viewer card" aria-label="Kiến trúc và mã nguồn">
+        <section className="repo-viewer card" aria-label={t("repository.viewerAria")}>
           <div className="viewer-tabs-bar">
-            <div className="detail-tabs viewer-tabs" role="tablist" aria-label="Chế độ xem">
+            <div
+              className="detail-tabs viewer-tabs"
+              role="tablist"
+              aria-label={t("repository.viewModeAria")}
+            >
               <button
                 type="button"
                 role="tab"
@@ -441,7 +461,7 @@ function RepositoryAnalysis({
                 onClick={() => setView("arch")}
               >
                 <Layers size={13} aria-hidden="true" />
-                Kiến trúc
+                {t("repository.archTab")}
               </button>
               <button
                 type="button"
@@ -451,7 +471,7 @@ function RepositoryAnalysis({
                 onClick={() => setView("code")}
               >
                 <FileCode2 size={13} aria-hidden="true" />
-                Mã nguồn
+                {t("repository.codeTab")}
               </button>
             </div>
             {layer ? (
@@ -460,17 +480,14 @@ function RepositoryAnalysis({
                 className="text-btn"
                 onClick={() => setLayerId(null)}
               >
-                Bỏ lọc lớp {layer.label}
+                {t("repository.clearLayer", { layer: layer.label })}
               </button>
             ) : null}
           </div>
 
           {view === "arch" ? (
             <div className="arch-map">
-              <p className="arch-intro">
-                Chỉ hiển thị thành phần có bằng chứng trong code. Chọn một lớp
-                để lọc phát hiện ở cột bên phải.
-              </p>
+              <p className="arch-intro">{t("repository.archIntro")}</p>
               <div className="arch-flow">
                 {layers.map((item, index) => (
                   <div className="arch-step" key={item.id}>
@@ -490,7 +507,9 @@ function RepositoryAnalysis({
                       <span className="arch-layer-head">
                         <span className="arch-layer-label">{item.label}</span>
                         <span className="arch-layer-evidence num">
-                          {item.evidence} bằng chứng
+                          {t("repository.layerEvidence", {
+                            count: item.evidence,
+                          })}
                         </span>
                       </span>
                       <span className="arch-layer-tech">{item.tech}</span>
@@ -506,8 +525,7 @@ function RepositoryAnalysis({
                 ))}
               </div>
               <p className="foot-note">
-                {findings.length} phát hiện gắn với entrypoint, handler,
-                aggregate và adapter đã đọc.
+                {t("repository.archFootnote", { count: findings.length })}
               </p>
             </div>
           ) : selected ? (
@@ -519,19 +537,19 @@ function RepositoryAnalysis({
                 </div>
                 <div className="viewer-actions">
                   <span className="pill pill-neutral">
-                    dòng {selected.line}
+                    {t("repository.line", { line: nf(selected.line) })}
                   </span>
                   <button
                     type="button"
                     className="icon-btn"
-                    aria-label="Sao chép đoạn mã"
+                    aria-label={t("repository.copyCode")}
                     onClick={copyCode}
                   >
                     {copied ? <Check size={15} /> : <Clipboard size={15} />}
                   </button>
                 </div>
               </div>
-              <pre className="code-block" aria-label="Đoạn mã liên quan">
+              <pre className="code-block" aria-label={t("repository.codeAria")}>
                 <code>
                   {selected.code.split("\n").map((line, index) => {
                     const lineNo = startLine + index;
@@ -554,7 +572,9 @@ function RepositoryAnalysis({
                 <div className="finding-detail-head">
                   <span
                     className={`sev-dot ${severityMeta[selected.severity].className}`}
-                    aria-label={`Mức ${severityMeta[selected.severity].label}`}
+                    aria-label={t("repository.severityAria", {
+                      level: t(severityMeta[selected.severity].labelKey),
+                    })}
                   />
                   <div className="finding-detail-main">
                     <h2>{selected.title}</h2>
@@ -564,16 +584,16 @@ function RepositoryAnalysis({
                     </span>
                   </div>
                   <span className={`pill ${findingStateMeta[stateOf(selected)].className}`}>
-                    {findingStateMeta[stateOf(selected)].label}
+                    {t(findingStateMeta[stateOf(selected)].labelKey)}
                   </span>
                 </div>
                 <div className="finding-detail-grid">
                   <div>
-                    <h3 className="mini-title">Vì sao đáng chú ý</h3>
+                    <h3 className="mini-title">{t("repository.whyNotable")}</h3>
                     <p className="detail-p">{selected.rationale}</p>
                   </div>
                   <div>
-                    <h3 className="mini-title">Cách xác minh</h3>
+                    <h3 className="mini-title">{t("repository.howToVerify")}</h3>
                     <p className="detail-p">{selected.verification}</p>
                   </div>
                 </div>
@@ -581,25 +601,27 @@ function RepositoryAnalysis({
                   {stateOf(selected) === "confirmed" ? (
                     <>
                       <span className="save-state" role="status">
-                        Đã xác nhận, dùng được làm bằng chứng trong báo cáo.
+                        {t("repository.confirmedNote")}
                       </span>
                       <button
                         type="button"
                         className="text-btn"
                         onClick={() => setFindingState(selected, selected.state)}
                       >
-                        Bỏ xác nhận
+                        {t("repository.unconfirm")}
                       </button>
                     </>
                   ) : stateOf(selected) === "dismissed" ? (
                     <>
-                      <span className="foot-note">Đã bỏ qua phát hiện này.</span>
+                      <span className="foot-note">
+                        {t("repository.dismissedNote")}
+                      </span>
                       <button
                         type="button"
                         className="text-btn"
                         onClick={() => setFindingState(selected, selected.state)}
                       >
-                        Hoàn tác
+                        {t("repository.undo")}
                       </button>
                     </>
                   ) : (
@@ -610,17 +632,17 @@ function RepositoryAnalysis({
                         onClick={() => setFindingState(selected, "confirmed")}
                       >
                         <Check size={14} aria-hidden="true" />
-                        Xác nhận phát hiện
+                        {t("repository.confirmFinding")}
                       </button>
                       <button
                         type="button"
                         className="text-btn"
                         onClick={() => setFindingState(selected, "dismissed")}
                       >
-                        Bỏ qua
+                        {t("repository.dismiss")}
                       </button>
                       <span className="foot-note">
-                        Chỉ xác nhận sau khi đã chạy bước kiểm chứng.
+                        {t("repository.confirmHint")}
                       </span>
                     </>
                   )}
@@ -629,29 +651,46 @@ function RepositoryAnalysis({
             </>
           ) : (
             <EmptyState
-              title={`Không có phát hiện trong ${selectedFile.split("/").pop() ?? "tệp này"}`}
-              detail="AI chưa có bằng chứng trong tệp này. Chọn tệp có đánh dấu trong cây thư mục hoặc một phát hiện ở cột bên phải."
+              title={t("repository.noFindingInFile", {
+                file: selectedFile.split("/").pop() ?? t("repository.thisFile"),
+              })}
+              detail={t("repository.noFindingInFileDetail")}
             />
           )}
         </section>
 
-        <aside className="repo-findings card" aria-label="Danh sách phát hiện">
+        <aside
+          className="repo-findings card"
+          aria-label={t("repository.findingsAria")}
+        >
           <CardHead
-            title="Phát hiện"
+            title={t("repository.findings")}
             meta={
               layer
-                ? `${visibleFindings.length}/${findings.length} · lớp ${layer.label}`
-                : `${findings.length} · ${needed} cần xem`
+                ? t("repository.filteredByLayer", {
+                    visible: visibleFindings.length,
+                    total: findings.length,
+                    layer: layer.label,
+                  })
+                : t("repository.findingsSummary", {
+                    total: findings.length,
+                    needed,
+                  })
             }
           />
-          <div className="chip-group chip-group-sm" role="group" aria-label="Lọc phát hiện">
+          <div
+            className="chip-group chip-group-sm"
+            role="group"
+            aria-label={t("repository.filterAria")}
+          >
             <button
               type="button"
               className={`chip${filter === "all" ? " is-on" : ""}`}
               aria-pressed={filter === "all"}
               onClick={() => setFilter("all")}
             >
-              Tất cả <span className="num">{findings.length}</span>
+              {t("repository.filterAll")}{" "}
+              <span className="num">{findings.length}</span>
             </button>
             <button
               type="button"
@@ -659,7 +698,8 @@ function RepositoryAnalysis({
               aria-pressed={filter === "needs"}
               onClick={() => setFilter("needs")}
             >
-              Cần xem <span className="num">{needed}</span>
+              {t("repository.filterNeeds")}{" "}
+              <span className="num">{needed}</span>
             </button>
             <button
               type="button"
@@ -667,7 +707,8 @@ function RepositoryAnalysis({
               aria-pressed={filter === "confirmed"}
               onClick={() => setFilter("confirmed")}
             >
-              Đã xác nhận <span className="num">{confirmed}</span>
+              {t("finding.confirmed")}{" "}
+              <span className="num">{confirmed}</span>
             </button>
           </div>
           <div className="finding-rail-list">
@@ -685,7 +726,9 @@ function RepositoryAnalysis({
                 >
                   <span
                     className={`sev-dot ${severityMeta[finding.severity].className}`}
-                    aria-label={`Mức ${severityMeta[finding.severity].label}`}
+                    aria-label={t("repository.severityAria", {
+                      level: t(severityMeta[finding.severity].labelKey),
+                    })}
                   />
                   <span className="finding-item-main">
                     <span className="finding-item-title">{finding.title}</span>
@@ -693,23 +736,21 @@ function RepositoryAnalysis({
                       {finding.file.split("/").pop()}:{finding.line}
                     </span>
                     <span className="finding-item-meta">
-                      {severityMeta[finding.severity].label} ·{" "}
-                      {findingStateMeta[stateOf(finding)].label}
+                      {t("repository.severityState", {
+                        severity: t(severityMeta[finding.severity].labelKey),
+                        state: t(findingStateMeta[stateOf(finding)].labelKey),
+                      })}
                     </span>
                   </span>
                   <ChevronRight size={14} aria-hidden="true" />
                 </button>
               ))
             ) : (
-              <p className="rail-empty">
-                Không có phát hiện ở trạng thái này.
-              </p>
+              <p className="rail-empty">{t("repository.railEmpty")}</p>
             )}
           </div>
           <div className="card-foot">
-            <span className="foot-note">
-              Phát hiện là suy luận có nguồn, không phải kết luận tuyển dụng.
-            </span>
+            <span className="foot-note">{t("repository.railFootnote")}</span>
           </div>
         </aside>
       </div>

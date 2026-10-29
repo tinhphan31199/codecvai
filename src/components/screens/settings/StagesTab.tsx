@@ -9,6 +9,7 @@ import {
   useStages,
   type UploadStage,
 } from "@/lib/api";
+import { useT } from "@/lib/i18n";
 import { CardHead, LoadError, Loading } from "../../ui";
 import { ConfirmDelete, FormStatus, RowActions } from "./shared";
 
@@ -17,6 +18,7 @@ type Draft = { id: string; label: string; detail: string };
 const EMPTY: Draft = { id: "", label: "", detail: "" };
 
 export default function StagesTab() {
+  const t = useT();
   const { data, loading, error, refetch } = useStages();
   const stages = data ?? [];
   const [editing, setEditing] = useState<UploadStage | null>(null);
@@ -52,7 +54,7 @@ export default function StagesTab() {
     const id = Number(draft.id);
     const label = draft.label.trim();
     if (!Number.isInteger(id) || id <= 0) {
-      setFormError("Mã công đoạn phải là số nguyên dương.");
+      setFormError(t("settingsCrud.stages.invalidId"));
       return;
     }
     if (!label) return;
@@ -63,17 +65,17 @@ export default function StagesTab() {
     try {
       if (editing) {
         await updateStage(editing.id, stage);
-        setNote(`Đã cập nhật công đoạn ${stage.label}.`);
+        setNote(t("settingsCrud.stages.updated", { name: stage.label }));
       } else {
         await createStage(stage);
-        setNote(`Đã thêm công đoạn ${stage.label}.`);
+        setNote(t("settingsCrud.stages.added", { name: stage.label }));
       }
       setFormOpen(false);
       setEditing(null);
       await refetch();
     } catch (err) {
       setFormError(
-        err instanceof Error ? err.message : "Không lưu được công đoạn.",
+        err instanceof Error ? err.message : t("settingsCrud.stages.saveError"),
       );
     } finally {
       setBusy(false);
@@ -91,11 +93,13 @@ export default function StagesTab() {
         setEditing(null);
       }
       setConfirming(null);
-      setNote(`Đã xoá công đoạn ${stage.label}.`);
+      setNote(t("settingsCrud.stages.deleted", { name: stage.label }));
       await refetch();
     } catch (err) {
       setFormError(
-        err instanceof Error ? err.message : "Không xoá được công đoạn.",
+        err instanceof Error
+          ? err.message
+          : t("settingsCrud.stages.deleteError"),
       );
     } finally {
       setBusy(false);
@@ -105,12 +109,12 @@ export default function StagesTab() {
   return (
     <section className="card crud-card">
       <CardHead
-        title="Công đoạn phân tích"
-        meta={`${stages.length} bước · upload_stages`}
+        title={t("settingsCrud.stages.title")}
+        meta={t("settingsCrud.stages.meta", { count: stages.length })}
         action={
           <button type="button" className="btn btn-ghost btn-sm" onClick={openCreate}>
             <Plus size={14} aria-hidden="true" />
-            Thêm công đoạn
+            {t("settingsCrud.stages.add")}
           </button>
         }
       />
@@ -125,7 +129,9 @@ export default function StagesTab() {
         <form className="crud-form" onSubmit={submit}>
           <div className="crud-grid">
             <label className="field">
-              <span className="field-label">Mã (số nguyên)</span>
+              <span className="field-label">
+                {t("settingsCrud.stages.field.id")}
+              </span>
               <input
                 type="number"
                 min={1}
@@ -137,26 +143,32 @@ export default function StagesTab() {
               />
             </label>
             <label className="field is-span-2">
-              <span className="field-label">Tên công đoạn</span>
+              <span className="field-label">
+                {t("settingsCrud.stages.field.label")}
+              </span>
               <input
                 type="text"
                 value={draft.label}
                 onChange={(event) =>
                   setDraft((prev) => ({ ...prev, label: event.target.value }))
                 }
-                placeholder="Ví dụ: Kiểm tra repository"
+                placeholder={t("settingsCrud.stages.field.labelPlaceholder")}
                 required
               />
             </label>
             <label className="field is-span-full">
-              <span className="field-label">Mô tả</span>
+              <span className="field-label">
+                {t("settingsCrud.field.description")}
+              </span>
               <input
                 type="text"
                 value={draft.detail}
                 onChange={(event) =>
                   setDraft((prev) => ({ ...prev, detail: event.target.value }))
                 }
-                placeholder="Hiển thị dưới tên công đoạn"
+                placeholder={t(
+                  "settingsCrud.stages.field.detailPlaceholder",
+                )}
               />
             </label>
           </div>
@@ -167,7 +179,9 @@ export default function StagesTab() {
               ) : (
                 <Check size={15} aria-hidden="true" />
               )}
-              {editing ? "Lưu thay đổi" : "Thêm công đoạn"}
+              {editing
+                ? t("settingsCrud.saveChanges")
+                : t("settingsCrud.stages.add")}
             </button>
             <button
               type="button"
@@ -179,14 +193,14 @@ export default function StagesTab() {
               disabled={busy}
             >
               <X size={15} aria-hidden="true" />
-              Hủy
+              {t("action.cancel")}
             </button>
           </div>
         </form>
       ) : null}
 
       {loading && !stages.length ? (
-        <Loading label="Đang tải công đoạn…" />
+        <Loading label={t("settingsCrud.stages.loading")} />
       ) : error ? (
         <LoadError message={error} onRetry={refetch} />
       ) : (
@@ -194,24 +208,35 @@ export default function StagesTab() {
           <table className="table">
             <thead>
               <tr>
-                <th className="num">Mã</th>
-                <th>Công đoạn</th>
-                <th>Mô tả</th>
-                <th aria-label="Thao tác" />
+                <th className="num">{t("settingsCrud.stages.col.id")}</th>
+                <th>{t("settingsCrud.stages.col.stage")}</th>
+                <th>{t("settingsCrud.field.description")}</th>
+                <th aria-label={t("settingsCrud.table.actions")} />
               </tr>
             </thead>
             <tbody>
               {stages.map((stage) => (
                 <tr key={stage.id}>
-                  <td className="num c-name" data-label="Mã">
+                  <td
+                    className="num c-name"
+                    data-label={t("settingsCrud.stages.col.id")}
+                  >
                     {stage.id}
                   </td>
-                  <td data-label="Công đoạn">{stage.label}</td>
-                  <td data-label="Mô tả">{stage.detail || "—"}</td>
+                  <td data-label={t("settingsCrud.stages.col.stage")}>
+                    {stage.label}
+                  </td>
+                  <td data-label={t("settingsCrud.field.description")}>
+                    {stage.detail || "—"}
+                  </td>
                   <td className="c-go">
                     <RowActions
-                      editLabel={`Sửa ${stage.label}`}
-                      deleteLabel={`Xoá ${stage.label}`}
+                      editLabel={t("settingsCrud.rowAction.edit", {
+                        name: stage.label,
+                      })}
+                      deleteLabel={t("settingsCrud.rowAction.delete", {
+                        name: stage.label,
+                      })}
                       onEdit={() => openEdit(stage)}
                       onDelete={() => {
                         setConfirming(stage);
@@ -229,17 +254,17 @@ export default function StagesTab() {
 
       {confirming ? (
         <ConfirmDelete
-          message={`Xoá công đoạn ${confirming.label} (mã ${confirming.id})?`}
+          message={t("settingsCrud.stages.confirmDelete", {
+            name: confirming.label,
+            id: confirming.id,
+          })}
           busy={busy}
           onConfirm={() => remove(confirming)}
           onCancel={() => setConfirming(null)}
         />
       ) : null}
 
-      <p className="crud-note">
-        Công đoạn hiển thị theo thứ tự mã tăng dần ở bước chọn tệp của màn Upload
-        CV.
-      </p>
+      <p className="crud-note">{t("settingsCrud.stages.note")}</p>
     </section>
   );
 }

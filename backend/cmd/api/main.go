@@ -20,7 +20,6 @@ func main() {
 	config.LoadDotEnv(".env.local", ".env")
 
 	port := env("PORT", "8080")
-	geminiKey := os.Getenv("GEMINI_API_KEY")
 
 	dsn := env("DATABASE_URL", "postgres://codecv:codecv@localhost:5433/codecv?sslmode=disable")
 	var dataStore *store.Store
@@ -45,10 +44,6 @@ func main() {
 	server := &http.Server{
 		Addr: ":" + port,
 		Handler: api.New(api.Config{
-			GeminiBaseURL:  env("GEMINI_API_BASE_URL", "https://generativelanguage.googleapis.com/v1beta"),
-			GeminiAPIKey:   geminiKey,
-			GithubBaseURL:  env("GITHUB_API_BASE_URL", "https://api.github.com"),
-			GithubToken:    os.Getenv("GITHUB_TOKEN"),
 			AllowedOrigins: splitList(env("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")),
 			Store:          dataStore,
 		}),
@@ -61,9 +56,6 @@ func main() {
 
 	go func() {
 		log.Printf("CodeCV API listening on http://localhost:%s", port)
-		if geminiKey == "" {
-			log.Print("warning: GEMINI_API_KEY is not set; analysis requests will return 503")
-		}
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("api: %v", err)
 		}

@@ -9,6 +9,7 @@ import {
   useLevels,
   type Level,
 } from "@/lib/api";
+import { useNumberFormat, useT } from "@/lib/i18n";
 import { CardHead, LoadError, Loading } from "../../ui";
 import { ConfirmDelete, FormStatus, RowActions } from "./shared";
 
@@ -18,6 +19,8 @@ const EMPTY: Draft = { name: "", rank: "" };
 
 export default function LevelsTab() {
   const { data, loading, error, refetch } = useLevels();
+  const t = useT();
+  const fmt = useNumberFormat();
   const levels = data ?? [];
   const [editing, setEditing] = useState<Level | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -53,7 +56,7 @@ export default function LevelsTab() {
     const rank = Number(draft.rank);
     if (!name) return;
     if (!Number.isInteger(rank)) {
-      setFormError("Thứ tự phải là số nguyên.");
+      setFormError(t("settings.levels.rankError"));
       return;
     }
     const level: Level = { name, rank };
@@ -65,19 +68,22 @@ export default function LevelsTab() {
         await updateLevel(editing.name, level);
         setNote(
           editing.name !== level.name
-            ? `Đã đổi ${editing.name} thành ${level.name} và cập nhật vị trí, hồ sơ liên quan.`
-            : `Đã cập nhật cấp bậc ${level.name}.`,
+            ? t("settings.levels.renamed", {
+                from: editing.name,
+                to: level.name,
+              })
+            : t("settings.levels.updated", { name: level.name }),
         );
       } else {
         await createLevel(level);
-        setNote(`Đã thêm cấp bậc ${level.name}.`);
+        setNote(t("settings.levels.added", { name: level.name }));
       }
       setFormOpen(false);
       setEditing(null);
       await refetch();
     } catch (err) {
       setFormError(
-        err instanceof Error ? err.message : "Không lưu được cấp bậc.",
+        err instanceof Error ? err.message : t("settings.levels.saveError"),
       );
     } finally {
       setBusy(false);
@@ -95,11 +101,11 @@ export default function LevelsTab() {
         setEditing(null);
       }
       setConfirming(null);
-      setNote(`Đã xoá cấp bậc ${level.name}.`);
+      setNote(t("settings.levels.deleted", { name: level.name }));
       await refetch();
     } catch (err) {
       setFormError(
-        err instanceof Error ? err.message : "Không xoá được cấp bậc.",
+        err instanceof Error ? err.message : t("settings.levels.deleteError"),
       );
     } finally {
       setBusy(false);
@@ -109,12 +115,12 @@ export default function LevelsTab() {
   return (
     <section className="card crud-card">
       <CardHead
-        title="Cấp bậc"
-        meta={`${levels.length} cấp bậc · levels`}
+        title={t("settings.levels.title")}
+        meta={t("settings.levels.meta", { count: levels.length })}
         action={
           <button type="button" className="btn btn-ghost btn-sm" onClick={openCreate}>
             <Plus size={14} aria-hidden="true" />
-            Thêm cấp bậc
+            {t("settings.levels.add")}
           </button>
         }
       />
@@ -129,26 +135,26 @@ export default function LevelsTab() {
         <form className="crud-form" onSubmit={submit}>
           <div className="crud-grid">
             <label className="field is-span-2">
-              <span className="field-label">Tên cấp bậc</span>
+              <span className="field-label">{t("settings.levels.name")}</span>
               <input
                 type="text"
                 value={draft.name}
                 onChange={(event) =>
                   setDraft((prev) => ({ ...prev, name: event.target.value }))
                 }
-                placeholder="Ví dụ: Senior"
+                placeholder={t("settings.levels.namePlaceholder")}
                 required
               />
             </label>
             <label className="field">
-              <span className="field-label">Thứ tự</span>
+              <span className="field-label">{t("settings.levels.rank")}</span>
               <input
                 type="number"
                 value={draft.rank}
                 onChange={(event) =>
                   setDraft((prev) => ({ ...prev, rank: event.target.value }))
                 }
-                placeholder="1"
+                placeholder={t("settings.levels.rankPlaceholder")}
               />
             </label>
           </div>
@@ -159,7 +165,7 @@ export default function LevelsTab() {
               ) : (
                 <Check size={15} aria-hidden="true" />
               )}
-              {editing ? "Lưu thay đổi" : "Thêm cấp bậc"}
+              {editing ? t("settings.saveChanges") : t("settings.levels.add")}
             </button>
             <button
               type="button"
@@ -171,14 +177,14 @@ export default function LevelsTab() {
               disabled={busy}
             >
               <X size={15} aria-hidden="true" />
-              Hủy
+              {t("action.cancel")}
             </button>
           </div>
         </form>
       ) : null}
 
       {loading && !levels.length ? (
-        <Loading label="Đang tải cấp bậc…" />
+        <Loading label={t("settings.levels.loading")} />
       ) : error ? (
         <LoadError message={error} onRetry={refetch} />
       ) : (
@@ -186,22 +192,30 @@ export default function LevelsTab() {
           <table className="table">
             <thead>
               <tr>
-                <th className="num">Thứ tự</th>
-                <th>Cấp bậc</th>
-                <th aria-label="Thao tác" />
+                <th>{t("settings.levels.colLevel")}</th>
+                <th className="num">{t("settings.levels.rank")}</th>
+                <th aria-label={t("settings.actions")} />
               </tr>
             </thead>
             <tbody>
               {levels.map((level) => (
                 <tr key={level.name}>
-                  <td className="num c-name" data-label="Thứ tự">
-                    {level.rank}
+                  <td className="c-name">
+                    <span className="person-main">
+                      <span className="row-name">{level.name}</span>
+                    </span>
                   </td>
-                  <td data-label="Cấp bậc">{level.name}</td>
+                  <td className="num" data-label={t("settings.levels.rank")}>
+                    {fmt(level.rank)}
+                  </td>
                   <td className="c-go">
                     <RowActions
-                      editLabel={`Sửa ${level.name}`}
-                      deleteLabel={`Xoá ${level.name}`}
+                      editLabel={t("settings.levels.editAria", {
+                        name: level.name,
+                      })}
+                      deleteLabel={t("settings.levels.deleteAria", {
+                        name: level.name,
+                      })}
                       onEdit={() => openEdit(level)}
                       onDelete={() => {
                         setConfirming(level);
@@ -219,17 +233,14 @@ export default function LevelsTab() {
 
       {confirming ? (
         <ConfirmDelete
-          message={`Xoá cấp bậc ${confirming.name}? Vị trí và hồ sơ đang mang cấp bậc này vẫn giữ nguyên giá trị.`}
+          message={t("settings.levels.confirm", { name: confirming.name })}
           busy={busy}
           onConfirm={() => remove(confirming)}
           onCancel={() => setConfirming(null)}
         />
       ) : null}
 
-      <p className="crud-note">
-        Danh sách sắp theo thứ tự tăng dần. Đổi tên cấp bậc sẽ cập nhật luôn vị
-        trí và hồ sơ ứng viên đang dùng tên cũ.
-      </p>
+      <p className="crud-note">{t("settings.levels.footnote")}</p>
     </section>
   );
 }

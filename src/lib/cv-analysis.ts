@@ -84,17 +84,4 @@ export interface AnalyzeCvErrorBody {
   };
 }
 
-export const ANALYSIS_MODELS = [
-  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash Lite" },
-  { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash Lite" },
-] as const;
-
-export type AnalysisModelId = (typeof ANALYSIS_MODELS)[number]["id"];
-
-export const isAnalysisModelId = (value: string): value is AnalysisModelId =>
-  ANALYSIS_MODELS.some((model) => model.id === value);
-
-export const modelLabel = (id: string) =>
-  ANALYSIS_MODELS.find((model) => model.id === id)?.label ?? id;
-
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;

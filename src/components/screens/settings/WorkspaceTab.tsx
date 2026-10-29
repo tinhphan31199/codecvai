@@ -30,15 +30,30 @@ type Draft = Record<StatKey, string> & {
   updated: string;
 };
 
-function toDraft(workspace: Workspace): Draft {
-  const draft = {
-    name: workspace.name,
-    reviewer: workspace.reviewer,
-    analysisModel: workspace.analysisModel,
-    updated: workspace.updated,
-  } as Draft;
+type DraftSource = Workspace & {
+  name?: string;
+  reviewer?: string;
+  analysisModel?: string;
+  updated?: string;
+} & Partial<Record<StatKey, number>>;
+
+function toDraft(workspace: DraftSource): Draft {
+  const draft: Draft = {
+    name: workspace.name ?? "",
+    reviewer: workspace.reviewer ?? "",
+    analysisModel: workspace.analysisModel ?? "",
+    updated: workspace.updated ?? "",
+    total: "0",
+    completed: "0",
+    review: "0",
+    processing: "0",
+    failed: "0",
+    archived: "0",
+    positions: "0",
+  };
   for (const [key] of STAT_KEYS) {
-    draft[key] = String(workspace[key]);
+    const value = workspace[key];
+    draft[key] = value === undefined ? "0" : String(value);
   }
   return draft;
 }
@@ -105,7 +120,7 @@ export default function WorkspaceTab() {
 
   return (
     <section className="card crud-card">
-      <CardHead title="Cấu hình workspace" meta="workspace_settings · 12 khoá" />
+      <CardHead title="Cấu hình workspace" meta="workspace_settings · thông tin chung" />
 
       {formError || note ? (
         <div className="crud-toolbar">

@@ -8,16 +8,17 @@ import {
   useCandidates,
   usePositions,
   useReports,
-  useWorkspace,
+  useStats,
 } from "@/lib/api";
+import { useT, type MessageKey } from "@/lib/i18n";
 import { CardHead, EmptyState, LoadError, PageHead, ScreenLoader } from "../ui";
 
 type ReportTab = "candidates" | "distribution" | "quality";
 
-const tabs: { key: ReportTab; label: string }[] = [
-  { key: "candidates", label: "Báo cáo ứng viên" },
-  { key: "distribution", label: "Phân bố hồ sơ" },
-  { key: "quality", label: "Chất lượng JD" },
+const tabs: { key: ReportTab; labelKey: MessageKey }[] = [
+  { key: "candidates", labelKey: "reports.tab.candidates" },
+  { key: "distribution", labelKey: "reports.tab.distribution" },
+  { key: "quality", labelKey: "reports.tab.quality" },
 ];
 
 const statusOrder = [
@@ -35,7 +36,8 @@ export default function Reports({
 }) {
   const [tab, setTab] = useState<ReportTab>("candidates");
   const [range, setRange] = useState("7");
-  const workspace = useWorkspace();
+  const t = useT();
+  const stats = useStats();
   const {
     data: reports,
     loading: reportsLoading,
@@ -73,13 +75,15 @@ export default function Reports({
   );
 
   if (loading) {
-    return <ScreenLoader title="Reports" label="Đang tải báo cáo…" />;
+    return (
+      <ScreenLoader title={t("screen.reports")} label={t("reports.loading")} />
+    );
   }
 
   if (error) {
     return (
       <div className="screen">
-        <PageHead title="Reports" />
+        <PageHead title={t("screen.reports")} />
         <LoadError message={error} onRetry={refetchAll} />
       </div>
     );
@@ -111,13 +115,13 @@ export default function Reports({
 
   const exportCsv = () => {
     const header = [
-      "Mã",
-      "Ứng viên",
-      "Vị trí",
-      "Phiên bản",
-      "Người review",
-      "Ngày tạo",
-      "Trạng thái",
+      t("reports.csv.code"),
+      t("reports.csv.candidate"),
+      t("reports.csv.position"),
+      t("reports.csv.version"),
+      t("reports.csv.reviewer"),
+      t("reports.csv.created"),
+      t("reports.csv.status"),
     ];
     const lines = rows.map((row) =>
       [
@@ -127,7 +131,7 @@ export default function Reports({
         `v${row.version}`,
         row.reviewer,
         row.created,
-        reportStatusMeta[row.status].label,
+        t(reportStatusMeta[row.status].labelKey),
       ]
         .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
         .join(","),
@@ -143,20 +147,26 @@ export default function Reports({
     const candidate = candidateById.get(candidateId);
     if (!candidate) return;
     const content = [
-      `# Báo cáo ứng viên — ${candidate.name}`,
+      t("reports.exportMd.title", { name: candidate.name }),
       "",
       `${candidate.position} · ${candidate.level} · ${candidate.location}`,
       "",
-      "## Tóm tắt",
+      t("reports.exportMd.summary"),
       candidate.summary,
       "",
-      "## Bằng chứng",
+      t("reports.exportMd.evidence"),
       ...candidate.criteria.map(
         (item) =>
-          `- ${item.label}: ${item.state === "verified" ? "Đã xác minh" : item.state === "inferred" ? "Suy luận" : "Chưa đủ dữ liệu"} (${item.evidence})`,
+          `- ${item.label}: ${
+            item.state === "verified"
+              ? t("evidence.verified")
+              : item.state === "inferred"
+                ? t("evidence.inferredShort")
+                : t("evidence.missing")
+          } (${item.evidence})`,
       ),
       "",
-      `Nguồn: ${candidate.source}`,
+      t("reports.exportMd.source", { source: candidate.source }),
     ].join("\n");
     download(
       `CodeCV_report_${candidate.id}.md`,
@@ -177,53 +187,55 @@ export default function Reports({
   return (
     <div className="screen">
       <PageHead
-        title="Reports"
-        sub={`Báo cáo ứng viên, phân bố hồ sơ và chất lượng JD · cập nhật ${workspace.updated}`}
+        title={t("screen.reports")}
+        sub={t("reports.sub", { updated: stats.updated })}
         actions={
           <>
             <label className="filter-select">
-              <span className="visually-hidden">Khoảng thời gian</span>
+              <span className="visually-hidden">{t("reports.rangeLabel")}</span>
               <select
                 value={range}
                 onChange={(event) => setRange(event.target.value)}
               >
-                <option value="today">Hôm nay · 26/10</option>
-                <option value="7">7 ngày qua</option>
-                <option value="30">30 ngày qua</option>
+                <option value="today">{t("reports.range.today")}</option>
+                <option value="7">{t("reports.range.days7")}</option>
+                <option value="30">{t("reports.range.days30")}</option>
               </select>
             </label>
             <button type="button" className="btn btn-primary" onClick={exportCsv}>
               <Download size={15} aria-hidden="true" />
-              Xuất báo cáo
+              {t("reports.export")}
             </button>
           </>
         }
       />
 
-      <section className="kpi-strip" aria-label="Tổng quan báo cáo">
+      <section className="kpi-strip" aria-label={t("reports.kpi.label")}>
         <div className="kpi-cell">
-          <span className="kpi-label">Báo cáo trong kỳ</span>
+          <span className="kpi-label">{t("reports.kpi.total")}</span>
           <span className="kpi-value num">{rows.length}</span>
-          <span className="kpi-note">{rows.length} phiên bản đã tạo</span>
+          <span className="kpi-note">
+            {t("reports.kpi.totalNote", { count: rows.length })}
+          </span>
         </div>
         <div className="kpi-cell">
-          <span className="kpi-label">Đã xuất</span>
+          <span className="kpi-label">{t("reportStatus.exported")}</span>
           <span className="kpi-value num">{exported}</span>
-          <span className="kpi-note">Sẵn sàng chia sẻ với team</span>
+          <span className="kpi-note">{t("reports.kpi.exportedNote")}</span>
         </div>
         <div className="kpi-cell">
-          <span className="kpi-label">Chờ review</span>
+          <span className="kpi-label">{t("reportStatus.review")}</span>
           <span className="kpi-value num">{review}</span>
-          <span className="kpi-note">Cần người review xác nhận</span>
+          <span className="kpi-note">{t("reports.kpi.reviewNote")}</span>
         </div>
         <div className="kpi-cell">
-          <span className="kpi-label">Lỗi tạo báo cáo</span>
+          <span className="kpi-label">{t("reports.kpi.failed")}</span>
           <span className="kpi-value num">{failed}</span>
-          <span className="kpi-note">Cần cấp lại quyền repository</span>
+          <span className="kpi-note">{t("reports.kpi.failedNote")}</span>
         </div>
       </section>
 
-      <div className="report-tabs" role="tablist" aria-label="Loại báo cáo">
+      <div className="report-tabs" role="tablist" aria-label={t("reports.typeLabel")}>
         {tabs.map((item) => (
           <button
             key={item.key}
@@ -233,7 +245,7 @@ export default function Reports({
             className={`report-tab${tab === item.key ? " is-on" : ""}`}
             onClick={() => setTab(item.key)}
           >
-            {item.label}
+            {t(item.labelKey)}
             <span className="num tab-count">{tabCounts[item.key]}</span>
           </button>
         ))}
@@ -242,12 +254,12 @@ export default function Reports({
       {tab === "candidates" ? (
         <section className="card">
           <CardHead
-            title="Báo cáo ứng viên gần nhất"
-            meta={`${rows.length} báo cáo trong kỳ`}
+            title={t("reports.candidates.title")}
+            meta={t("reports.candidates.meta", { count: rows.length })}
             action={
               <button type="button" className="card-link" onClick={exportCsv}>
                 <FileText size={13} aria-hidden="true" />
-                Xuất CSV
+                {t("reports.candidates.exportCsv")}
               </button>
             }
           />
@@ -257,14 +269,14 @@ export default function Reports({
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>Ứng viên</th>
-                      <th>Mã báo cáo</th>
-                      <th>Vị trí</th>
-                      <th className="num">Phiên bản</th>
-                      <th>Người review</th>
-                      <th className="num">Ngày tạo</th>
-                      <th>Trạng thái</th>
-                      <th aria-label="Tải báo cáo" />
+                      <th>{t("reports.col.candidate")}</th>
+                      <th>{t("reports.col.code")}</th>
+                      <th>{t("reports.col.position")}</th>
+                      <th className="num">{t("reports.col.version")}</th>
+                      <th>{t("reports.col.reviewer")}</th>
+                      <th className="num">{t("reports.col.created")}</th>
+                      <th>{t("reports.col.status")}</th>
+                      <th aria-label={t("reports.col.download")} />
                     </tr>
                   </thead>
                   <tbody>
@@ -282,31 +294,33 @@ export default function Reports({
                             {row.candidate}
                           </a>
                         </td>
-                        <td className="c-code mono" data-label="Mã báo cáo">
+                        <td className="c-code mono" data-label={t("reports.col.code")}>
                           {row.id}
                         </td>
-                        <td className="c-role" data-label="Vị trí">
+                        <td className="c-role" data-label={t("reports.col.position")}>
                           {row.position}
                         </td>
-                        <td className="num mono" data-label="Phiên bản">
+                        <td className="num mono" data-label={t("reports.col.version")}>
                           v{row.version}
                         </td>
-                        <td className="c-reviewer" data-label="Người review">
+                        <td className="c-reviewer" data-label={t("reports.col.reviewer")}>
                           {row.reviewer}
                         </td>
-                        <td className="num c-updated" data-label="Ngày tạo">
+                        <td className="num c-updated" data-label={t("reports.col.created")}>
                           {row.created}
                         </td>
-                        <td className="c-status" data-label="Trạng thái">
+                        <td className="c-status" data-label={t("reports.col.status")}>
                           <span className={`pill ${reportStatusMeta[row.status].className}`}>
-                            {reportStatusMeta[row.status].label}
+                            {t(reportStatusMeta[row.status].labelKey)}
                           </span>
                         </td>
                         <td className="c-go">
                           <button
                             type="button"
                             className="icon-btn"
-                            aria-label={`Tải báo cáo của ${row.candidate}`}
+                            aria-label={t("reports.downloadAria", {
+                              name: row.candidate,
+                            })}
                             onClick={() => exportRow(row.candidateId)}
                           >
                             <Download size={15} />
@@ -319,30 +333,32 @@ export default function Reports({
               </div>
               <div className="card-foot">
                 <span className="foot-note">
-                  Hiển thị {Math.min(6, rows.length)}/{rows.length} báo cáo gần
-                  nhất trong kỳ.
+                  {t("reports.candidates.foot", {
+                    shown: Math.min(6, rows.length),
+                    total: rows.length,
+                  })}
                 </span>
                 <button
                   type="button"
                   className="card-link"
                   onClick={() => go("candidates")}
                 >
-                  Mở danh sách ứng viên
+                  {t("reports.candidates.openList")}
                   <ChevronRight size={13} aria-hidden="true" />
                 </button>
               </div>
             </>
           ) : (
             <EmptyState
-              title="Không có báo cáo trong khoảng thời gian này"
-              detail="Chọn khoảng thời gian rộng hơn để xem báo cáo đã tạo."
+              title={t("reports.candidates.emptyTitle")}
+              detail={t("reports.candidates.emptyDetail")}
               action={
                 <button
                   type="button"
                   className="btn btn-ghost"
                   onClick={() => setRange("30")}
                 >
-                  Xem 30 ngày qua
+                  {t("reports.candidates.emptyAction")}
                 </button>
               }
             />
@@ -354,8 +370,10 @@ export default function Reports({
         <div className="reports-grid">
           <section className="card">
             <CardHead
-              title="Phân bố theo trạng thái"
-              meta={`${workspace.total} hồ sơ · toàn workspace`}
+              title={t("reports.distribution.statusTitle")}
+              meta={t("reports.distribution.statusMeta", {
+                count: stats.total,
+              })}
             />
             <div className="bar-list">
               {statusOrder.map((status) => {
@@ -365,7 +383,9 @@ export default function Reports({
                 return (
                   <div className="bar-row" key={status}>
                     <div className="bar-top">
-                      <span className="bar-label">{statusMeta[status].label}</span>
+                      <span className="bar-label">
+                        {t(statusMeta[status].labelKey)}
+                      </span>
                       <span className="bar-value num">{count}</span>
                     </div>
                     <div className="bar-track">
@@ -382,15 +402,20 @@ export default function Reports({
             </div>
             <div className="card-foot">
               <span className="foot-note">
-                Phân bố theo {candidateList.length} hồ sơ trong workspace.
+                {t("reports.distribution.statusFoot", {
+                  count: candidateList.length,
+                })}
               </span>
             </div>
           </section>
 
           <section className="card">
             <CardHead
-              title="Hồ sơ theo vị trí"
-              meta={`${positionList.length} vị trí · ${positionList.reduce((sum, p) => sum + p.candidates, 0)} hồ sơ`}
+              title={t("reports.distribution.positionTitle")}
+              meta={t("reports.distribution.positionMeta", {
+                positions: positionList.length,
+                count: positionList.reduce((sum, p) => sum + p.candidates, 0),
+              })}
             />
             <div className="bar-list">
               {positionList.map((position) => (
@@ -410,7 +435,9 @@ export default function Reports({
             </div>
             <div className="card-foot">
               <span className="foot-note">
-                Tổng khớp {workspace.total} hồ sơ trong workspace.
+                {t("reports.distribution.positionFoot", {
+                  count: stats.total,
+                })}
               </span>
             </div>
           </section>
@@ -421,18 +448,18 @@ export default function Reports({
         <div className="reports-grid">
           <section className="card">
             <CardHead
-              title="Tiêu chí theo vị trí"
-              meta={`${positionList.length} JD · nguồn xác minh`}
+              title={t("reports.quality.title")}
+              meta={t("reports.quality.meta", { count: positionList.length })}
             />
             <div className="table-wrap">
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Vị trí</th>
-                    <th>Team</th>
-                    <th className="num">Tiêu chí</th>
-                    <th className="num">Bắt buộc</th>
-                    <th className="num">Ứng viên</th>
+                    <th>{t("reports.col.position")}</th>
+                    <th>{t("reports.col.team")}</th>
+                    <th className="num">{t("reports.col.criteria")}</th>
+                    <th className="num">{t("reports.col.must")}</th>
+                    <th className="num">{t("reports.col.candidates")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -441,16 +468,16 @@ export default function Reports({
                       <td className="c-name">
                         <span className="row-name">{position.title}</span>
                       </td>
-                      <td className="c-role" data-label="Team">
+                      <td className="c-role" data-label={t("reports.col.team")}>
                         {position.team}
                       </td>
-                      <td className="num fig" data-label="Tiêu chí">
+                      <td className="num fig" data-label={t("reports.col.criteria")}>
                         {position.criteria.length}
                       </td>
-                      <td className="num fig" data-label="Bắt buộc">
+                      <td className="num fig" data-label={t("reports.col.must")}>
                         {position.criteria.filter((c) => c.kind === "must").length}
                       </td>
-                      <td className="num fig" data-label="Ứng viên">
+                      <td className="num fig" data-label={t("reports.col.candidates")}>
                         {position.candidates}
                       </td>
                     </tr>
@@ -459,16 +486,16 @@ export default function Reports({
               </table>
             </div>
             <div className="card-foot">
-              <span className="foot-note">
-                Mọi tiêu chí đều có nguồn xác minh: CV, repository hoặc phỏng vấn.
-              </span>
+              <span className="foot-note">{t("reports.quality.foot")}</span>
             </div>
           </section>
 
           <section className="card">
             <CardHead
-              title="Vị trí cần bổ sung tiêu chí"
-              meta={`${weakPositions.length} vị trí dưới 4 tiêu chí`}
+              title={t("reports.quality.weakTitle")}
+              meta={t("reports.quality.weakMeta", {
+                count: weakPositions.length,
+              })}
             />
             <ul className="flag-list">
               {weakPositions.map((position) => (
@@ -476,24 +503,26 @@ export default function Reports({
                   <span className="flag-main">
                     <span className="flag-title">{position.title}</span>
                     <span className="flag-sub">
-                      {position.criteria.length} tiêu chí · {position.candidates} ứng
-                      viên
+                      {t("reports.quality.weakSub", {
+                        criteria: position.criteria.length,
+                        candidates: position.candidates,
+                      })}
                     </span>
                   </span>
-                  <span className="pill pill-warning">Cần bổ sung</span>
+                  <span className="pill pill-warning">
+                    {t("reports.quality.weakPill")}
+                  </span>
                 </li>
               ))}
             </ul>
             <div className="card-foot">
-              <span className="foot-note">
-                Thêm tiêu chí và nguồn xác minh trước khi mở phân tích hàng loạt.
-              </span>
+              <span className="foot-note">{t("reports.quality.weakFoot")}</span>
               <button
                 type="button"
                 className="card-link"
                 onClick={() => go("jobs")}
               >
-                Mở Job Descriptions
+                {t("reports.quality.openJobs")}
                 <ChevronRight size={13} aria-hidden="true" />
               </button>
             </div>

@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import type { CandidateStatus, Screen } from "@/data/codecv";
 import { candidateEvidence, statusMeta } from "@/data/codecv";
-import { useCandidates, useWorkspace } from "@/lib/api";
+import { useCandidates, useStats } from "@/lib/api";
+import { useT, type MessageKey } from "@/lib/i18n";
 import {
   Avatar,
   EmptyState,
@@ -23,13 +24,13 @@ import {
 
 const PAGE_SIZE = 8;
 
-const statusOptions: { value: CandidateStatus | "all"; label: string }[] = [
-  { value: "all", label: "Tất cả trạng thái" },
-  { value: "completed", label: statusMeta.completed.label },
-  { value: "review", label: statusMeta.review.label },
-  { value: "processing", label: statusMeta.processing.label },
-  { value: "failed", label: statusMeta.failed.label },
-  { value: "archived", label: statusMeta.archived.label },
+const statusOptions: { value: CandidateStatus | "all"; labelKey: MessageKey }[] = [
+  { value: "all", labelKey: "candidates.statusAll" },
+  { value: "completed", labelKey: statusMeta.completed.labelKey },
+  { value: "review", labelKey: statusMeta.review.labelKey },
+  { value: "processing", labelKey: statusMeta.processing.labelKey },
+  { value: "failed", labelKey: statusMeta.failed.labelKey },
+  { value: "archived", labelKey: statusMeta.archived.labelKey },
 ];
 
 export default function Candidates({
@@ -41,8 +42,9 @@ export default function Candidates({
   query: string;
   setQuery: (value: string) => void;
 }) {
-  const workspace = useWorkspace();
+  const stats = useStats();
   const { data: candidates, loading, error, refetch } = useCandidates();
+  const t = useT();
   const list = useMemo(() => candidates ?? [], [candidates]);
 
   const search = query;
@@ -108,8 +110,8 @@ export default function Candidates({
   if (loading) {
     return (
       <ScreenLoader
-        title="Candidates"
-        label="Đang tải danh sách ứng viên từ máy chủ…"
+        title={t("screen.candidates")}
+        label={t("candidates.loadingLabel")}
       />
     );
   }
@@ -117,7 +119,7 @@ export default function Candidates({
   if (error) {
     return (
       <div className="screen">
-        <PageHead title="Candidates" />
+        <PageHead title={t("screen.candidates")} />
         <LoadError message={error} onRetry={refetch} />
       </div>
     );
@@ -126,8 +128,11 @@ export default function Candidates({
   return (
     <div className="screen">
       <PageHead
-        title="Candidates"
-        sub={`${workspace.total} hồ sơ trong workspace · ${list.length} hồ sơ đang hiển thị.`}
+        title={t("screen.candidates")}
+        sub={t("candidates.sub", {
+          total: stats.total,
+          shown: list.length,
+        })}
         actions={
           <button
             type="button"
@@ -135,7 +140,7 @@ export default function Candidates({
             onClick={() => go("upload")}
           >
             <UploadCloud size={15} aria-hidden="true" />
-            Phân tích CV mới
+            {t("candidates.newAnalysis")}
           </button>
         }
       />
@@ -151,14 +156,14 @@ export default function Candidates({
                 setQuery(event.target.value);
                 setPage(1);
               }}
-              placeholder="Tìm theo tên, email, vị trí…"
-              aria-label="Tìm ứng viên"
+              placeholder={t("candidates.searchPlaceholder")}
+              aria-label={t("candidates.searchAria")}
             />
             {search ? (
               <button
                 type="button"
                 className="filter-clear"
-                aria-label="Xóa tìm kiếm"
+                aria-label={t("candidates.clearSearchAria")}
                 onClick={() => {
                   setQuery("");
                 }}
@@ -169,7 +174,9 @@ export default function Candidates({
           </div>
 
           <label className="filter-select">
-            <span className="visually-hidden">Lọc theo trạng thái</span>
+            <span className="visually-hidden">
+              {t("candidates.filterStatusAria")}
+            </span>
             <select
               value={status}
               onChange={(event) => {
@@ -179,14 +186,16 @@ export default function Candidates({
             >
               {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.label}
+                  {t(option.labelKey)}
                 </option>
               ))}
             </select>
           </label>
 
           <label className="filter-select">
-            <span className="visually-hidden">Lọc theo vị trí</span>
+            <span className="visually-hidden">
+              {t("candidates.filterPositionAria")}
+            </span>
             <select
               value={position}
               onChange={(event) => {
@@ -194,7 +203,7 @@ export default function Candidates({
                 setPage(1);
               }}
             >
-              <option value="all">Tất cả vị trí</option>
+              <option value="all">{t("candidates.allPositions")}</option>
               {positions.map((item) => (
                 <option key={item} value={item}>
                   {item}
@@ -204,20 +213,24 @@ export default function Candidates({
           </label>
 
           <label className="filter-select">
-            <span className="visually-hidden">Sắp xếp</span>
+            <span className="visually-hidden">{t("candidates.sortAria")}</span>
             <select
               value={sort}
               onChange={(event) => setSort(event.target.value)}
             >
-              <option value="recent">Cập nhật gần nhất</option>
-              <option value="evidence">Nhiều bằng chứng nhất</option>
-              <option value="name">Tên A–Z</option>
+              <option value="recent">{t("candidates.sortRecent")}</option>
+              <option value="evidence">{t("candidates.sortEvidence")}</option>
+              <option value="name">{t("candidates.sortName")}</option>
             </select>
           </label>
         </div>
 
         <div className="filter-row">
-          <div className="chip-group" role="group" aria-label="Lọc theo bằng chứng">
+          <div
+            className="chip-group"
+            role="group"
+            aria-label={t("candidates.filterEvidenceAria")}
+          >
             <button
               type="button"
               className={`chip${evidence === "all" ? " is-on" : ""}`}
@@ -227,7 +240,8 @@ export default function Candidates({
                 setPage(1);
               }}
             >
-              Tất cả <span className="num">{list.length}</span>
+              {t("candidates.evidenceAll")}{" "}
+              <span className="num">{list.length}</span>
             </button>
             <button
               type="button"
@@ -238,7 +252,8 @@ export default function Candidates({
                 setPage(1);
               }}
             >
-              Có xác minh <span className="num">{verifiedCount}</span>
+              {t("candidates.evidenceVerified")}{" "}
+              <span className="num">{verifiedCount}</span>
             </button>
             <button
               type="button"
@@ -249,17 +264,18 @@ export default function Candidates({
                 setPage(1);
               }}
             >
-              Còn thiếu <span className="num">{gapCount}</span>
+              {t("candidates.evidenceGap")}{" "}
+              <span className="num">{gapCount}</span>
             </button>
           </div>
           <div className="filter-summary">
             {filtered ? (
               <button type="button" className="text-btn" onClick={reset}>
-                Xóa bộ lọc
+                {t("candidates.clearFilters")}
               </button>
             ) : null}
             <span className="result-count">
-              <strong className="num">{rows.length}</strong> hồ sơ
+              {t("candidates.resultCount", { count: rows.length })}
             </span>
           </div>
         </div>
@@ -270,13 +286,13 @@ export default function Candidates({
               <table className="table table-candidates">
                 <thead>
                   <tr>
-                    <th>Ứng viên</th>
-                    <th>Vị trí</th>
-                    <th className="num">Kinh nghiệm</th>
-                    <th>Bằng chứng</th>
-                    <th>Trạng thái</th>
-                    <th className="num">Cập nhật</th>
-                    <th aria-label="Mở hồ sơ" />
+                    <th>{t("candidates.colCandidate")}</th>
+                    <th>{t("candidates.colPosition")}</th>
+                    <th className="num">{t("candidates.colExperience")}</th>
+                    <th>{t("candidates.colEvidence")}</th>
+                    <th>{t("candidates.colStatus")}</th>
+                    <th className="num">{t("candidates.colUpdated")}</th>
+                    <th aria-label={t("candidates.colActionAria")} />
                   </tr>
                 </thead>
                 <tbody>
@@ -309,19 +325,30 @@ export default function Candidates({
                             </span>
                           </div>
                         </td>
-                        <td className="c-role" data-label="Vị trí">
+                        <td
+                          className="c-role"
+                          data-label={t("candidates.colPosition")}
+                        >
                           <span>
                             <span className="role-main">{candidate.position}</span>
                             <span className="role-sub">{candidate.location}</span>
                           </span>
                         </td>
-                        <td className="num c-exp" data-label="Kinh nghiệm">
+                        <td
+                          className="num c-exp"
+                          data-label={t("candidates.colExperience")}
+                        >
                           <span>
                             <span className="fig">{candidate.years}</span>
-                            <span className="unit">năm</span>
+                            <span className="unit">
+                              {t("candidates.yearsUnit")}
+                            </span>
                           </span>
                         </td>
-                        <td className="c-evidence-cell" data-label="Bằng chứng">
+                        <td
+                          className="c-evidence-cell"
+                          data-label={t("candidates.colEvidence")}
+                        >
                           <div className="evidence-cell">
                             <div className="evidence-top">
                               <span className="num evidence-count fig">
@@ -336,17 +363,25 @@ export default function Candidates({
                             />
                           </div>
                         </td>
-                        <td className="c-status" data-label="Trạng thái">
+                        <td
+                          className="c-status"
+                          data-label={t("candidates.colStatus")}
+                        >
                           <StatusPill status={candidate.status} />
                         </td>
-                        <td className="num c-updated" data-label="Cập nhật">
+                        <td
+                          className="num c-updated"
+                          data-label={t("candidates.colUpdated")}
+                        >
                           {candidate.updated}
                         </td>
                         <td className="c-go">
                           <button
                             type="button"
                             className="icon-btn"
-                            aria-label={`Mở hồ sơ ${candidate.name}`}
+                            aria-label={t("candidates.openProfileAria", {
+                              name: candidate.name,
+                            })}
                             onClick={() => go("candidate", candidate.id)}
                           >
                             <ChevronRight size={16} />
@@ -361,11 +396,11 @@ export default function Candidates({
 
             <div className="pagination">
               <span className="page-info">
-                Hiển thị{" "}
-                <strong className="num">
-                  {start + 1}–{Math.min(start + PAGE_SIZE, rows.length)}
-                </strong>{" "}
-                trên <strong className="num">{rows.length}</strong> hồ sơ
+                {t("candidates.pageInfo", {
+                  from: start + 1,
+                  to: Math.min(start + PAGE_SIZE, rows.length),
+                  total: rows.length,
+                })}
               </span>
               <div className="page-controls">
                 <button
@@ -375,7 +410,7 @@ export default function Candidates({
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
                   <ChevronLeft size={14} aria-hidden="true" />
-                  Trước
+                  {t("candidates.prev")}
                 </button>
                 <span className="page-current num">
                   {safePage}/{pages}
@@ -386,7 +421,7 @@ export default function Candidates({
                   disabled={safePage === pages}
                   onClick={() => setPage((p) => Math.min(pages, p + 1))}
                 >
-                  Sau
+                  {t("candidates.next")}
                   <ChevronRight size={14} aria-hidden="true" />
                 </button>
               </div>
@@ -394,11 +429,11 @@ export default function Candidates({
           </>
         ) : (
           <EmptyState
-            title="Không có hồ sơ khớp bộ lọc"
-            detail="Thử xóa bộ lọc hoặc tìm theo tên, email và vị trí khác."
+            title={t("candidates.emptyTitle")}
+            detail={t("candidates.emptyDetail")}
             action={
               <button type="button" className="btn btn-ghost" onClick={reset}>
-                Xóa bộ lọc
+                {t("candidates.clearFilters")}
               </button>
             }
           />
@@ -406,16 +441,21 @@ export default function Candidates({
 
         <div className="card-foot">
           <span className="foot-note">
-            {statusMeta.review.label}: {workspace.review} hồ sơ trong toàn
-            workspace. Danh sách hiển thị {list.length} hồ sơ.
+            {t("candidates.footReview", {
+              status: t(statusMeta.review.labelKey),
+              review: stats.review,
+              shown: list.length,
+            })}
           </span>
-          <span className="foot-note">Cập nhật {workspace.updated}</span>
+          <span className="foot-note">
+            {t("candidates.updatedAt", { time: stats.updated })}
+          </span>
         </div>
       </section>
 
       <div className="screen-note">
-        <strong>Bằng chứng chỉ tính khi có nguồn.</strong> Hồ sơ thiếu bằng
-        chứng vẫn hiển thị đầy đủ; mở hồ sơ để xem nguồn từng tiêu chí.
+        <strong>{t("candidates.noteLead")}</strong>{" "}
+        {t("candidates.noteBody")}
       </div>
     </div>
   );

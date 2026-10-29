@@ -3,15 +3,18 @@
 import { useMemo, useState } from "react";
 import {
   Check,
+  ChevronLeft,
   ChevronRight,
   Clock,
   Download,
   MessageSquare,
-  Video,
+  Search,
+  X,
 } from "lucide-react";
-import type { Question, Screen } from "@/data/codecv";
-import { buildHistory, generateQuestions } from "@/data/codecv";
-import { useCandidate } from "@/lib/api";
+import type { CandidateStatus, Question, Screen } from "@/data/codecv";
+import { generateQuestions, statusMeta } from "@/data/codecv";
+import { useCandidate, useCandidates } from "@/lib/api";
+import { useT, type MessageKey } from "@/lib/i18n";
 import {
   Avatar,
   CardHead,
@@ -19,28 +22,37 @@ import {
   LoadError,
   PageHead,
   ScreenLoader,
+  StatusPill,
 } from "../ui";
 
-const categories = [
-  "Architecture",
-  "Database",
-  "Messaging",
-  "Security",
-  "Testing",
-] as const;
+const categoryKeys: Partial<Record<string, MessageKey>> = {
+  Architecture: "interview.category.architecture",
+  Database: "interview.category.database",
+  Messaging: "interview.category.messaging",
+  Security: "interview.category.security",
+  Testing: "interview.category.testing",
+};
+
+const knownCategories = Object.keys(categoryKeys);
 
 type AnswerTab = "hints" | "sample" | "checks";
 
-const checkPoints = [
-  "Nêu bối cảnh và ràng buộc cụ thể từ repository.",
-  "Chỉ ra trade-off và phương án thay thế đã cân nhắc.",
-  "Mô tả cách kiểm chứng hoặc đo kết quả sau khi làm.",
+const answerTabs: { key: AnswerTab; labelKey: MessageKey }[] = [
+  { key: "hints", labelKey: "interview.tab.hints" },
+  { key: "sample", labelKey: "interview.tab.sample" },
+  { key: "checks", labelKey: "interview.tab.checks" },
 ];
 
-const hintPrompts = [
-  "Bắt đầu bằng một tình huống thật trong repository, không trả lời lý thuyết.",
-  "Đào vào quyết định: vì sao chọn cách này, đánh đổi điều gì.",
-  "Hỏi tiếp nếu câu trả lời dừng ở khái niệm hoặc không có ví dụ.",
+const checkPointKeys: MessageKey[] = [
+  "interview.check.1",
+  "interview.check.2",
+  "interview.check.3",
+];
+
+const hintKeys: MessageKey[] = [
+  "interview.hint.1",
+  "interview.hint.2",
+  "interview.hint.3",
 ];
 
 export default function InterviewStudio({
@@ -51,6 +63,7 @@ export default function InterviewStudio({
   go: (screen: Screen, id?: string) => void;
 }) {
   const { data: candidate, loading, error, refetch } = useCandidate(id);
+  const t = useT();
   const questions = useMemo(
     () => (candidate ? candidate.questions ?? generateQuestions(candidate) : []),
     [candidate],
@@ -64,13 +77,13 @@ export default function InterviewStudio({
   const [savedNotes, setSavedNotes] = useState<Record<string, boolean>>({});
 
   if (loading) {
-    return <ScreenLoader title="Interview Studio" />;
+    return <ScreenLoader title={t("screen.interview")} />;
   }
 
   if (error) {
     return (
       <div className="screen">
-        <PageHead title="Interview Studio" />
+        <PageHead title={t("screen.interview")} />
         <LoadError message={error} onRetry={refetch} />
       </div>
     );
@@ -80,15 +93,15 @@ export default function InterviewStudio({
     return (
       <div className="screen">
         <EmptyState
-          title="Không tìm thấy hồ sơ"
-          detail="Hồ sơ có thể đã bị lưu trữ hoặc đường dẫn không đúng."
+          title={t("interview.notFound.title")}
+          detail={t("interview.notFound.detail")}
           action={
             <button
               type="button"
               className="btn btn-ghost"
               onClick={() => go("candidates")}
             >
-              Về danh sách ứng viên
+              {t("interview.notFound.action")}
             </button>
           }
         />
@@ -96,15 +109,29 @@ export default function InterviewStudio({
     );
   }
 
-  const selected: Question | undefined =
-    questions.find((item) => item.id === selectedId) ?? questions[0];
-
-  const grouped = categories
+  const presentCategories: string[] = Array.from(
+    new Set(questions.map((item) => item.category)),
+  );
+  const groupOrder = [
+    ...knownCategories.filter((category) => presentCategories.includes(category)),
+    ...presentCategories.filter((category) => !knownCategories.includes(category)),
+  ];
+  const grouped = groupOrder
     .map((category) => ({
       category,
       items: questions.filter((item) => item.category === category),
     }))
-    .filter((group) => group.items.length);
+    .filter((group) => group.items.length > 0);
+  const orderedQuestions = grouped.flatMap((group) => group.items);
+
+  const selected: Question | undefined =
+    orderedQuestions.find((item) => item.id === selectedId) ??
+    orderedQuestions[0];
+
+  const categoryLabel = (category: string) => {
+    const key = categoryKeys[category];
+    return key ? t(key) : category;
+  };
 
   const ratedCount = Object.keys(ratings).length;
   const askedCount = Object.keys(asked).filter((key) => asked[key]).length;
@@ -120,33 +147,42 @@ export default function InterviewStudio({
 
   const exportSheet = () => {
     const lines = [
-      "# Phiếu phỏng vấn — CodeCV AI",
+      t("interview.export.docTitle"),
       "",
       `**${candidate.name}** · ${candidate.position}`,
-      `Người phỏng vấn: Minh Anh · Vòng 2 · 26/10/2026 · 15:00`,
+      t("interview.export.interviewer", {
+        reviewer: candidate.reviewer || "—",
+        updated: candidate.updatedAt,
+      }),
       "",
-      "## Rubric (0–4)",
+      t("interview.export.rubric"),
       ...candidate.criteria.map(
         (item) =>
-          `- ${item.label}: ${ratings[item.id] ?? "chưa chấm"}/4`,
+          t("interview.export.rating", {
+            label: item.label,
+            rating:
+              ratings[item.id] !== undefined
+                ? `${ratings[item.id]}/4`
+                : t("interview.export.unrated"),
+          }),
       ),
       "",
-      "## Câu hỏi đã hỏi",
-      ...questions
+      t("interview.export.asked"),
+      ...orderedQuestions
         .filter((item) => asked[item.id])
         .map((item, index) => `${index + 1}. ${item.text}`),
       "",
-      "## Ghi chú",
+      t("interview.export.notes"),
       ...(Object.keys(notes).some((key) => notes[key]?.trim())
-        ? questions
+        ? orderedQuestions
             .filter((item) => notes[item.id]?.trim())
-            .map(
-              (item) =>
-                `- Câu ${questions.indexOf(item) + 1}: ${notes[item.id]}`,
+            .map((item) =>
+              t("interview.export.noteLine", {
+                index: orderedQuestions.indexOf(item) + 1,
+                note: notes[item.id] ?? "",
+              }),
             )
-        : ["Chưa có ghi chú."]),
-      "",
-      `Lịch sử hồ sơ gần nhất: ${buildHistory(candidate)[0]?.title ?? "—"}`,
+        : [t("interview.export.noNotes")]),
     ];
     const blob = new Blob([lines.join("\n")], {
       type: "text/markdown;charset=utf-8",
@@ -162,8 +198,12 @@ export default function InterviewStudio({
   return (
     <div className="screen">
       <PageHead
-        title="Interview Studio"
-        sub={`${candidate.name} · ${candidate.position} · Vòng 2 · ${questions.length} câu hỏi · 60 phút`}
+        title={t("screen.interview")}
+        sub={t("interview.sub", {
+          name: candidate.name,
+          position: candidate.position,
+          count: questions.length,
+        })}
         actions={
           <>
             <button
@@ -171,11 +211,11 @@ export default function InterviewStudio({
               className="btn btn-ghost"
               onClick={() => go("candidate", candidate.id)}
             >
-              Mở hồ sơ
+              {t("interview.openProfile")}
             </button>
             <button type="button" className="btn btn-primary" onClick={exportSheet}>
               <Download size={15} aria-hidden="true" />
-              Xuất phiếu phỏng vấn
+              {t("interview.export")}
             </button>
           </>
         }
@@ -192,45 +232,59 @@ export default function InterviewStudio({
           <div>
             <span className="studio-name">{candidate.name}</span>
             <span className="studio-sub">
-              {candidate.role} · {candidate.years} năm · {candidate.location}
+              {t("interview.person.meta", {
+                role: candidate.role,
+                years: candidate.years,
+                location: candidate.location,
+              })}
             </span>
           </div>
         </div>
         <div className="studio-meta">
           <span>
             <Clock size={14} aria-hidden="true" />
-            60 phút
-          </span>
-          <span>
-            <Video size={14} aria-hidden="true" />
-            Google Meet
+            {t("interview.updated", { time: candidate.updatedAt })}
           </span>
           <span>
             <MessageSquare size={14} aria-hidden="true" />
-            Đã hỏi {askedCount}/{questions.length}
+            {t("interview.askedProgress", {
+              asked: askedCount,
+              total: questions.length,
+            })}
           </span>
           <span>
             <Check size={14} aria-hidden="true" />
-            Đã chấm {ratedCount}/{candidate.criteria.length} tiêu chí
+            {t("interview.ratedProgress", {
+              rated: ratedCount,
+              total: candidate.criteria.length,
+            })}
           </span>
         </div>
       </div>
 
       <div className="studio-grid">
-        <section className="card question-pane" aria-label="Danh sách câu hỏi">
+        <section
+          className="card question-pane"
+          aria-label={t("interview.questions.aria")}
+        >
           <CardHead
-            title="Câu hỏi theo chủ đề"
-            meta={`${questions.length} câu · ${grouped.length} nhóm`}
+            title={t("interview.questions.title")}
+            meta={t("interview.questions.meta", {
+              count: questions.length,
+              groups: grouped.length,
+            })}
           />
           <div className="question-groups">
             {grouped.map((group) => (
               <div className="q-group" key={group.category}>
                 <div className="q-group-head">
-                  <span className="q-group-title">{group.category}</span>
+                  <span className="q-group-title">
+                    {categoryLabel(group.category)}
+                  </span>
                   <span className="q-group-count num">{group.items.length}</span>
                 </div>
                 {group.items.map((question) => {
-                  const index = questions.indexOf(question) + 1;
+                  const index = orderedQuestions.indexOf(question) + 1;
                   const on = selected?.id === question.id;
                   return (
                     <button
@@ -249,8 +303,11 @@ export default function InterviewStudio({
                       <span className="q-item-main">
                         <span className="q-item-text">{question.text}</span>
                         <span className="q-item-meta">
-                          {question.difficulty}
-                          {asked[question.id] ? " · đã hỏi" : ""}
+                          {asked[question.id]
+                            ? t("interview.questions.askedMeta", {
+                                difficulty: question.difficulty,
+                              })
+                            : question.difficulty}
                         </span>
                       </span>
                       <ChevronRight size={14} aria-hidden="true" />
@@ -262,15 +319,20 @@ export default function InterviewStudio({
           </div>
         </section>
 
-        <section className="card answer-pane" aria-label="Chi tiết câu hỏi">
+        <section className="card answer-pane" aria-label={t("interview.answer.aria")}>
           {selected ? (
             <>
               <div className="answer-head">
                 <div className="answer-meta">
-                  <span className="pill pill-neutral">{selected.category}</span>
+                  <span className="pill pill-neutral">
+                    {categoryLabel(selected.category)}
+                  </span>
                   <span className="pill pill-neutral">{selected.difficulty}</span>
                   <span className="answer-index num">
-                    Câu {questions.indexOf(selected) + 1}/{questions.length}
+                    {t("interview.answer.index", {
+                      current: orderedQuestions.indexOf(selected) + 1,
+                      total: orderedQuestions.length,
+                    })}
                   </span>
                 </div>
                 <button
@@ -285,20 +347,20 @@ export default function InterviewStudio({
                   }
                 >
                   <Check size={14} aria-hidden="true" />
-                  {asked[selected.id] ? "Đã hỏi" : "Đánh dấu đã hỏi"}
+                  {asked[selected.id]
+                    ? t("interview.answer.badge")
+                    : t("interview.answer.markAsked")}
                 </button>
               </div>
 
               <p className="answer-question">{selected.text}</p>
 
-              <div className="answer-tabs" role="tablist" aria-label="Nội dung câu trả lời">
-                {(
-                  [
-                    { key: "hints", label: "Gợi ý" },
-                    { key: "sample", label: "Câu trả lời mẫu" },
-                    { key: "checks", label: "Điểm cần kiểm tra" },
-                  ] as { key: AnswerTab; label: string }[]
-                ).map((item) => (
+              <div
+                className="answer-tabs"
+                role="tablist"
+                aria-label={t("interview.answer.tabsAria")}
+              >
+                {answerTabs.map((item) => (
                   <button
                     key={item.key}
                     type="button"
@@ -307,7 +369,7 @@ export default function InterviewStudio({
                     className={`answer-tab${tab === item.key ? " is-on" : ""}`}
                     onClick={() => setTab(item.key)}
                   >
-                    {item.label}
+                    {t(item.labelKey)}
                   </button>
                 ))}
               </div>
@@ -316,12 +378,12 @@ export default function InterviewStudio({
                 {tab === "hints" ? (
                   <>
                     <ul className="hint-list">
-                      {hintPrompts.map((hint) => (
-                        <li key={hint}>{hint}</li>
+                      {hintKeys.map((hintKey) => (
+                        <li key={hintKey}>{t(hintKey)}</li>
                       ))}
                     </ul>
                     <div className="follow-ups">
-                      <h3 className="mini-title">Câu hỏi nối tiếp</h3>
+                      <h3 className="mini-title">{t("interview.followUps")}</h3>
                       <ul className="plain-list">
                         {selected.followUps.map((followUp) => (
                           <li key={followUp}>{followUp}</li>
@@ -335,14 +397,18 @@ export default function InterviewStudio({
                   <div className="sample-answer">
                     <p>{selected.answer}</p>
                     <span className="foot-note">
-                      Câu trả lời mẫu là hướng dẫn, không phải đáp án bắt buộc.
+                      {t("interview.sample.note")}
                     </span>
                   </div>
                 ) : null}
 
                 {tab === "checks" ? (
-                  <div className="check-list" role="group" aria-label="Điểm cần kiểm tra">
-                    {checkPoints.map((point, index) => {
+                  <div
+                    className="check-list"
+                    role="group"
+                    aria-label={t("interview.tab.checks")}
+                  >
+                    {checkPointKeys.map((pointKey, index) => {
                       const key = `${selected.id}-${index}`;
                       return (
                         <button
@@ -358,7 +424,7 @@ export default function InterviewStudio({
                           <span className="check-box" aria-hidden="true">
                             {checks[key] ? <Check size={12} /> : null}
                           </span>
-                          <span>{point}</span>
+                          <span>{t(pointKey)}</span>
                         </button>
                       );
                     })}
@@ -368,7 +434,7 @@ export default function InterviewStudio({
 
               <div className="answer-note">
                 <label className="field">
-                  <span className="field-label">Ghi chú cho câu hỏi này</span>
+                  <span className="field-label">{t("interview.note.label")}</span>
                   <textarea
                     className="note-input"
                     rows={3}
@@ -381,7 +447,7 @@ export default function InterviewStudio({
                         [selected.id]: false,
                       }));
                     }}
-                    placeholder="Câu trả lời nổi bật, điểm cần đào sâu, bằng chứng bổ sung…"
+                    placeholder={t("interview.note.placeholder")}
                   />
                 </label>
                 <div className="note-foot">
@@ -396,15 +462,15 @@ export default function InterviewStudio({
                       }))
                     }
                   >
-                    Lưu ghi chú
+                    {t("interview.note.save")}
                   </button>
                   {savedNotes[selected.id] ? (
                     <span className="save-state" role="status">
-                      Đã lưu trong phiên
+                      {t("interview.note.saved")}
                     </span>
                   ) : (
                     <span className="foot-note">
-                      Ghi chú chỉ hiển thị với người phỏng vấn.
+                      {t("interview.note.hint")}
                     </span>
                   )}
                 </div>
@@ -412,8 +478,8 @@ export default function InterviewStudio({
             </>
           ) : (
             <EmptyState
-              title="Chưa có câu hỏi"
-              detail="Tạo báo cáo ứng viên trước để sinh câu hỏi phỏng vấn."
+              title={t("interview.empty.title")}
+              detail={t("interview.empty.detail")}
             />
           )}
         </section>
@@ -421,8 +487,10 @@ export default function InterviewStudio({
         <aside className="studio-rail">
           <section className="card">
             <CardHead
-              title="Rubric phỏng vấn"
-              meta={`${candidate.criteria.length} tiêu chí · thang 0–4`}
+              title={t("interview.rubric.title")}
+              meta={t("interview.rubric.meta", {
+                count: candidate.criteria.length,
+              })}
             />
             <div className="rubric-list">
               {candidate.criteria.map((criterion) => {
@@ -438,7 +506,9 @@ export default function InterviewStudio({
                     <div
                       className="rubric-scale"
                       role="group"
-                      aria-label={`Chấm điểm ${criterion.label}`}
+                      aria-label={t("interview.rubric.groupAria", {
+                        criterion: criterion.label,
+                      })}
                     >
                       {[0, 1, 2, 3, 4].map((score) => (
                         <button
@@ -448,7 +518,10 @@ export default function InterviewStudio({
                             value === score ? " is-on" : ""
                           }`}
                           aria-pressed={value === score}
-                          aria-label={`${criterion.label}: ${score} trên 4`}
+                          aria-label={t("interview.rubric.btnAria", {
+                            criterion: criterion.label,
+                            score,
+                          })}
                           onClick={() => toggleRating(criterion.id, score)}
                         >
                           {score}
@@ -461,29 +534,29 @@ export default function InterviewStudio({
             </div>
             <div className="card-foot">
               <span className="foot-note">
-                Điểm do người phỏng vấn chấm; không dùng điểm tổng tự động.
+                {t("interview.rubric.note")}
               </span>
             </div>
           </section>
 
           <section className="card">
-            <CardHead title="Phiên phỏng vấn" />
+            <CardHead title={t("interview.session.title")} />
             <dl className="info-list">
               <div>
-                <dt>Người phỏng vấn</dt>
-                <dd>Minh Anh</dd>
+                <dt>{t("interview.session.interviewer")}</dt>
+                <dd>{candidate.reviewer || "—"}</dd>
               </div>
               <div>
-                <dt>Thời gian</dt>
-                <dd className="num">26/10/2026 · 15:00</dd>
+                <dt>{t("interview.session.updated")}</dt>
+                <dd className="num">{candidate.updatedAt}</dd>
               </div>
               <div>
-                <dt>Hình thức</dt>
-                <dd>Google Meet · 60 phút</dd>
+                <dt>{t("interview.session.level")}</dt>
+                <dd>{candidate.level || "—"}</dd>
               </div>
               <div>
-                <dt>Vòng</dt>
-                <dd>Vòng 2 · Technical</dd>
+                <dt>{t("interview.session.source")}</dt>
+                <dd>{candidate.source || "—"}</dd>
               </div>
             </dl>
             <div className="card-foot">
@@ -492,13 +565,290 @@ export default function InterviewStudio({
                 className="card-link"
                 onClick={() => go("repository", candidate.id)}
               >
-                Xem repository đã phân tích
+                {t("interview.session.repository")}
                 <ChevronRight size={13} aria-hidden="true" />
               </button>
             </div>
           </section>
         </aside>
       </div>
+    </div>
+  );
+}
+
+const PICKER_PAGE_SIZE = 8;
+
+const statusFilters: (CandidateStatus | "all")[] = [
+  "all",
+  "completed",
+  "review",
+  "processing",
+  "failed",
+  "archived",
+];
+
+export function InterviewPicker({
+  go,
+}: {
+  go: (screen: Screen, id?: string) => void;
+}) {
+  const { data, loading, error, refetch } = useCandidates();
+  const t = useT();
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<CandidateStatus | "all">("all");
+  const [position, setPosition] = useState("all");
+  const [page, setPage] = useState(1);
+
+  const list = useMemo(() => data ?? [], [data]);
+  const positions = useMemo(
+    () => Array.from(new Set(list.map((candidate) => candidate.position))),
+    [list],
+  );
+
+  const rows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return list.filter((candidate) => {
+      if (status !== "all" && candidate.status !== status) return false;
+      if (position !== "all" && candidate.position !== position) return false;
+      if (!q) return true;
+      return `${candidate.name} ${candidate.email} ${candidate.position} ${candidate.role}`
+        .toLowerCase()
+        .includes(q);
+    });
+  }, [list, query, status, position]);
+
+  const pages = Math.max(1, Math.ceil(rows.length / PICKER_PAGE_SIZE));
+  const safePage = Math.min(page, pages);
+  const start = (safePage - 1) * PICKER_PAGE_SIZE;
+  const visible = rows.slice(start, start + PICKER_PAGE_SIZE);
+  const filtered = Boolean(query || status !== "all" || position !== "all");
+
+  const reset = () => {
+    setQuery("");
+    setStatus("all");
+    setPosition("all");
+    setPage(1);
+  };
+
+  const statusCount = (value: CandidateStatus | "all") =>
+    value === "all"
+      ? list.length
+      : list.filter((candidate) => candidate.status === value).length;
+
+  if (loading) {
+    return <ScreenLoader title={t("screen.interview")} />;
+  }
+
+  if (error) {
+    return (
+      <div className="screen">
+        <PageHead title={t("screen.interview")} />
+        <LoadError message={error} onRetry={refetch} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="screen">
+      <PageHead
+        title={t("screen.interview")}
+        sub={t("interview.select.sub")}
+      />
+      <section className="card">
+        <CardHead
+          title={t("interview.select.title")}
+          meta={t("interview.select.meta", { count: list.length })}
+        />
+        {list.length === 0 ? (
+          <EmptyState
+            title={t("interview.select.empty.title")}
+            detail={t("interview.select.empty.detail")}
+            action={
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => go("upload")}
+              >
+                {t("interview.select.empty.action")}
+              </button>
+            }
+          />
+        ) : (
+          <>
+            <div className="filter-bar">
+              <div className="filter-search">
+                <Search size={15} aria-hidden="true" />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setPage(1);
+                  }}
+                  placeholder={t("interview.select.searchPlaceholder")}
+                  aria-label={t("interview.select.searchAria")}
+                />
+                {query ? (
+                  <button
+                    type="button"
+                    className="filter-clear"
+                    aria-label={t("interview.select.clearSearchAria")}
+                    onClick={() => setQuery("")}
+                  >
+                    <X size={14} />
+                  </button>
+                ) : null}
+              </div>
+
+              <label className="filter-select">
+                <span className="visually-hidden">
+                  {t("interview.select.filterPositionAria")}
+                </span>
+                <select
+                  value={position}
+                  onChange={(event) => {
+                    setPosition(event.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="all">
+                    {t("interview.select.allPositions")}
+                  </option>
+                  {positions.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="filter-row">
+              <div
+                className="chip-group"
+                role="group"
+                aria-label={t("interview.select.filterStatusAria")}
+              >
+                {statusFilters.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={`chip${status === value ? " is-on" : ""}`}
+                    aria-pressed={status === value}
+                    onClick={() => {
+                      setStatus(value);
+                      setPage(1);
+                    }}
+                  >
+                    {value === "all"
+                      ? t("interview.select.statusAll")
+                      : t(statusMeta[value].labelKey)}{" "}
+                    <span className="num">{statusCount(value)}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="filter-summary">
+                {filtered ? (
+                  <button type="button" className="text-btn" onClick={reset}>
+                    {t("interview.select.clearFilters")}
+                  </button>
+                ) : null}
+                <span className="result-count">
+                  {t("interview.select.resultCount", { count: rows.length })}
+                </span>
+              </div>
+            </div>
+
+            {visible.length ? (
+              <>
+                <div className="progress-list">
+                  {visible.map((candidate) => (
+                    <button
+                      key={candidate.id}
+                      type="button"
+                      className="progress-row"
+                      aria-label={t("interview.select.action", {
+                        name: candidate.name,
+                      })}
+                      onClick={() => go("interview", candidate.id)}
+                    >
+                      <Avatar
+                        initials={candidate.initials}
+                        hue={candidate.hue}
+                        size={34}
+                        name={candidate.name}
+                      />
+                      <span className="progress-main">
+                        <span className="progress-title">
+                          {candidate.name}
+                        </span>
+                        <span className="progress-sub">
+                          {candidate.position} · {candidate.level} ·{" "}
+                          {candidate.location}
+                        </span>
+                      </span>
+                      <span className="progress-side">
+                        <StatusPill status={candidate.status} />
+                        <span className="progress-detail">
+                          {candidate.updated}
+                        </span>
+                      </span>
+                      <ChevronRight size={15} aria-hidden="true" />
+                    </button>
+                  ))}
+                </div>
+
+                <div className="pagination">
+                  <span className="page-info">
+                    {t("interview.select.pageInfo", {
+                      from: start + 1,
+                      to: Math.min(start + PICKER_PAGE_SIZE, rows.length),
+                      total: rows.length,
+                    })}
+                  </span>
+                  <div className="page-controls">
+                    <button
+                      type="button"
+                      className="btn btn-quiet"
+                      disabled={safePage === 1}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    >
+                      <ChevronLeft size={14} aria-hidden="true" />
+                      {t("interview.select.prev")}
+                    </button>
+                    <span className="page-current num">
+                      {safePage}/{pages}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn-quiet"
+                      disabled={safePage === pages}
+                      onClick={() => setPage((p) => Math.min(pages, p + 1))}
+                    >
+                      {t("interview.select.next")}
+                      <ChevronRight size={14} aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <EmptyState
+                title={t("interview.select.noMatch.title")}
+                detail={t("interview.select.noMatch.detail")}
+                action={
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={reset}
+                  >
+                    {t("interview.select.clearFilters")}
+                  </button>
+                }
+              />
+            )}
+          </>
+        )}
+      </section>
     </div>
   );
 }

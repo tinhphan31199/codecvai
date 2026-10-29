@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"codecv/backend/internal/cvextract"
-	"codecv/backend/internal/gemini"
+	"codecv/backend/internal/gateway"
 	"codecv/backend/internal/github"
 	"codecv/backend/internal/links"
 	"codecv/backend/internal/model"
@@ -26,37 +26,22 @@ const (
 	maxOverhead  = 2 << 20
 )
 
-var (
-	defaultLevels = []string{"Junior", "Middle", "Senior"}
-
-	models = map[string]struct{}{
-		"gemini-3.1-flash-lite": {},
-		"gemini-3.5-flash-lite": {},
-	}
-)
+var defaultLevels = []string{"Junior", "Middle", "Senior"}
 
 type Config struct {
-	GeminiBaseURL  string
-	GeminiAPIKey   string
-	GithubBaseURL  string
-	GithubToken    string
 	AllowedOrigins []string
 	Store          *store.Store
 }
 
 type Server struct {
-	gemini         *gemini.Client
-	github         *github.Client
-	geminiKey      string
+	gateway        *gateway.Gateway
 	allowedOrigins []string
 	store          *store.Store
 }
 
 func New(cfg Config) http.Handler {
 	server := &Server{
-		gemini:         gemini.New(cfg.GeminiBaseURL, cfg.GeminiAPIKey),
-		github:         github.New(cfg.GithubBaseURL, cfg.GithubToken),
-		geminiKey:      cfg.GeminiAPIKey,
+		gateway:        gateway.New(cfg.Store),
 		allowedOrigins: cfg.AllowedOrigins,
 		store:          cfg.Store,
 	}
@@ -67,6 +52,7 @@ func New(cfg Config) http.Handler {
 
 	mux.HandleFunc("GET /api/workspace", withStore(server, server.handleWorkspace))
 	mux.HandleFunc("PUT /api/workspace", withStore(server, server.handleWorkspace))
+	mux.HandleFunc("GET /api/stats", withStore(server, server.handleStats))
 	mux.HandleFunc("GET /api/dashboard", withStore(server, server.handleDashboard))
 	mux.HandleFunc("GET /api/candidates", withStore(server, server.handleCandidates))
 	mux.HandleFunc("GET /api/candidates/{id}", withStore(server, server.handleCandidate))
@@ -86,10 +72,13 @@ func New(cfg Config) http.Handler {
 	mux.HandleFunc("POST /api/team", withStore(server, server.handleTeam))
 	mux.HandleFunc("PUT /api/team/{name}", withStore(server, server.handleTeamMember))
 	mux.HandleFunc("DELETE /api/team/{name}", withStore(server, server.handleTeamMember))
+	mux.HandleFunc("POST /api/gemini/models", withStore(server, server.handleGeminiModels))
 	mux.HandleFunc("GET /api/models", withStore(server, server.handleModels))
 	mux.HandleFunc("POST /api/models", withStore(server, server.handleModels))
 	mux.HandleFunc("PUT /api/models/{id}", withStore(server, server.handleModel))
 	mux.HandleFunc("DELETE /api/models/{id}", withStore(server, server.handleModel))
+	mux.HandleFunc("GET /api/service-configs", withStore(server, server.handleServiceConfigs))
+	mux.HandleFunc("PUT /api/service-configs/{id}", withStore(server, server.handleServiceConfig))
 	mux.HandleFunc("GET /api/stages", withStore(server, server.handleStages))
 	mux.HandleFunc("POST /api/stages", withStore(server, server.handleStages))
 	mux.HandleFunc("PUT /api/stages/{id}", withStore(server, server.handleStage))
@@ -118,6 +107,11 @@ func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 
 func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 	startedAt := time.Now()
+
+	if s.store == nil {
+		s.fail(w, http.StatusServiceUnavailable, "missing_db", "Máy chủ chưa kết nối cơ sở dữ liệu. Kiểm tra DATABASE_URL và khởi động lại server.")
+		return
+	}
 
 	if r.ContentLength > maxFileBytes+maxOverhead {
 		s.fail(w, http.StatusRequestEntityTooLarge, "too_large", "Tệp vượt quá 10 MB. Nén hoặc xuất lại CV rồi thử lại.")
@@ -192,46 +186,17 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 		language = "en"
 	}
 
-	modelID := r.FormValue("model")
-	if _, valid := models[modelID]; !valid {
-		s.fail(w, http.StatusBadRequest, "bad_request", "Model phân tích không được hỗ trợ. Chọn Gemini 3.1 Flash Lite hoặc Gemini 3.5 Flash Lite.")
-		return
-	}
-
+	modelID := strings.TrimSpace(r.FormValue("model"))
 	includeQuestions := r.FormValue("includeQuestions") != "false"
 
-	if strings.TrimSpace(s.geminiKey) == "" {
-		s.fail(w, http.StatusServiceUnavailable, "missing_key", "Máy chủ chưa cấu hình GEMINI_API_KEY. Thêm key vào .env.local rồi khởi động lại server.")
-		return
-	}
-
 	var (
-		extracted  cvextract.Result
-		cvFileURI  string
-		cvFileMime string
+		extracted cvextract.Result
+		cvFile    []byte
 	)
 
 	if fileType == cvextract.TypePDF {
 		extracted = cvextract.BestEffort(buffer, fileType)
-
-		uploaded, uploadErr := s.gemini.UploadFile(r.Context(), header.Filename, "application/pdf", buffer)
-		if uploadErr != nil {
-			if extracted.Characters < cvextract.MinCvChars {
-				var geminiErr *gemini.Error
-				if errors.As(uploadErr, &geminiErr) {
-					s.fail(w, errorStatus(geminiErr.Code), geminiErr.Code, geminiErr.Message)
-					return
-				}
-				log.Printf("[analyze-cv] upload failed: %v", uploadErr)
-				s.fail(w, http.StatusBadGateway, "upstream_error", "Không tải được tệp CV lên Gemini. Vui lòng thử lại.")
-				return
-			}
-			log.Printf("[analyze-cv] upload failed, falling back to extracted text: %v", uploadErr)
-		} else {
-			cvFileURI = uploaded.URI
-			cvFileMime = uploaded.MimeType
-			log.Printf("[analyze-cv] cv stored on gemini files: %s", uploaded.Name)
-		}
+		cvFile = buffer
 	} else {
 		extracted, err = cvextract.Extract(buffer, fileType)
 		if err != nil {
@@ -247,24 +212,24 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 	}
 
 	extraction := links.Extract(extracted.Text)
-	evidence := s.github.Evidence(r.Context(), extraction)
+	evidence := s.githubEvidence(r.Context(), extraction)
 
-	analysis, err := s.gemini.Analyze(r.Context(), gemini.Input{
+	result, err := s.gateway.Analyze(r.Context(), gateway.Request{
+		ModelID:          modelID,
 		CVText:           extracted.Text,
-		CVFileURI:        cvFileURI,
-		CVFileMime:       cvFileMime,
+		CVFile:           cvFile,
+		CVFileName:       header.Filename,
 		Repositories:     evidence.Repositories,
 		GithubContext:    evidence.Context,
 		Position:         position,
 		Level:            level,
 		Language:         language,
-		Model:            modelID,
 		IncludeQuestions: includeQuestions,
 	})
 	if err != nil {
-		var geminiErr *gemini.Error
-		if errors.As(err, &geminiErr) {
-			s.fail(w, errorStatus(geminiErr.Code), geminiErr.Code, geminiErr.Message)
+		var gatewayErr *gateway.Error
+		if errors.As(err, &gatewayErr) {
+			s.fail(w, errorStatus(gatewayErr.Code), gatewayErr.Code, gatewayErr.Message)
 			return
 		}
 		log.Printf("[analyze-cv] analysis failed: %v", err)
@@ -273,26 +238,25 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf(
-		"[analyze-cv] ok model=%s github=%d/%d duration=%s",
+		"[analyze-cv] ok model=%s provider=%s github=%d/%d duration=%s",
 		modelID,
+		result.Provider,
 		evidence.Meta.Analyzed,
 		evidence.Meta.Targets,
 		time.Since(startedAt).Round(time.Millisecond),
 	)
 
-	if s.store != nil {
-		if _, err := s.store.SaveAnalysis(r.Context(), store.SaveAnalysisInput{
-			Position: position.Title,
-			Level:    level,
-			Model:    modelID,
-			Analysis: analysis,
-		}); err != nil {
-			log.Printf("[analyze-cv] persist failed: %v", err)
-		}
+	if _, err := s.store.SaveAnalysis(r.Context(), store.SaveAnalysisInput{
+		Position: position.Title,
+		Level:    level,
+		Model:    modelID,
+		Analysis: result.Analysis,
+	}); err != nil {
+		log.Printf("[analyze-cv] persist failed: %v", err)
 	}
 
 	writeJSON(w, http.StatusOK, model.Response{
-		Analysis: analysis,
+		Analysis: result.Analysis,
 		Meta: model.Meta{
 			Model:      modelID,
 			Pages:      extracted.Pages,
@@ -302,6 +266,44 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 			Github:     evidence.Meta,
 		},
 	})
+}
+
+// GitHub đọc cấu hình từ DB mỗi lần phân tích; thiếu cấu hình thì dùng mặc định công khai.
+func (s *Server) githubEvidence(ctx context.Context, extraction links.Extraction) github.Evidence {
+	baseURL := "https://api.github.com"
+	token := ""
+	if s.store != nil {
+		cfg, err := s.store.ServiceConfig(ctx, "github")
+		switch {
+		case err == nil:
+			if trimmed := strings.TrimSpace(cfg.BaseURL); trimmed != "" {
+				baseURL = trimmed
+			}
+			token = strings.TrimSpace(cfg.APIKey)
+		case !errors.Is(err, store.ErrNotFound):
+			log.Printf("[analyze-cv] github config lookup failed: %v", err)
+		}
+	}
+	return github.New(baseURL, token).Evidence(ctx, extraction)
+}
+
+// Base URL và key của provider AI cũng nằm ở DB; fallback chỉ để server vẫn chạy khi thiếu dòng cấu hình.
+func (s *Server) serviceConfig(ctx context.Context, id, fallbackBaseURL string) (baseURL, key string) {
+	baseURL = fallbackBaseURL
+	if s.store == nil {
+		return baseURL, ""
+	}
+	cfg, err := s.store.ServiceConfig(ctx, id)
+	if err != nil {
+		if !errors.Is(err, store.ErrNotFound) {
+			log.Printf("[api] %s config lookup failed: %v", id, err)
+		}
+		return baseURL, ""
+	}
+	if trimmed := strings.TrimSpace(cfg.BaseURL); trimmed != "" {
+		baseURL = trimmed
+	}
+	return baseURL, strings.TrimSpace(cfg.APIKey)
 }
 
 // Vị trí do người dùng tạo nằm ở DB; danh mục nhúng chỉ còn là fallback.

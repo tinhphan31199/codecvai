@@ -1,3 +1,5 @@
+import type { MessageKey } from "@/lib/i18n";
+
 export type Screen =
   | "overview"
   | "upload"
@@ -114,6 +116,7 @@ export interface Position {
   level: string;
   open: string;
   candidates: number;
+  candidateCount?: number;
   updated: string;
   owner: string;
   location: string;
@@ -168,54 +171,54 @@ console.assert(
 
 export const statusMeta: Record<
   CandidateStatus,
-  { label: string; className: string }
+  { labelKey: MessageKey; className: string }
 > = {
-  completed: { label: "Hoàn tất", className: "pill-positive" },
-  processing: { label: "Đang phân tích", className: "pill-info" },
-  review: { label: "Chờ review", className: "pill-warning" },
-  failed: { label: "Cần xử lý", className: "pill-negative" },
-  archived: { label: "Lưu trữ", className: "pill-neutral" },
+  completed: { labelKey: "status.completed", className: "pill-positive" },
+  processing: { labelKey: "status.processing", className: "pill-info" },
+  review: { labelKey: "status.review", className: "pill-warning" },
+  failed: { labelKey: "status.failed", className: "pill-negative" },
+  archived: { labelKey: "status.archived", className: "pill-neutral" },
 };
 
 export const evidenceMeta: Record<
   EvidenceState,
-  { label: string; short: string; className: string }
+  { labelKey: MessageKey; shortKey: MessageKey; className: string }
 > = {
   verified: {
-    label: "Đã xác minh",
-    short: "Đã xác minh",
+    labelKey: "evidence.verified",
+    shortKey: "evidence.verifiedShort",
     className: "pill-positive",
   },
   inferred: {
-    label: "Suy luận từ bằng chứng",
-    short: "Suy luận",
+    labelKey: "evidence.inferred",
+    shortKey: "evidence.inferredShort",
     className: "pill-info",
   },
   missing: {
-    label: "Chưa đủ dữ liệu",
-    short: "Chưa đủ",
+    labelKey: "evidence.missing",
+    shortKey: "evidence.missingShort",
     className: "pill-neutral",
   },
 };
 
 export const severityMeta: Record<
   Severity,
-  { label: string; className: string; rank: number }
+  { labelKey: MessageKey; className: string; rank: number }
 > = {
-  high: { label: "Cao", className: "sev-high", rank: 0 },
-  medium: { label: "Trung bình", className: "sev-medium", rank: 1 },
-  low: { label: "Thấp", className: "sev-low", rank: 2 },
-  info: { label: "Thông tin", className: "sev-info", rank: 3 },
+  high: { labelKey: "severity.high", className: "sev-high", rank: 0 },
+  medium: { labelKey: "severity.medium", className: "sev-medium", rank: 1 },
+  low: { labelKey: "severity.low", className: "sev-low", rank: 2 },
+  info: { labelKey: "severity.info", className: "sev-info", rank: 3 },
 };
 
 export const findingStateMeta: Record<
   FindingState,
-  { label: string; className: string }
+  { labelKey: MessageKey; className: string }
 > = {
-  open: { label: "Chưa xử lý", className: "pill-neutral" },
-  "needs-check": { label: "Cần kiểm tra", className: "pill-warning" },
-  confirmed: { label: "Đã xác nhận", className: "pill-positive" },
-  dismissed: { label: "Đã bỏ qua", className: "pill-neutral" },
+  open: { labelKey: "finding.open", className: "pill-neutral" },
+  "needs-check": { labelKey: "finding.needsCheck", className: "pill-warning" },
+  confirmed: { labelKey: "finding.confirmed", className: "pill-positive" },
+  dismissed: { labelKey: "finding.dismissed", className: "pill-neutral" },
 };
 
 const c = (
@@ -2160,10 +2163,13 @@ export const reportRows = [
   },
 ];
 
-export const reportStatusMeta = {
-  exported: { label: "Đã xuất", className: "pill-positive" },
-  review: { label: "Chờ review", className: "pill-warning" },
-  failed: { label: "Lỗi", className: "pill-negative" },
+export const reportStatusMeta: Record<
+  "exported" | "review" | "failed",
+  { labelKey: MessageKey; className: string }
+> = {
+  exported: { labelKey: "reportStatus.exported", className: "pill-positive" },
+  review: { labelKey: "reportStatus.review", className: "pill-warning" },
+  failed: { labelKey: "reportStatus.failed", className: "pill-negative" },
 };
 
 export const teamMembers = [

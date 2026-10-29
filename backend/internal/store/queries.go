@@ -47,26 +47,50 @@ func (s *Store) Workspace(ctx context.Context) (model.Workspace, error) {
 	}
 
 	return model.Workspace{
-		Name:          values["name"],
-		Total:         atoi(values["total"]),
-		Completed:     atoi(values["completed"]),
-		Review:        atoi(values["review"]),
-		Processing:    atoi(values["processing"]),
-		Failed:        atoi(values["failed"]),
-		Archived:      atoi(values["archived"]),
-		Positions:     atoi(values["positions"]),
-		Updated:       values["updated"],
-		UpdatedAt:     values["updatedAt"],
-		Reviewer:      values["reviewer"],
-		AnalysisModel: values["analysisModel"],
+		TwoFactor:    boolValue(values["twoFactor"]),
+		SessionHours: intValue(values["sessionHours"]),
+		NotifyReview: boolValue(values["notifyReview"]),
+		NotifyDone:   boolValue(values["notifyDone"]),
+		NotifyDigest: boolValue(values["notifyDigest"]),
 	}, nil
+}
+
+func (s *Store) Stats(ctx context.Context) (model.Stats, error) {
+	var stats model.Stats
+	if err := s.pool.QueryRow(ctx, `
+		SELECT
+			COUNT(*),
+			COUNT(*) FILTER (WHERE status = 'completed'),
+			COUNT(*) FILTER (WHERE status = 'review'),
+			COUNT(*) FILTER (WHERE status = 'processing'),
+			COUNT(*) FILTER (WHERE status = 'failed'),
+			COUNT(*) FILTER (WHERE status = 'archived'),
+			(SELECT COUNT(*) FROM positions)
+		FROM candidates`).Scan(
+		&stats.Total, &stats.Completed, &stats.Review, &stats.Processing,
+		&stats.Failed, &stats.Archived, &stats.Positions,
+	); err != nil {
+		return model.Stats{}, fmt.Errorf("store: stats counts: %w", err)
+	}
+
+	if err := s.pool.QueryRow(ctx, `
+		SELECT COALESCE(to_char(MAX(ts), 'DD/MM · HH24:MI'), ''),
+			COALESCE(to_char(MAX(ts), 'DD/MM/YYYY · HH24:MI'), '')
+		FROM (
+			SELECT to_timestamp(updated_at, 'DD/MM/YYYY · HH24:MI') AS ts
+			FROM candidates
+			WHERE updated_at ~ '^\d{2}/\d{2}/\d{4} · \d{2}:\d{2}$'
+		) t`).Scan(&stats.Updated, &stats.UpdatedAt); err != nil {
+		return model.Stats{}, fmt.Errorf("store: stats updated: %w", err)
+	}
+
+	return stats, nil
 }
 
 func (s *Store) UpdateWorkspaceSettings(ctx context.Context, values map[string]string) error {
 	allowed := map[string]bool{
-		"name": true, "total": true, "completed": true, "review": true,
-		"processing": true, "failed": true, "archived": true, "positions": true,
-		"updated": true, "updatedAt": true, "reviewer": true, "analysisModel": true,
+		"twoFactor": true, "sessionHours": true, "notifyReview": true,
+		"notifyDone": true, "notifyDigest": true,
 	}
 	for key, value := range values {
 		if !allowed[key] {
@@ -83,8 +107,10 @@ func (s *Store) UpdateWorkspaceSettings(ctx context.Context, values map[string]s
 
 func (s *Store) Positions(ctx context.Context) ([]model.Position, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT id, title, team, level, open, candidates, updated, owner, location, description
-		FROM positions ORDER BY candidates DESC`)
+		SELECT p.id, p.title, p.team, p.level, p.open, p.candidates, p.updated,
+			p.owner, p.location, p.description,
+			(SELECT COUNT(*) FROM candidates c WHERE c.position = p.title) AS candidate_count
+		FROM positions p ORDER BY p.candidates DESC`)
 	if err != nil {
 		return nil, fmt.Errorf("store: positions: %w", err)
 	}
@@ -94,7 +120,8 @@ func (s *Store) Positions(ctx context.Context) ([]model.Position, error) {
 	for rows.Next() {
 		var pos model.Position
 		if err := rows.Scan(&pos.ID, &pos.Title, &pos.Team, &pos.Level, &pos.Open,
-			&pos.Candidates, &pos.Updated, &pos.Owner, &pos.Location, &pos.Description); err != nil {
+			&pos.Candidates, &pos.Updated, &pos.Owner, &pos.Location, &pos.Description,
+			&pos.CandidateCount); err != nil {
 			return nil, err
 		}
 		positions = append(positions, pos)
@@ -518,7 +545,7 @@ func (s *Store) DeleteTeamMember(ctx context.Context, name string) error {
 }
 
 func (s *Store) Models(ctx context.Context) ([]model.AIModel, error) {
-	rows, err := s.pool.Query(ctx, `SELECT id, name, provider, note, active FROM ai_models ORDER BY id`)
+	rows, err := s.pool.Query(ctx, `SELECT id, name, provider, note, active, api_key FROM ai_models ORDER BY id`)
 	if err != nil {
 		return nil, err
 	}
@@ -527,27 +554,41 @@ func (s *Store) Models(ctx context.Context) ([]model.AIModel, error) {
 	models := make([]model.AIModel, 0)
 	for rows.Next() {
 		var m model.AIModel
-		if err := rows.Scan(&m.ID, &m.Name, &m.Provider, &m.Note, &m.Active); err != nil {
+		if err := rows.Scan(&m.ID, &m.Name, &m.Provider, &m.Note, &m.Active, &m.APIKey); err != nil {
 			return nil, err
 		}
+		HideModelKey(&m)
 		models = append(models, m)
 	}
 	return models, rows.Err()
 }
 
+func (s *Store) ModelAPIKey(ctx context.Context, id string) (string, error) {
+	var key string
+	err := s.pool.QueryRow(ctx, `SELECT api_key FROM ai_models WHERE id = $1`, id).Scan(&key)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	if err != nil {
+		return "", fmt.Errorf("store: model api key: %w", err)
+	}
+	return key, nil
+}
+
 func (s *Store) CreateModel(ctx context.Context, m model.AIModel) error {
 	_, err := s.pool.Exec(ctx, `
-		INSERT INTO ai_models (id, name, provider, note, active)
-		VALUES ($1, $2, $3, $4, $5)`,
-		m.ID, m.Name, m.Provider, m.Note, m.Active)
+		INSERT INTO ai_models (id, name, provider, note, active, api_key)
+		VALUES ($1, $2, $3, $4, $5, $6)`,
+		m.ID, m.Name, m.Provider, m.Note, m.Active, strings.TrimSpace(m.APIKey))
 	return wrapConfigError("store: create model", err)
 }
 
 func (s *Store) UpdateModel(ctx context.Context, originalID string, m model.AIModel) error {
 	tag, err := s.pool.Exec(ctx, `
-		UPDATE ai_models SET id = $1, name = $2, provider = $3, note = $4, active = $5
-		WHERE id = $6`,
-		m.ID, m.Name, m.Provider, m.Note, m.Active, originalID)
+		UPDATE ai_models SET id = $1, name = $2, provider = $3, note = $4, active = $5,
+			api_key = CASE WHEN $6 = '' THEN api_key ELSE $6 END
+		WHERE id = $7`,
+		m.ID, m.Name, m.Provider, m.Note, m.Active, strings.TrimSpace(m.APIKey), originalID)
 	if err != nil {
 		return wrapConfigError("store: update model", err)
 	}
@@ -555,6 +596,21 @@ func (s *Store) UpdateModel(ctx context.Context, originalID string, m model.AIMo
 		return ErrNotFound
 	}
 	return nil
+}
+
+// HideModelKey keeps the raw key out of API responses, exposing only a masked hint.
+func HideModelKey(m *model.AIModel) {
+	key := strings.TrimSpace(m.APIKey)
+	m.APIKey = ""
+	if key == "" {
+		return
+	}
+	hint := "••••"
+	if len(key) > 4 {
+		hint += key[len(key)-4:]
+	}
+	m.APIKeySet = true
+	m.APIKeyHint = hint
 }
 
 func (s *Store) DeleteModel(ctx context.Context, id string) error {
@@ -566,6 +622,86 @@ func (s *Store) DeleteModel(ctx context.Context, id string) error {
 		return ErrNotFound
 	}
 	return nil
+}
+
+// ModelByID trả về nguyên hàng, kể cả api_key, để gateway gọi thẳng provider.
+func (s *Store) ModelByID(ctx context.Context, id string) (model.AIModel, error) {
+	var m model.AIModel
+	err := s.pool.QueryRow(ctx, `
+		SELECT id, name, provider, note, active, api_key FROM ai_models WHERE id = $1`, id).
+		Scan(&m.ID, &m.Name, &m.Provider, &m.Note, &m.Active, &m.APIKey)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.AIModel{}, ErrNotFound
+		}
+		return model.AIModel{}, fmt.Errorf("store: model %s: %w", id, err)
+	}
+	return m, nil
+}
+
+func (s *Store) ServiceConfigs(ctx context.Context) ([]model.ServiceConfig, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT id, kind, name, base_url, api_key, sort FROM service_configs ORDER BY sort, id`)
+	if err != nil {
+		return nil, fmt.Errorf("store: service configs: %w", err)
+	}
+	defer rows.Close()
+
+	configs := make([]model.ServiceConfig, 0)
+	for rows.Next() {
+		var cfg model.ServiceConfig
+		if err := rows.Scan(&cfg.ID, &cfg.Kind, &cfg.Name, &cfg.BaseURL, &cfg.APIKey, &cfg.Sort); err != nil {
+			return nil, err
+		}
+		HideServiceKey(&cfg)
+		configs = append(configs, cfg)
+	}
+	return configs, rows.Err()
+}
+
+// ServiceConfig trả về nguyên hàng, kể cả api_key, để gateway dựng client.
+func (s *Store) ServiceConfig(ctx context.Context, id string) (model.ServiceConfig, error) {
+	var cfg model.ServiceConfig
+	err := s.pool.QueryRow(ctx, `
+		SELECT id, kind, name, base_url, api_key, sort FROM service_configs WHERE id = $1`, id).
+		Scan(&cfg.ID, &cfg.Kind, &cfg.Name, &cfg.BaseURL, &cfg.APIKey, &cfg.Sort)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.ServiceConfig{}, ErrNotFound
+		}
+		return model.ServiceConfig{}, fmt.Errorf("store: service config %s: %w", id, err)
+	}
+	return cfg, nil
+}
+
+func (s *Store) UpdateServiceConfig(ctx context.Context, id string, cfg model.ServiceConfig) error {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE service_configs SET base_url = $1,
+			api_key = CASE WHEN $2 = '' THEN api_key ELSE $2 END
+		WHERE id = $3`,
+		strings.TrimSpace(cfg.BaseURL), strings.TrimSpace(cfg.APIKey), id)
+	if err != nil {
+		return fmt.Errorf("store: update service config: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// HideServiceKey keeps the raw key out of API responses, exposing only a masked hint.
+func HideServiceKey(cfg *model.ServiceConfig) {
+	key := strings.TrimSpace(cfg.APIKey)
+	cfg.APIKey = ""
+	if key == "" {
+		return
+	}
+	hint := "••••"
+	if len(key) > 4 {
+		hint += key[len(key)-4:]
+	}
+	cfg.APIKeySet = true
+	cfg.APIKeyHint = hint
 }
 
 func (s *Store) UploadStages(ctx context.Context) ([]model.UploadStage, error) {
@@ -689,10 +825,6 @@ func wrapConfigError(op string, err error) error {
 }
 
 func (s *Store) Dashboard(ctx context.Context) (model.Dashboard, error) {
-	workspace, err := s.Workspace(ctx)
-	if err != nil {
-		return model.Dashboard{}, err
-	}
 	review, err := s.ListCandidates(ctx, CandidateFilter{Status: "review", Sort: "updated", Limit: 50})
 	if err != nil {
 		return model.Dashboard{}, err
@@ -710,7 +842,6 @@ func (s *Store) Dashboard(ctx context.Context) (model.Dashboard, error) {
 		return model.Dashboard{}, err
 	}
 	return model.Dashboard{
-		Workspace:  workspace,
 		Review:     review,
 		Processing: processing,
 		Recent:     recent,
@@ -816,4 +947,15 @@ func atoi(value string) int {
 		n = n*10 + int(c-'0')
 	}
 	return n
+}
+
+func boolValue(value string) bool {
+	return value == "1" || value == "true"
+}
+
+func intValue(value string) int {
+	if n := atoi(value); n > 0 {
+		return n
+	}
+	return 0
 }

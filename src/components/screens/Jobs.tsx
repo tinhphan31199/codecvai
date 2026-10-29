@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import type { Position, Screen } from "@/data/codecv";
 import { createPosition, useLevels, usePositions } from "@/lib/api";
+import { useT } from "@/lib/i18n";
+import { sanitizeHtml } from "@/lib/sanitize";
 import {
   EmptyState,
   LoadError,
@@ -27,6 +29,7 @@ export default function Jobs({
 }) {
   const { data, loading, error, refetch } = usePositions();
   const { data: levelData } = useLevels();
+  const t = useT();
   const positions = data ?? [];
   const levelOptions = levelData?.length
     ? levelData.map((level) => level.name)
@@ -91,8 +94,8 @@ export default function Jobs({
   if (loading && !positions.length) {
     return (
       <ScreenLoader
-        title="Job Descriptions"
-        label="Đang tải danh sách vị trí…"
+        title={t("screen.jobs")}
+        label={t("jobs.loading")}
       />
     );
   }
@@ -100,7 +103,7 @@ export default function Jobs({
   if (error) {
     return (
       <div className="screen">
-        <PageHead title="Job Descriptions" />
+        <PageHead title={t("screen.jobs")} />
         <LoadError message={error} onRetry={refetch} />
       </div>
     );
@@ -109,8 +112,11 @@ export default function Jobs({
   return (
     <div className="screen">
       <PageHead
-        title="Job Descriptions"
-        sub={`${positions.length} vị trí đang mở · ${teams.length} team · tiêu chí dùng chung cho CV và repository.`}
+        title={t("screen.jobs")}
+        sub={t("jobs.sub", {
+          count: positions.length,
+          teams: teams.length,
+        })}
         actions={
           <button
             type="button"
@@ -118,7 +124,7 @@ export default function Jobs({
             onClick={toggleForm}
           >
             {openForm ? <X size={15} aria-hidden="true" /> : <Plus size={15} aria-hidden="true" />}
-            {openForm ? "Đóng form" : "Tạo vị trí"}
+            {openForm ? t("jobs.closeForm") : t("jobs.create")}
           </button>
         }
       />
@@ -126,26 +132,26 @@ export default function Jobs({
       {openForm ? (
         <form className="card jd-form" onSubmit={create}>
           <div className="jd-form-head">
-            <h2>Tạo vị trí mới</h2>
+            <h2>{t("jobs.form.title")}</h2>
             <span className="foot-note">
-              Tiêu chí có thể bổ sung sau khi tạo.
+              {t("jobs.form.note")}
             </span>
           </div>
           <div className="jd-form-grid">
             <label className="field">
-              <span className="field-label">Tên vị trí</span>
+              <span className="field-label">{t("jobs.form.titleLabel")}</span>
               <input
                 type="text"
                 value={draft.title}
                 onChange={(event) =>
                   setDraft((prev) => ({ ...prev, title: event.target.value }))
                 }
-                placeholder="Ví dụ: Staff Backend Engineer"
+                placeholder={t("jobs.form.titlePlaceholder")}
                 required
               />
             </label>
             <label className="field">
-              <span className="field-label">Team</span>
+              <span className="field-label">{t("jobs.form.team")}</span>
               <input
                 type="text"
                 value={draft.team}
@@ -155,7 +161,7 @@ export default function Jobs({
               />
             </label>
             <label className="field">
-              <span className="field-label">Cấp bậc</span>
+              <span className="field-label">{t("jobs.form.level")}</span>
               <select
                 value={draft.level}
                 onChange={(event) =>
@@ -168,7 +174,7 @@ export default function Jobs({
               </select>
             </label>
             <label className="field">
-              <span className="field-label">Địa điểm</span>
+              <span className="field-label">{t("jobs.form.location")}</span>
               <input
                 type="text"
                 value={draft.location}
@@ -181,28 +187,33 @@ export default function Jobs({
           <div className="jd-form-actions">
             <button type="submit" className="btn btn-primary" disabled={!draft.title.trim()}>
               <Plus size={15} aria-hidden="true" />
-              Tạo vị trí
+              {t("jobs.create")}
             </button>
             <button
               type="button"
               className="btn btn-quiet"
               onClick={() => setOpenForm(false)}
             >
-              Hủy
+              {t("action.cancel")}
             </button>
           </div>
         </form>
       ) : null}
 
       <div className="filter-row jobs-filter">
-        <div className="chip-group" role="group" aria-label="Lọc theo team">
+        <div
+          className="chip-group"
+          role="group"
+          aria-label={t("jobs.filter.aria")}
+        >
           <button
             type="button"
             className={`chip${team === "all" ? " is-on" : ""}`}
             aria-pressed={team === "all"}
             onClick={() => setTeam("all")}
           >
-            Tất cả <span className="num">{positions.length}</span>
+            {t("jobs.filter.all")}{" "}
+            <span className="num">{positions.length}</span>
           </button>
           {teams.map((item) => (
             <button
@@ -220,7 +231,8 @@ export default function Jobs({
           ))}
         </div>
         <span className="result-count">
-          <strong className="num">{visible.length}</strong> vị trí
+          <strong className="num">{visible.length}</strong>{" "}
+          {t("jobs.resultUnit", { count: visible.length })}
         </span>
       </div>
 
@@ -237,9 +249,14 @@ export default function Jobs({
                       {position.team} · {position.level}
                     </span>
                   </div>
-                  <span className="pill pill-positive">Đang mở</span>
+                  <span className="pill pill-positive">{t("jobs.badge.open")}</span>
                 </div>
-                <p className="jd-desc">{position.description}</p>
+                <div
+                  className="jd-desc"
+                  dangerouslySetInnerHTML={{
+                    __html: sanitizeHtml(position.description),
+                  }}
+                />
                 <div className="jd-facts">
                   <span>
                     <MapPin size={13} aria-hidden="true" />
@@ -247,7 +264,7 @@ export default function Jobs({
                   </span>
                   <span>
                     <Users size={13} aria-hidden="true" />
-                    {position.candidates} ứng viên
+                    {t("jobs.candidates", { count: position.candidates })}
                   </span>
                   <span>{position.open}</span>
                 </div>
@@ -265,7 +282,7 @@ export default function Jobs({
                     }
                   >
                     <span>
-                      Tiêu chí tuyển dụng{" "}
+                      {t("jobs.criteria.title")}{" "}
                       <span className="num">({position.criteria.length})</span>
                     </span>
                     <ChevronDown
@@ -283,15 +300,22 @@ export default function Jobs({
                               {criterion.label}
                             </span>
                             <span className="jd-crit-meta">
-                              {criterion.kind === "must" ? "Bắt buộc" : "Ưu tiên"}{" "}
-                              · trọng số {criterion.weight} · {criterion.verify}
+                              {criterion.kind === "must"
+                                ? t("jobs.criteria.mustMeta", {
+                                    weight: criterion.weight,
+                                    verify: criterion.verify,
+                                  })
+                                : t("jobs.criteria.niceMeta", {
+                                    weight: criterion.weight,
+                                    verify: criterion.verify,
+                                  })}
                             </span>
                           </li>
                         ))}
                       </ul>
                     ) : (
                       <p className="jd-empty">
-                        Chưa có tiêu chí. Bổ sung trước khi phân tích CV.
+                        {t("jobs.criteria.empty")}
                       </p>
                     )
                   ) : null}
@@ -299,14 +323,17 @@ export default function Jobs({
 
                 <div className="jd-foot">
                   <span className="foot-note">
-                    {position.owner} · cập nhật {position.updated}
+                    {t("jobs.updated", {
+                      owner: position.owner,
+                      updated: position.updated,
+                    })}
                   </span>
                   <button
                     type="button"
                     className="card-link"
                     onClick={() => go("candidates")}
                   >
-                    Xem ứng viên
+                    {t("jobs.viewCandidates")}
                     <ChevronRight size={13} aria-hidden="true" />
                   </button>
                 </div>
@@ -317,15 +344,14 @@ export default function Jobs({
       ) : (
         <div className="card">
           <EmptyState
-            title="Không có vị trí trong team này"
-            detail="Chọn team khác hoặc tạo vị trí mới."
+            title={t("jobs.empty.title")}
+            detail={t("jobs.empty.detail")}
           />
         </div>
       )}
 
       <p className="screen-note">
-        Mỗi vị trí dùng cùng một bộ tiêu chí để đối chiếu CV và repository, nhờ đó
-        bằng chứng giữa các ứng viên có thể so sánh được.
+        {t("jobs.note")}
       </p>
     </div>
   );
