@@ -22,10 +22,12 @@ Postgres 16 runs in a dedicated container (`codecv-postgres`) on host port
 cd backend && docker compose up -d
 ```
 
-The API migrates and seeds automatically on startup. Connection string defaults
-to `postgres://codecv:codecv@localhost:5433/codecv?sslmode=disable`; override
-with `DATABASE_URL` if needed. Seed data is generated from `src/data/codecv.ts`
-via `backend/scripts/export-seed.mjs`.
+The API applies migrations automatically on startup and loads no seed catalog:
+positions, teams, levels, models and providers are created and edited by the user
+in Settings. A fresh database only gets the migrations' baseline rows (provider
+endpoints and the 9-level ladder). Connection string defaults to
+`postgres://codecv:codecv@localhost:5433/codecv?sslmode=disable`; override with
+`DATABASE_URL` if needed.
 
 ## Run
 

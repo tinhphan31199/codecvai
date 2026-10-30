@@ -45,6 +45,28 @@ const vi = {
   "settings.security.sessionAria": "Tự đăng xuất sau",
   "settings.security.sessionUnset": "Chưa đặt",
   "settings.security.hours": "{hours} giờ",
+  "settings.security.passwordTitle": "Đổi mật khẩu",
+  "settings.security.passwordSub":
+    "Đổi mật khẩu của tài khoản đang đăng nhập; các phiên cũ sẽ bị đăng xuất.",
+  "settings.security.currentPassword": "Mật khẩu hiện tại",
+  "settings.security.newPassword": "Mật khẩu mới",
+  "settings.security.confirmPassword": "Nhập lại mật khẩu mới",
+  "settings.security.changePassword": "Lưu mật khẩu mới",
+  "settings.security.changingPassword": "Đang đổi mật khẩu…",
+  "settings.security.passwordChanged": "Đã đổi mật khẩu. Các phiên khác đã bị đăng xuất.",
+  "settings.security.passwordMismatch": "Mật khẩu nhập lại không khớp.",
+  "settings.security.passwordNeeded": "Nhập đủ mật khẩu hiện tại và mật khẩu mới.",
+  "settings.security.passwordShort": "Mật khẩu mới cần từ 8 ký tự.",
+  "settings.security.googleTitle": "Đăng nhập Google",
+  "settings.security.googleSub":
+    "Liên kết email Google để đăng nhập một chạm. Nếu chưa có tài khoản, lần đăng nhập Google đầu tiên sẽ tự tạo tài khoản mới.",
+  "settings.security.googleEmail": "Email Google",
+  "settings.security.googleUnlinked": "Chưa liên kết",
+  "settings.security.googleLinked":
+    "Đã liên kết Google. Lần sau bạn có thể đăng nhập bằng nút Google.",
+  "settings.security.googleLinkError": "Không liên kết được Google. Vui lòng thử lại.",
+  "settings.security.googleDisabled":
+    "Máy chủ chưa cấu hình GOOGLE_CLIENT_ID.",
   "settings.security.sectionNotifications": "Thông báo",
   "settings.security.notificationsNote": "Gửi qua email nội bộ",
   "settings.security.notifyReview": "Nhắc hồ sơ chờ review",
@@ -57,7 +79,7 @@ const vi = {
   "settings.security.notifyDigestSub":
     "Gửi email tổng hợp hoạt động tuyển dụng mỗi thứ Hai.",
   "settings.security.footnote":
-    "Mỗi thay đổi được lưu ngay vào bảng workspace_settings và áp dụng cho toàn bộ workspace.",
+    "Cấu hình được lưu ngay vào bảng workspace_settings và áp dụng cho toàn bộ workspace; mật khẩu chỉ đổi cho tài khoản đang đăng nhập.",
 
   "settings.team.title": "Thành viên",
   "settings.team.meta": "{count} người · team_members",
@@ -181,6 +203,27 @@ const en: Record<keyof typeof vi, Message> = {
     one: "{hours} hour",
     other: "{hours} hours",
   },
+  "settings.security.passwordTitle": "Change password",
+  "settings.security.passwordSub":
+    "Change the password of the signed-in account; older sessions are signed out.",
+  "settings.security.currentPassword": "Current password",
+  "settings.security.newPassword": "New password",
+  "settings.security.confirmPassword": "Repeat new password",
+  "settings.security.changePassword": "Save new password",
+  "settings.security.changingPassword": "Changing password…",
+  "settings.security.passwordChanged": "Password changed. Other sessions were signed out.",
+  "settings.security.passwordMismatch": "The repeated password doesn't match.",
+  "settings.security.passwordNeeded": "Enter both the current and the new password.",
+  "settings.security.passwordShort": "The new password needs at least 8 characters.",
+  "settings.security.googleTitle": "Google sign-in",
+  "settings.security.googleSub":
+    "Link a Google email for one-tap sign-in. If no account exists yet, the first Google sign-in creates one automatically.",
+  "settings.security.googleEmail": "Google email",
+  "settings.security.googleUnlinked": "Not linked",
+  "settings.security.googleLinked":
+    "Google linked. Next time you can sign in with the Google button.",
+  "settings.security.googleLinkError": "Couldn't link Google. Please try again.",
+  "settings.security.googleDisabled": "The server has no GOOGLE_CLIENT_ID configured.",
   "settings.security.sectionNotifications": "Notifications",
   "settings.security.notificationsNote": "Sent by internal email",
   "settings.security.notifyReview": "Review reminders",
@@ -193,7 +236,7 @@ const en: Record<keyof typeof vi, Message> = {
   "settings.security.notifyDigestSub":
     "Email a summary of recruiting activity every Monday.",
   "settings.security.footnote":
-    "Every change is saved immediately to workspace_settings and applies to the whole workspace.",
+    "Settings save immediately to workspace_settings and apply to the whole workspace; the password only changes for the signed-in account.",
 
   "settings.team.title": "Team",
   "settings.team.meta": {

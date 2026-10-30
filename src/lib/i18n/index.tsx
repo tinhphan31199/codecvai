@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import type { Message } from "./types";
 import { commonMessages } from "./messages/common";
+import { authMessages } from "./messages/auth";
 import { shellMessages } from "./messages/shell";
 import { dashboardMessages } from "./messages/dashboard";
 import { candidatesMessages } from "./messages/candidates";
@@ -21,6 +22,7 @@ export type Vars = Record<string, string | number>;
 
 const vi = {
   ...commonMessages.vi,
+  ...authMessages.vi,
   ...shellMessages.vi,
   ...dashboardMessages.vi,
   ...candidatesMessages.vi,
@@ -36,6 +38,7 @@ const vi = {
 
 const en: Record<keyof typeof vi, Message> = {
   ...commonMessages.en,
+  ...authMessages.en,
   ...shellMessages.en,
   ...dashboardMessages.en,
   ...candidatesMessages.en,

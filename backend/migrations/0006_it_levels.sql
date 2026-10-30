@@ -1,7 +1,12 @@
--- Ladder 9 bậc IT. Chỉ dời Junior/Middle/Senior khi chúng còn giữ rank mặc định
--- để không ghi đè chỉnh sửa tay của người dùng; không chèn lại bậc đã bị xoá.
+-- Ladder 9 bậc IT mặc định. ON CONFLICT DO NOTHING nên rank người dùng đã sửa
+-- được giữ nguyên; các UPDATE chỉ dời bậc còn mang rank mặc định cũ.
 
-INSERT INTO levels (name, rank) VALUES ('Intern', 1), ('Fresher', 2)
+INSERT INTO levels (name, rank) VALUES
+    ('Intern', 1),
+    ('Fresher', 2),
+    ('Junior', 3),
+    ('Middle', 4),
+    ('Senior', 5)
 ON CONFLICT (name) DO NOTHING;
 
 UPDATE levels SET rank = 3 WHERE name = 'Junior' AND rank = 1;

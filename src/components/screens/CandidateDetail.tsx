@@ -19,7 +19,7 @@ import {
   getSkills,
   severityMeta,
 } from "@/data/codecv";
-import { candidateCvUrl, patchCandidate, useCandidate } from "@/lib/api";
+import { downloadCandidateCv, patchCandidate, useCandidate } from "@/lib/api";
 import { useT, type MessageKey } from "@/lib/i18n";
 import {
   Avatar,
@@ -62,6 +62,23 @@ export default function CandidateDetail({
   const [note, setNote] = useState("");
   const [noteSaved, setNoteSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [cvBusy, setCvBusy] = useState(false);
+  const [cvError, setCvError] = useState<string | null>(null);
+
+  const downloadCv = async () => {
+    if (!candidate || cvBusy) return;
+    setCvBusy(true);
+    setCvError(null);
+    try {
+      await downloadCandidateCv(candidate.id);
+    } catch (err) {
+      setCvError(
+        err instanceof Error ? err.message : t("candidate.downloadCvError"),
+      );
+    } finally {
+      setCvBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (candidate) {
@@ -202,14 +219,15 @@ export default function CandidateDetail({
         actions={
           <>
             {candidate.hasCv ? (
-              <a
+              <button
+                type="button"
                 className="btn btn-ghost"
-                href={candidateCvUrl(candidate.id)}
-                download
+                onClick={downloadCv}
+                disabled={cvBusy}
               >
                 <Download size={15} aria-hidden="true" />
                 {t("candidate.downloadCv")}
-              </a>
+              </button>
             ) : null}
             <button
               type="button"
@@ -231,6 +249,12 @@ export default function CandidateDetail({
           </>
         }
       />
+
+      {cvError ? (
+        <p className="field-hint is-error" role="alert">
+          {cvError}
+        </p>
+      ) : null}
 
       <div className="detail-toolbar">
         <div className="detail-person">

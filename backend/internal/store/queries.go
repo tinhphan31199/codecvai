@@ -189,6 +189,29 @@ func (s *Store) CreatePosition(ctx context.Context, pos model.Position) error {
 	return tx.Commit(ctx)
 }
 
+func insertPosition(ctx context.Context, tx pgx.Tx, pos model.Position) error {
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO positions (id, title, team, level, open, candidates, updated, owner, location, description)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		ON CONFLICT (id) DO NOTHING`,
+		pos.ID, pos.Title, pos.Team, pos.Level, pos.Open, pos.Candidates,
+		pos.Updated, pos.Owner, pos.Location, pos.Description,
+	); err != nil {
+		return fmt.Errorf("store: create position: %w", err)
+	}
+	for idx, crit := range pos.Criteria {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO position_criteria (position_id, idx, label, kind, weight, verify)
+			VALUES ($1, $2, $3, $4, $5, $6)
+			ON CONFLICT (position_id, idx) DO NOTHING`,
+			pos.ID, idx, crit.Label, crit.Kind, crit.Weight, crit.Verify,
+		); err != nil {
+			return fmt.Errorf("store: create position criteria: %w", err)
+		}
+	}
+	return nil
+}
+
 func (s *Store) UpdatePosition(ctx context.Context, pos model.Position) error {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {

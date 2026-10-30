@@ -24,6 +24,7 @@ import {
   useStages,
   useTeams,
 } from "@/lib/api";
+import { authToken, clearSession } from "@/lib/auth";
 import {
   localeOf,
   useLang,
@@ -340,6 +341,10 @@ export default function UploadCV({
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${API_BASE}/api/analyze-cv`);
+    const token = authToken();
+    if (token) {
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    }
     xhr.responseType = "json";
     xhr.timeout = 150_000;
 
@@ -350,6 +355,12 @@ export default function UploadCV({
         | CvAnalysisResponse
         | AnalyzeCvErrorBody
         | null;
+
+      if (xhr.status === 401) {
+        clearSession();
+        setPhase("idle");
+        return;
+      }
 
       if (xhr.status >= 200 && xhr.status < 300 && body && "analysis" in body) {
         setResult(body);

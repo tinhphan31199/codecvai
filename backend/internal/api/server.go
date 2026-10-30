@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"codecv/backend/internal/auth"
 	"codecv/backend/internal/cvextract"
 	"codecv/backend/internal/gateway"
 	"codecv/backend/internal/github"
@@ -33,6 +34,8 @@ type Config struct {
 	AllowedOrigins []string
 	Store          *store.Store
 	Storage        *storage.Client
+	Auth           *auth.Manager
+	GoogleClientID string
 }
 
 type Server struct {
@@ -40,6 +43,23 @@ type Server struct {
 	allowedOrigins []string
 	store          *store.Store
 	cvStorage      *storage.Client
+	auth           *auth.Manager
+	authUsers      userLookup
+	emailUsers     emailLookup
+	googleClientID string
+	googleVerifier auth.GoogleVerifier
+}
+
+// userLookup lets the auth middleware resolve the session owner without a live DB.
+type userLookup interface {
+	UserByID(ctx context.Context, id string) (model.User, time.Time, error)
+}
+
+// emailLookup resolves, links and auto-creates accounts for Google sign-in.
+type emailLookup interface {
+	UserByEmail(ctx context.Context, email string) (model.User, time.Time, error)
+	UpdateEmail(ctx context.Context, id, email string) error
+	CreateUser(ctx context.Context, user model.User, passwordHash string) (model.User, error)
 }
 
 func New(cfg Config) http.Handler {
@@ -48,10 +68,26 @@ func New(cfg Config) http.Handler {
 		allowedOrigins: cfg.AllowedOrigins,
 		store:          cfg.Store,
 		cvStorage:      cfg.Storage,
+		auth:           cfg.Auth,
+		googleClientID: strings.TrimSpace(cfg.GoogleClientID),
+	}
+	if cfg.Store != nil {
+		server.authUsers = cfg.Store
+		server.emailUsers = cfg.Store
+	}
+	if server.googleClientID != "" {
+		server.googleVerifier = auth.GoogleIDTokenVerifier{}
 	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", server.handleHealth)
+	mux.HandleFunc("POST /api/auth/register", server.handleRegister)
+	mux.HandleFunc("POST /api/auth/login", server.handleLogin)
+	mux.HandleFunc("GET /api/auth/config", server.handleAuthConfig)
+	mux.HandleFunc("POST /api/auth/google", server.handleGoogleLogin)
+	mux.HandleFunc("POST /api/auth/google/link", server.handleGoogleLink)
+	mux.HandleFunc("GET /api/auth/me", server.handleMe)
+	mux.HandleFunc("POST /api/auth/password", server.handleChangePassword)
 	mux.HandleFunc("POST /api/analyze-cv", server.handleAnalyze)
 	mux.HandleFunc("GET /api/analysis-queue", withStore(server, server.handleAnalysisQueue))
 
@@ -98,7 +134,7 @@ func New(cfg Config) http.Handler {
 	mux.HandleFunc("PUT /api/teams/{name}", withStore(server, server.handleTeamItem))
 	mux.HandleFunc("DELETE /api/teams/{name}", withStore(server, server.handleTeamItem))
 
-	return recoverer(cors(cfg.AllowedOrigins, mux))
+	return recoverer(cors(cfg.AllowedOrigins, server.authenticate(mux)))
 }
 
 func withStore(server *Server, next http.HandlerFunc) http.HandlerFunc {

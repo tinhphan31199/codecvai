@@ -16,6 +16,7 @@ import {
   FolderGit2,
   HelpCircle,
   LayoutDashboard,
+  LogOut,
   Menu,
   MessagesSquare,
   Search,
@@ -25,9 +26,18 @@ import {
   X,
 } from "lucide-react";
 import type { Screen } from "@/data/codecv";
-import { useModels, useStats } from "@/lib/api";
+import { clearApiCache, fetchMe, useModels, useStats } from "@/lib/api";
+import {
+  clearSession,
+  hueOf,
+  initialsOf,
+  saveSessionUser,
+  useAuthReady,
+  useAuthSession,
+} from "@/lib/auth";
 import { setLang, translate, useLang, useT, type MessageKey } from "@/lib/i18n";
 import { Avatar, LogoMark } from "./ui";
+import Login from "./screens/Login";
 import Dashboard from "./screens/Dashboard";
 import UploadCV from "./screens/UploadCV";
 import Candidates from "./screens/Candidates";
@@ -101,6 +111,47 @@ const activeKey = (screen: Screen) =>
   screen === "candidate" ? "candidates" : screen;
 
 export default function CodeCVApp() {
+  const session = useAuthSession();
+  const ready = useAuthReady();
+  const t = useT();
+
+  useEffect(() => {
+    if (!session?.token) return;
+    let cancelled = false;
+    fetchMe()
+      .then((user) => {
+        if (!cancelled) saveSessionUser(user);
+      })
+      .catch(() => {
+        if (!cancelled) clearSession();
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.token]);
+
+  if (!ready) {
+    return (
+      <div className="auth-boot" role="status">
+        <LogoMark size={28} />
+        <span>{t("auth.bootLoading")}</span>
+      </div>
+    );
+  }
+  if (!session) return <Login />;
+  return <Shell />;
+}
+
+function Shell() {
+  const session = useAuthSession();
+  const user = session?.user ?? null;
+  const displayName = user?.displayName || user?.username || "—";
+  const avatarInitials = initialsOf(displayName);
+  const avatarHue = hueOf(user?.username ?? "codecv");
+  const logout = () => {
+    clearSession();
+    clearApiCache();
+  };
   const hash = useSyncExternalStore(subscribeHash, getHash, getServerHash);
   const route = useMemo(() => parseHash(hash), [hash]);
   const stats = useStats();
@@ -285,11 +336,27 @@ export default function CodeCVApp() {
           <span className="nav-label">{t("shell.helpDocs")}</span>
         </a>
         <div className="account-row">
-          <Avatar initials="MA" hue={243} size={30} name="Minh Anh" />
+          <Avatar
+            initials={avatarInitials}
+            hue={avatarHue}
+            size={30}
+            name={displayName}
+          />
           <span className="account-main">
-            <span className="account-name">Minh Anh</span>
-            <span className="account-sub">{t("shell.accountRole")}</span>
+            <span className="account-name">{displayName}</span>
+            <span className="account-sub">
+              {user ? `@${user.username}` : t("shell.accountRole")}
+            </span>
           </span>
+          <button
+            type="button"
+            className="icon-btn account-logout"
+            aria-label={t("auth.logout")}
+            title={t("auth.logout")}
+            onClick={logout}
+          >
+            <LogOut size={16} />
+          </button>
         </div>
       </div>
     </>
@@ -332,7 +399,21 @@ export default function CodeCVApp() {
           <button type="button" className="icon-btn" aria-label={t("shell.help")}>
             <HelpCircle size={17} />
           </button>
-          <Avatar initials="MA" hue={243} size={28} name="Minh Anh" />
+          <button
+            type="button"
+            className="icon-btn"
+            aria-label={t("auth.logout")}
+            title={t("auth.logout")}
+            onClick={logout}
+          >
+            <LogOut size={17} />
+          </button>
+          <Avatar
+            initials={avatarInitials}
+            hue={avatarHue}
+            size={28}
+            name={displayName}
+          />
         </div>
       </header>
 
@@ -352,7 +433,12 @@ export default function CodeCVApp() {
               <LogoMark size={20} />
               {t(screenTitles[route.screen])}
             </span>
-            <Avatar initials="MA" hue={243} size={26} name="Minh Anh" />
+            <Avatar
+              initials={avatarInitials}
+              hue={avatarHue}
+              size={26}
+              name={displayName}
+            />
           </header>
 
           <div className="canvas">

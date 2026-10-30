@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"codecv/backend/internal/api"
+	"codecv/backend/internal/auth"
 	"codecv/backend/internal/config"
 	"codecv/backend/internal/storage"
 	"codecv/backend/internal/store"
@@ -34,10 +35,8 @@ func main() {
 		} else {
 			if err := dataStore.Migrate(context.Background()); err != nil {
 				log.Printf("warning: migration failed: %v", err)
-			} else if err := dataStore.Seed(context.Background()); err != nil {
-				log.Printf("warning: seeding failed: %v", err)
 			} else {
-				log.Print("database ready (migrated + seeded)")
+				log.Print("database ready (migrated)")
 			}
 		}
 	}
@@ -49,12 +48,31 @@ func main() {
 		log.Print("CV storage disabled: set AWS_ENDPOINT_URL_S3, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET to keep CV originals")
 	}
 
+	jwtSecret := strings.TrimSpace(os.Getenv("AUTH_JWT_SECRET"))
+	if jwtSecret == "" {
+		generated, err := auth.RandomSecret()
+		if err != nil {
+			log.Fatalf("api: cannot create signing secret: %v", err)
+		}
+		jwtSecret = generated
+		log.Print("AUTH_JWT_SECRET not set: using an ephemeral signing key, sessions end when the API restarts")
+	}
+
+	googleClientID := strings.TrimSpace(os.Getenv("GOOGLE_CLIENT_ID"))
+	if googleClientID != "" {
+		log.Print("Google sign-in ready (GOOGLE_CLIENT_ID set)")
+	} else {
+		log.Print("Google sign-in disabled: set GOOGLE_CLIENT_ID to show the Google button")
+	}
+
 	server := &http.Server{
 		Addr: ":" + port,
 		Handler: api.New(api.Config{
 			AllowedOrigins: splitList(env("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")),
 			Store:          dataStore,
 			Storage:        cvStorage,
+			Auth:           auth.NewManager(jwtSecret),
+			GoogleClientID: googleClientID,
 		}),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       60 * time.Second,

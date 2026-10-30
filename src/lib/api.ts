@@ -2,6 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { Candidate, Finding, Position } from "@/data/codecv";
+import {
+  authToken,
+  clearSession,
+  saveSession,
+  saveSessionUser,
+  type AuthUser,
+} from "@/lib/auth";
 import { getLang, translate } from "@/lib/i18n";
 
 const API_BASE = (
@@ -167,12 +174,18 @@ function invalidate(path: string) {
   inflight.delete(path);
 }
 
-async function requestJSON<T>(path: string, init?: RequestInit): Promise<T> {
+async function requestJSON<T>(
+  path: string,
+  init?: RequestInit,
+  options: { anonymous?: boolean } = {},
+): Promise<T> {
+  const token = options.anonymous ? null : authToken();
   const response = await fetch(`${API_BASE}${path}`, {
     cache: "no-store",
     ...init,
     headers: {
       ...(init?.body ? { "Content-Type": "application/json" } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init?.headers ?? {}),
     },
   });
@@ -180,15 +193,26 @@ async function requestJSON<T>(path: string, init?: RequestInit): Promise<T> {
     let message = translate(getLang(), "state.serverError", {
       status: response.status,
     });
+    let code = "";
     try {
       const body = (await response.json()) as {
-        error?: { message?: string };
+        error?: { code?: string; message?: string };
       };
       if (body?.error?.message) {
         message = body.error.message;
       }
+      code = body?.error?.code ?? "";
     } catch {
       // body không phải JSON, giữ thông điệp mặc định
+    }
+    // A 401 from a credential check (e.g. an invalid Google token) leaves the
+    // session intact; only the auth middleware's "unauthorized" ends it.
+    if (
+      response.status === 401 &&
+      !options.anonymous &&
+      (code === "" || code === "unauthorized")
+    ) {
+      clearSession();
     }
     throw new Error(message);
   }
@@ -353,10 +377,116 @@ export function useAnalysisQueue(limit = 5): QueryResult<AnalysisQueueItem[]> {
   return { ...result, data: result.data ? result.data.items : null };
 }
 
+// ---- Auth ----
+
+export interface AuthResponse {
+  token: string;
+  expiresAt: string;
+  user: AuthUser;
+}
+
+export function clearApiCache() {
+  cache.clear();
+  inflight.clear();
+}
+
+export async function loginUser(
+  username: string,
+  password: string,
+): Promise<AuthResponse> {
+  const result = await requestJSON<AuthResponse>(
+    "/api/auth/login",
+    { method: "POST", body: JSON.stringify({ username, password }) },
+    { anonymous: true },
+  );
+  saveSession(result.token, result.user);
+  return result;
+}
+
+export async function registerUser(
+  username: string,
+  password: string,
+  displayName: string,
+): Promise<AuthResponse> {
+  const result = await requestJSON<AuthResponse>(
+    "/api/auth/register",
+    { method: "POST", body: JSON.stringify({ username, password, displayName }) },
+    { anonymous: true },
+  );
+  saveSession(result.token, result.user);
+  return result;
+}
+
+export async function fetchMe(): Promise<AuthUser> {
+  const result = await requestJSON<{ user: AuthUser }>("/api/auth/me");
+  return result.user;
+}
+
+export async function fetchAuthConfig(): Promise<{ googleClientId: string }> {
+  return requestJSON<{ googleClientId: string }>(
+    "/api/auth/config",
+    undefined,
+    { anonymous: true },
+  );
+}
+
+export async function loginWithGoogle(credential: string): Promise<AuthResponse> {
+  const result = await requestJSON<AuthResponse>(
+    "/api/auth/google",
+    { method: "POST", body: JSON.stringify({ credential }) },
+    { anonymous: true },
+  );
+  saveSession(result.token, result.user);
+  clearApiCache();
+  return result;
+}
+
+export async function linkGoogleAccount(
+  credential: string,
+): Promise<AuthUser> {
+  const result = await requestJSON<{ user: AuthUser }>(
+    "/api/auth/google/link",
+    { method: "POST", body: JSON.stringify({ credential }) },
+  );
+  saveSessionUser(result.user);
+  return result.user;
+}
+
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<AuthResponse> {
+  const result = await requestJSON<AuthResponse>("/api/auth/password", {
+    method: "POST",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  saveSession(result.token, result.user);
+  return result;
+}
+
 // ---- Mutations ----
 
-export function candidateCvUrl(id: string): string {
-  return `${API_BASE}/api/candidates/${encodeURIComponent(id)}/cv`;
+export async function downloadCandidateCv(id: string): Promise<void> {
+  const token = authToken();
+  const response = await fetch(
+    `${API_BASE}/api/candidates/${encodeURIComponent(id)}/cv`,
+    { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+  );
+  if (response.status === 401) {
+    clearSession();
+  }
+  if (!response.ok) {
+    throw new Error(translate(getLang(), "candidate.downloadCvError"));
+  }
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const match = /filename="?([^";]+)"?/i.exec(disposition);
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = match?.[1] ?? `CodeCV_${id}.pdf`;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function patchCandidate(
