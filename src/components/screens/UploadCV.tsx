@@ -970,6 +970,13 @@ export default function UploadCV({
                 {t("upload.reposEmpty")}
               </span>
             )}
+            {result.meta.repositoryQueue ? (
+              <span className="result-repo-queue">
+                {t("upload.repoQueued", {
+                  count: result.meta.repositoryQueue,
+                })}
+              </span>
+            ) : null}
           </div>
 
           {result.analysis.summary ? (

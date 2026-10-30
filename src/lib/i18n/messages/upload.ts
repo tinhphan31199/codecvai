@@ -91,6 +91,8 @@ const vi = {
   "upload.repoSkipped": "Bỏ qua",
   "upload.repoUnread": "Chưa đọc",
   "upload.reposEmpty": "CV không đề cập repository công khai.",
+  "upload.repoQueued":
+    "{count} repo đã lưu và sẽ được đọc lần lượt ở luồng nền để tránh giới hạn GitHub API.",
 
   "upload.evidenceLabel": "Bằng chứng",
   "upload.criteriaTitle": "Đối chiếu tiêu chí",
@@ -249,6 +251,11 @@ const en: Record<keyof typeof vi, Message> = {
   "upload.repoSkipped": "Skipped",
   "upload.repoUnread": "Not read",
   "upload.reposEmpty": "The CV doesn't mention a public repository.",
+  "upload.repoQueued": {
+    one: "{count} repository saved and read one at a time in the background to stay under GitHub's rate limit.",
+    other:
+      "{count} repositories saved and read one at a time in the background to stay under GitHub's rate limit.",
+  },
 
   "upload.evidenceLabel": "Evidence",
   "upload.criteriaTitle": "Criteria match",

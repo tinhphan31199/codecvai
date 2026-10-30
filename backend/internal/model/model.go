@@ -17,6 +17,8 @@ const (
 	RepositoryAnalyzed    = "analyzed"
 	RepositoryUnavailable = "unavailable"
 	RepositorySkipped     = "skipped"
+	RepositoryPending     = "pending"
+	RepositoryAnalyzing   = "analyzing"
 )
 
 type Repository struct {
@@ -26,6 +28,30 @@ type Repository struct {
 	Status  string `json:"status"`
 	Context string `json:"context"`
 	Detail  string `json:"detail"`
+}
+
+// RepositoryRecord is one repository stored with a CV analysis; pending rows
+// are picked up by the background worker after the request has finished.
+type RepositoryRecord struct {
+	URL       string    `json:"url"`
+	Label     string    `json:"label"`
+	Kind      string    `json:"kind"`
+	Status    string    `json:"status"`
+	Context   string    `json:"context"`
+	Detail    string    `json:"detail"`
+	Source    string    `json:"source"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	Owner     string    `json:"-"`
+	Name      string    `json:"-"`
+}
+
+// RepositoryJob is a claimed pending repository, one at a time.
+type RepositoryJob struct {
+	CandidateID string
+	Index       int
+	URL         string
+	Owner       string
+	Name        string
 }
 
 type Candidate struct {
@@ -80,12 +106,13 @@ type AnalysisQueueItem struct {
 }
 
 type Meta struct {
-	Model      string     `json:"model"`
-	Pages      *int       `json:"pages"`
-	Characters int        `json:"characters"`
-	DurationMs int64      `json:"durationMs"`
-	Truncated  bool       `json:"truncated"`
-	Github     GithubMeta `json:"github"`
+	Model           string     `json:"model"`
+	Pages           *int       `json:"pages"`
+	Characters      int        `json:"characters"`
+	DurationMs      int64      `json:"durationMs"`
+	Truncated       bool       `json:"truncated"`
+	Github          GithubMeta `json:"github"`
+	RepositoryQueue int        `json:"repositoryQueue"`
 }
 
 type Response struct {

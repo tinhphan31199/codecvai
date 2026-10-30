@@ -60,6 +60,7 @@ export interface CvAnalysisMeta {
   durationMs: number;
   truncated: boolean;
   github: CvGithubMeta;
+  repositoryQueue?: number;
 }
 
 export interface CvAnalysisResponse {

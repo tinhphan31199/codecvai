@@ -27,6 +27,7 @@ const (
 	maxProfileReadmes = 3
 	maxProfileListed  = 24
 	maxProfilePages   = 3
+	maxQueueRepos     = 20
 	maxRootEntries    = 40
 	maxCommits        = 6
 	perPage           = 100
@@ -60,8 +61,11 @@ func New(baseURL, token string) *Client {
 
 type Evidence struct {
 	Repositories []model.Repository
-	Context      string
-	Meta         model.GithubMeta
+	// Discovered lists profile repositories saved for the background queue,
+	// newest first, forks after original work, capped at maxQueueRepos.
+	Discovered []model.RepositoryRecord
+	Context    string
+	Meta       model.GithubMeta
 }
 
 func (c *Client) Evidence(ctx context.Context, extraction links.Extraction) Evidence {
@@ -76,6 +80,11 @@ func (c *Client) Evidence(ctx context.Context, extraction links.Extraction) Evid
 	deadline := time.Now().Add(totalBudget)
 	var contextBuilder strings.Builder
 	publicRepos := 0
+	discovered := make([]model.RepositoryRecord, 0, maxQueueRepos)
+	seenDiscovered := make(map[string]struct{}, len(repositories)+maxQueueRepos)
+	for _, repository := range repositories {
+		seenDiscovered[strings.ToLower(repository.Label)] = struct{}{}
+	}
 
 	for _, target := range extraction.Targets {
 		index, ok := indexByKey[target.Key]
@@ -98,9 +107,20 @@ func (c *Client) Evidence(ctx context.Context, extraction links.Extraction) Evid
 			continue
 		}
 
-		updated, section, discovered := c.inspectProfile(ctx, deadline, target, repositories[index])
+		updated, section, profileRepos, queued := c.inspectProfile(ctx, deadline, target, repositories[index])
 		repositories[index] = updated
-		publicRepos += discovered
+		publicRepos += profileRepos
+		for _, repository := range queued {
+			if len(discovered) >= maxQueueRepos {
+				break
+			}
+			key := strings.ToLower(repository.Label)
+			if _, exists := seenDiscovered[key]; exists {
+				continue
+			}
+			seenDiscovered[key] = struct{}{}
+			discovered = append(discovered, repository)
+		}
 		if section != "" {
 			contextBuilder.WriteString(section)
 			contextBuilder.WriteString("\n\n")
@@ -119,6 +139,7 @@ func (c *Client) Evidence(ctx context.Context, extraction links.Extraction) Evid
 
 	return Evidence{
 		Repositories: repositories,
+		Discovered:   discovered,
 		Context:      truncateRunes(strings.TrimSpace(contextBuilder.String()), maxContextChars),
 		Meta: model.GithubMeta{
 			Targets:     len(extraction.Targets),
@@ -126,6 +147,28 @@ func (c *Client) Evidence(ctx context.Context, extraction links.Extraction) Evid
 			PublicRepos: publicRepos,
 		},
 	}
+}
+
+// Repo reads one repository outside the CV request so the background queue can
+// spread GitHub calls over time instead of exhausting the rate limit mid-analysis.
+func (c *Client) Repo(ctx context.Context, owner, name string) model.Repository {
+	base := model.Repository{
+		URL:    "https://github.com/" + owner + "/" + name,
+		Label:  "github.com/" + strings.ToLower(owner) + "/" + strings.ToLower(name),
+		Kind:   model.RepositoryRepo,
+		Status: model.RepositoryUnavailable,
+		Detail: "Chưa đọc dữ liệu GitHub",
+	}
+	target := links.Target{
+		Key:   strings.ToLower(owner + "/" + name),
+		Kind:  model.RepositoryRepo,
+		URL:   base.URL,
+		Owner: owner,
+		Repo:  name,
+	}
+	deadline := time.Now().Add(totalBudget)
+	repository, _ := c.inspectRepo(ctx, deadline, target, base)
+	return repository
 }
 
 type githubRepo struct {
@@ -277,7 +320,7 @@ func (c *Client) inspectProfile(
 	deadline time.Time,
 	target links.Target,
 	base model.Repository,
-) (model.Repository, string, int) {
+) (model.Repository, string, int, []model.RepositoryRecord) {
 	login := url.PathEscape(target.Login)
 
 	var (
@@ -316,7 +359,7 @@ func (c *Client) inspectProfile(
 	if userErr != nil {
 		base.Status = model.RepositoryUnavailable
 		base.Detail = failureDetail(userErr, "profile")
-		return base, "", 0
+		return base, "", 0, nil
 	}
 
 	scanned := validRepos(repos)
@@ -498,7 +541,55 @@ func (c *Client) inspectProfile(
 	base.Context = truncateRunes(strings.Join(summary, " · "), 160)
 	base.Detail = detail
 
-	return base, strings.Join(lines, "\n"), publicRepos
+	return base, strings.Join(lines, "\n"), publicRepos, profileRepoQueue(defaultIfEmpty(user.Login, target.Login), scanned)
+}
+
+// profileRepoQueue turns the profile listing into pending rows for the
+// background worker: original work first, forks only after it, at most 20.
+func profileRepoQueue(login string, scanned []githubRepo) []model.RepositoryRecord {
+	ordered := make([]githubRepo, 0, len(scanned))
+	for _, repo := range scanned {
+		if !repo.Fork {
+			ordered = append(ordered, repo)
+		}
+	}
+	for _, repo := range scanned {
+		if repo.Fork {
+			ordered = append(ordered, repo)
+		}
+	}
+
+	seen := make(map[string]struct{}, maxQueueRepos)
+	queued := make([]model.RepositoryRecord, 0, maxQueueRepos)
+	for _, repo := range ordered {
+		fullName := clip(repo.FullName, 140)
+		if fullName == "" {
+			fullName = login + "/" + repo.Name
+		}
+		owner, name, ok := strings.Cut(fullName, "/")
+		if !ok || owner == "" || name == "" {
+			continue
+		}
+		key := strings.ToLower(fullName)
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		seen[key] = struct{}{}
+		queued = append(queued, model.RepositoryRecord{
+			URL:    "https://github.com/" + fullName,
+			Label:  "github.com/" + key,
+			Kind:   model.RepositoryRepo,
+			Status: model.RepositoryPending,
+			Detail: "Đang chờ phân tích ở luồng nền",
+			Source: "profile",
+			Owner:  owner,
+			Name:   name,
+		})
+		if len(queued) == maxQueueRepos {
+			break
+		}
+	}
+	return queued
 }
 
 func (c *Client) get(ctx context.Context, deadline time.Time, path, accept string) ([]byte, error) {

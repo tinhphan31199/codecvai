@@ -19,6 +19,7 @@ import {
   useCandidate,
   useCandidates,
   useRepository,
+  type RepoRecord,
 } from "@/lib/api";
 import { useNumberFormat, useT } from "@/lib/i18n";
 import {
@@ -205,12 +206,20 @@ function RepositoryAnalysis({
   go: (screen: Screen, id?: string) => void;
 }) {
   const { data: candidate, loading, error, refetch } = useCandidate(id);
-  const { data: repo } = useRepository(id);
+  const { data: repo, refresh: refreshRepo } = useRepository(id);
   const t = useT();
   const nf = useNumberFormat();
   const findings = candidate?.findings ?? [];
   const tree = repo?.tree ?? [];
   const layers = repo?.layers ?? [];
+  const repositories = repo?.repositories ?? [];
+  const repoItems = repositories.filter((item) => item.kind === "repo");
+  const analyzedRepos = repoItems.filter(
+    (item) => item.status === "analyzed",
+  ).length;
+  const pendingRepos = repoItems.filter(
+    (item) => item.status === "pending" || item.status === "analyzing",
+  ).length;
   const [selectedId, setSelectedId] = useState(findings[0]?.id ?? "");
   const [selectedFile, setSelectedFile] = useState(
     findings[0]?.file ?? "src/Orders.Infrastructure/Messaging/RabbitMqConsumer.cs",
@@ -227,6 +236,12 @@ function RepositoryAnalysis({
       setSelectedFile(findings[0].file);
     }
   }, [findings]);
+
+  useEffect(() => {
+    if (!pendingRepos) return;
+    const timer = window.setInterval(() => refreshRepo(), 5000);
+    return () => window.clearInterval(timer);
+  }, [pendingRepos, refreshRepo]);
 
   const stateOf = (finding: Finding) => states[finding.id] ?? finding.state;
   const selected = findings.find((item) => item.id === selectedId) ?? null;
@@ -265,7 +280,38 @@ function RepositoryAnalysis({
     );
   }
 
-  if (candidate.repoState !== "connected" || !candidate.repo) {
+  const primaryRepo =
+    candidate.repo ||
+    repoItems.find((item) => item.status === "analyzed")?.url ||
+    repoItems[0]?.url ||
+    "";
+
+  const repoStatusClass = (status: RepoRecord["status"]) =>
+    status === "analyzed"
+      ? "pill-positive"
+      : status === "unavailable"
+        ? "pill-negative"
+        : "pill-neutral";
+
+  const repoStatusLabel = (status: RepoRecord["status"]) => {
+    switch (status) {
+      case "analyzed":
+        return t("repository.repoStatusAnalyzed");
+      case "pending":
+        return t("repository.repoStatusPending");
+      case "analyzing":
+        return t("repository.repoStatusAnalyzing");
+      case "skipped":
+        return t("repository.repoStatusSkipped");
+      default:
+        return t("repository.repoStatusUnavailable");
+    }
+  };
+
+  if (
+    !repositories.length &&
+    (candidate.repoState !== "connected" || !candidate.repo)
+  ) {
     return (
       <div className="screen">
         <PageHead
@@ -347,7 +393,8 @@ function RepositoryAnalysis({
         title={t("screen.repository")}
         sub={
           <>
-            {candidate.name} · <span className="mono">{candidate.repo}</span> ·{" "}
+            {candidate.name} ·{" "}
+            <span className="mono">{primaryRepo || "—"}</span> ·{" "}
             <span className="mono">
               {candidate.repoBranch}@{candidate.commit}
             </span>{" "}
@@ -378,12 +425,61 @@ function RepositoryAnalysis({
         }
       />
 
+      {repositories.length ? (
+        <section
+          className="card repo-saved"
+          aria-label={t("repository.savedTitle")}
+        >
+          <CardHead
+            title={t("repository.savedTitle")}
+            meta={t("repository.savedMeta", {
+              total: repoItems.length,
+              analyzed: analyzedRepos,
+              pending: pendingRepos,
+            })}
+          />
+          <ul className="saved-repo-list">
+            {repositories.map((item) => (
+              <li className="saved-repo" key={`${item.kind}-${item.label}`}>
+                <GitBranch size={13} aria-hidden="true" />
+                <span className="saved-repo-main">
+                  <a
+                    className="saved-repo-label mono"
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {item.label}
+                  </a>
+                  {item.context ? (
+                    <span className="saved-repo-context">{item.context}</span>
+                  ) : null}
+                  {item.detail ? (
+                    <span className="saved-repo-detail">{item.detail}</span>
+                  ) : null}
+                </span>
+                <span className={`pill ${repoStatusClass(item.status)}`}>
+                  {repoStatusLabel(item.status)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {pendingRepos ? (
+            <div className="card-foot">
+              <span className="foot-note">
+                {t("repository.savedPendingNote", { count: pendingRepos })}
+              </span>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
       <section
         className="repo-summary"
         aria-label={t("repository.summaryAria")}
       >
         <div className="repo-summary-main">
-          <span className="repo-path mono">{candidate.repo}</span>
+          <span className="repo-path mono">{primaryRepo}</span>
           <span className="repo-branch">
             <GitBranch size={13} aria-hidden="true" />
             {t("repository.branchMeta", {

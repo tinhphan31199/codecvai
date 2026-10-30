@@ -14,13 +14,14 @@ import (
 // SaveAnalysisInput carries the result of an analyze-cv request so it can be
 // written into the candidates table.
 type SaveAnalysisInput struct {
-	OwnerID  string // account that ran the analysis; empty keeps the profile admin-only
-	Position string // position title shown on the card
-	Level    string
-	Model    string
-	FileName string // original CV file name shown in the analysis queue
-	CVKey    string // object key of the stored original CV; empty when storage is off
-	Analysis model.Analysis
+	OwnerID      string // account that ran the analysis; empty keeps the profile admin-only
+	Position     string // position title shown on the card
+	Level        string
+	Model        string
+	FileName     string // original CV file name shown in the analysis queue
+	CVKey        string // object key of the stored original CV; empty when storage is off
+	Analysis     model.Analysis
+	Repositories []model.RepositoryRecord // every repo found; pending rows are analyzed by the worker
 }
 
 // SaveAnalysis inserts a candidate (with criteria and questions) produced by
@@ -68,6 +69,37 @@ func (s *Store) SaveAnalysis(ctx context.Context, in SaveAnalysisInput) (string,
 			}
 		}
 	}
+
+	// Repo discovered from a GitHub profile is saved as pending even though the
+	// main analysis has not read it yet; the profile screen should still open.
+	hasRepo := false
+	hasQueued := false
+	for _, repository := range in.Repositories {
+		if repository.Kind != model.RepositoryRepo {
+			continue
+		}
+		hasRepo = true
+		if repository.Status == model.RepositoryPending {
+			hasQueued = true
+		}
+	}
+	if hasRepo {
+		if candidate.RepoState == "" || (hasQueued && candidate.RepoState != "connected") {
+			candidate.RepoState = "connected"
+		}
+		if candidate.Repo == "" {
+			for _, repository := range in.Repositories {
+				if repository.Kind == model.RepositoryRepo &&
+					(repository.Status == model.RepositoryAnalyzed || repository.Status == model.RepositoryPending) {
+					candidate.Repo = repository.URL
+					break
+				}
+			}
+		}
+		if candidate.RepoState == "connected" {
+			candidate.Source = "CV + repository"
+		}
+	}
 	if candidate.RepoState == "" {
 		candidate.RepoState = "none"
 	}
@@ -109,13 +141,13 @@ func (s *Store) SaveAnalysis(ctx context.Context, in SaveAnalysisInput) (string,
 		})
 	}
 
-	if err := s.insertAnalysisCandidate(ctx, in.OwnerID, candidate, criteria, questions, in.FileName, in.CVKey, now); err != nil {
+	if err := s.insertAnalysisCandidate(ctx, in.OwnerID, candidate, criteria, questions, in.Repositories, in.FileName, in.CVKey, now); err != nil {
 		return "", err
 	}
 	return id, nil
 }
 
-func (s *Store) insertAnalysisCandidate(ctx context.Context, ownerID string, candidate model.CandidateRecord, criteria []model.Criterion, questions []model.Question, fileName, cvKey string, analyzedAt time.Time) error {
+func (s *Store) insertAnalysisCandidate(ctx context.Context, ownerID string, candidate model.CandidateRecord, criteria []model.Criterion, questions []model.Question, repositories []model.RepositoryRecord, fileName, cvKey string, analyzedAt time.Time) error {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -151,6 +183,19 @@ func (s *Store) insertAnalysisCandidate(ctx context.Context, ownerID string, can
 		candidate.StageIndex, fileName, cvKey, analyzedAt, owner,
 	); err != nil {
 		return fmt.Errorf("store: save candidate: %w", err)
+	}
+
+	for idx, repository := range repositories {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO candidate_repositories (
+				candidate_id, idx, url, label, kind, status, context, detail, source, owner, repo_name, updated_at
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, now())`,
+			candidate.ID, idx, repository.URL, repository.Label, repository.Kind,
+			repository.Status, repository.Context, repository.Detail, repository.Source,
+			repository.Owner, repository.Name,
+		); err != nil {
+			return fmt.Errorf("store: save repositories: %w", err)
+		}
 	}
 
 	for idx, crit := range criteria {

@@ -25,6 +25,17 @@ const vi = {
   "repository.openProfile": "Mở hồ sơ",
   "repository.useInInterview": "Dùng trong phỏng vấn",
 
+  "repository.savedTitle": "Repository của ứng viên",
+  "repository.savedMeta":
+    "{total} repo · {analyzed} đã đọc · {pending} đang chờ",
+  "repository.savedPendingNote":
+    "Worker đang đọc lần lượt từng repo ở luồng nền để tránh giới hạn GitHub API; danh sách tự cập nhật.",
+  "repository.repoStatusAnalyzed": "Đã đọc",
+  "repository.repoStatusPending": "Đang chờ",
+  "repository.repoStatusAnalyzing": "Đang phân tích",
+  "repository.repoStatusUnavailable": "Không đọc được",
+  "repository.repoStatusSkipped": "Bỏ qua",
+
   "repository.summaryAria": "Tổng quan repository",
   "repository.branchMeta": "{branch} · {commits} commit · {files} tệp",
   "repository.language": "Ngôn ngữ",
@@ -108,6 +119,17 @@ const en: Record<keyof typeof vi, Message> = {
   "repository.analyzedAt": "analyzed {date}",
   "repository.openProfile": "Open profile",
   "repository.useInInterview": "Use in interview",
+
+  "repository.savedTitle": "Candidate repositories",
+  "repository.savedMeta":
+    "{total} repos · {analyzed} read · {pending} waiting",
+  "repository.savedPendingNote":
+    "The worker reads one repository at a time in the background to stay under GitHub's rate limit; this list refreshes automatically.",
+  "repository.repoStatusAnalyzed": "Read",
+  "repository.repoStatusPending": "Waiting",
+  "repository.repoStatusAnalyzing": "Analyzing",
+  "repository.repoStatusUnavailable": "Unreadable",
+  "repository.repoStatusSkipped": "Skipped",
 
   "repository.summaryAria": "Repository overview",
   "repository.branchMeta": "{branch} · {commits} commits · {files} files",

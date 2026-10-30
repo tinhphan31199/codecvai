@@ -30,12 +30,18 @@ const (
 
 var defaultLevels = []string{"Junior", "Middle", "Senior"}
 
+// RepoQueue wakes the background repository worker after an analysis is saved.
+type RepoQueue interface {
+	Notify()
+}
+
 type Config struct {
 	AllowedOrigins []string
 	Store          *store.Store
 	Storage        *storage.Client
 	Auth           *auth.Manager
 	GoogleClientID string
+	RepoQueue      RepoQueue
 }
 
 type Server struct {
@@ -48,6 +54,7 @@ type Server struct {
 	emailUsers     emailLookup
 	googleClientID string
 	googleVerifier auth.GoogleVerifier
+	repoQueue      RepoQueue
 }
 
 // userLookup lets the auth middleware resolve the session owner without a live DB.
@@ -70,6 +77,7 @@ func New(cfg Config) http.Handler {
 		cvStorage:      cfg.Storage,
 		auth:           cfg.Auth,
 		googleClientID: strings.TrimSpace(cfg.GoogleClientID),
+		repoQueue:      cfg.RepoQueue,
 	}
 	if cfg.Store != nil {
 		server.authUsers = cfg.Store
@@ -277,6 +285,13 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	evidence := s.githubEvidence(r.Context(), extraction)
+	savedRepos := savedRepositoryRecords(evidence)
+	queued := 0
+	for _, repository := range savedRepos {
+		if repository.Status == model.RepositoryPending {
+			queued++
+		}
+	}
 
 	result, err := s.gateway.Analyze(r.Context(), gateway.Request{
 		ModelID:          modelID,
@@ -304,11 +319,13 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf(
-		"[analyze-cv] ok model=%s provider=%s github=%d/%d duration=%s",
+		"[analyze-cv] ok model=%s provider=%s github=%d/%d repos=%d queued=%d duration=%s",
 		modelID,
 		result.Provider,
 		evidence.Meta.Analyzed,
 		evidence.Meta.Targets,
+		len(savedRepos),
+		queued,
 		time.Since(startedAt).Round(time.Millisecond),
 	)
 
@@ -316,28 +333,50 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 
 	user, _ := userFromContext(r.Context())
 	if _, err := s.store.SaveAnalysis(r.Context(), store.SaveAnalysisInput{
-		OwnerID:  user.ID,
-		Position: position.Title,
-		Level:    level,
-		Model:    modelID,
-		FileName: header.Filename,
-		CVKey:    cvKey,
-		Analysis: result.Analysis,
+		OwnerID:      user.ID,
+		Position:     position.Title,
+		Level:        level,
+		Model:        modelID,
+		FileName:     header.Filename,
+		CVKey:        cvKey,
+		Analysis:     result.Analysis,
+		Repositories: savedRepos,
 	}); err != nil {
 		log.Printf("[analyze-cv] persist failed: %v", err)
+	} else if s.repoQueue != nil && queued > 0 {
+		s.repoQueue.Notify()
 	}
 
 	writeJSON(w, http.StatusOK, model.Response{
 		Analysis: result.Analysis,
 		Meta: model.Meta{
-			Model:      modelID,
-			Pages:      extracted.Pages,
-			Characters: extracted.Characters,
-			DurationMs: time.Since(startedAt).Milliseconds(),
-			Truncated:  extracted.Truncated,
-			Github:     evidence.Meta,
+			Model:           modelID,
+			Pages:           extracted.Pages,
+			Characters:      extracted.Characters,
+			DurationMs:      time.Since(startedAt).Milliseconds(),
+			Truncated:       extracted.Truncated,
+			Github:          evidence.Meta,
+			RepositoryQueue: queued,
 		},
 	})
+}
+
+// savedRepositoryRecords keeps every repo the CV or profile exposed: the ones
+// read during the request plus the pending ones the background worker will read.
+func savedRepositoryRecords(evidence github.Evidence) []model.RepositoryRecord {
+	records := make([]model.RepositoryRecord, 0, len(evidence.Repositories)+len(evidence.Discovered))
+	for _, repository := range evidence.Repositories {
+		records = append(records, model.RepositoryRecord{
+			URL:     repository.URL,
+			Label:   repository.Label,
+			Kind:    repository.Kind,
+			Status:  repository.Status,
+			Context: repository.Context,
+			Detail:  repository.Detail,
+			Source:  "cv",
+		})
+	}
+	return append(records, evidence.Discovered...)
 }
 
 // storeCV lưu bản gốc CV lên bucket private; lỗi chỉ log để phân tích vẫn thành công.

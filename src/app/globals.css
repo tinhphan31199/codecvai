@@ -2067,6 +2067,12 @@ button.row-name:hover {
   color: var(--muted);
 }
 
+.result-repo-queue {
+  flex-basis: 100%;
+  font-size: 11px;
+  color: var(--muted);
+}
+
 .pdf-modal {
   position: fixed;
   inset: 0;
@@ -3256,6 +3262,83 @@ button.row-name:hover {
   font-size: 12px;
   line-height: 1.6;
   color: var(--muted-strong);
+}
+
+.repo-saved {
+  margin-bottom: 16px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.repo-saved .card-head {
+  margin: 0;
+  padding: 14px 16px 12px;
+}
+
+.saved-repo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+
+.saved-repo {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 16px;
+}
+
+.saved-repo + .saved-repo {
+  border-top: 1px solid var(--line);
+}
+
+.saved-repo > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--muted);
+}
+
+.saved-repo-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.saved-repo-label {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 550;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-repo-label:hover {
+  text-decoration: underline;
+}
+
+.saved-repo-context {
+  color: var(--muted-strong);
+  font-size: 11px;
+}
+
+.saved-repo-detail {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.saved-repo .pill {
+  flex: none;
+  margin-top: 1px;
+}
+
+.repo-saved .card-foot {
+  padding: 8px 16px 10px;
+  border-top: 1px solid var(--line);
 }
 
 .repo-summary {

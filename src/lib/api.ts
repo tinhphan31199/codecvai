@@ -137,6 +137,17 @@ export interface ArchitectureLayer {
   nodes: string[];
 }
 
+export interface RepoRecord {
+  url: string;
+  label: string;
+  kind: "repo" | "profile" | "link";
+  status: "pending" | "analyzing" | "analyzed" | "unavailable" | "skipped";
+  context: string;
+  detail: string;
+  source: string;
+  updatedAt: string;
+}
+
 export interface RepoAnalysis {
   candidateId: string;
   repo: string;
@@ -146,6 +157,7 @@ export interface RepoAnalysis {
   tree: TreeNode[];
   layers: ArchitectureLayer[];
   findings: Finding[];
+  repositories: RepoRecord[];
 }
 
 export interface Dashboard {
@@ -238,6 +250,7 @@ export interface QueryResult<T> {
   loading: boolean;
   error: string | null;
   refetch: () => void;
+  refresh: () => void;
 }
 
 function useQuery<T>(path: string): QueryResult<T> {
@@ -297,7 +310,18 @@ function useQuery<T>(path: string): QueryResult<T> {
     }
   }, [path]);
 
-  return { data, loading, error, refetch };
+  // refresh cập nhật dữ liệu tại chỗ, không bật loading để không nháy màn hình.
+  const refresh = useCallback(async () => {
+    try {
+      const json = await requestJSON<T>(path);
+      cache.set(path, json);
+      setData(json);
+    } catch {
+      // Giữ dữ liệu cũ; lần poll sau sẽ thử lại.
+    }
+  }, [path]);
+
+  return { data, loading, error, refetch, refresh };
 }
 
 // ---- Hooks ----

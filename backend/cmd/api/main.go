@@ -14,6 +14,7 @@ import (
 	"codecv/backend/internal/api"
 	"codecv/backend/internal/auth"
 	"codecv/backend/internal/config"
+	"codecv/backend/internal/repoqueue"
 	"codecv/backend/internal/storage"
 	"codecv/backend/internal/store"
 )
@@ -65,20 +66,36 @@ func main() {
 		log.Print("Google sign-in disabled: set GOOGLE_CLIENT_ID to show the Google button")
 	}
 
+	var repoWorker *repoqueue.Worker
+	if dataStore != nil {
+		repoWorker = repoqueue.New(dataStore)
+	}
+
+	handlerConfig := api.Config{
+		AllowedOrigins: splitList(env("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")),
+		Store:          dataStore,
+		Storage:        cvStorage,
+		Auth:           auth.NewManager(jwtSecret),
+		GoogleClientID: googleClientID,
+	}
+	if repoWorker != nil {
+		handlerConfig.RepoQueue = repoWorker
+	}
+
 	server := &http.Server{
-		Addr: ":" + port,
-		Handler: api.New(api.Config{
-			AllowedOrigins: splitList(env("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")),
-			Store:          dataStore,
-			Storage:        cvStorage,
-			Auth:           auth.NewManager(jwtSecret),
-			GoogleClientID: googleClientID,
-		}),
+		Addr:              ":" + port,
+		Handler:           api.New(handlerConfig),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       60 * time.Second,
 		WriteTimeout:      160 * time.Second,
 		IdleTimeout:       60 * time.Second,
 		MaxHeaderBytes:    1 << 20,
+	}
+
+	workerCtx, stopWorker := context.WithCancel(context.Background())
+	defer stopWorker()
+	if repoWorker != nil {
+		go repoWorker.Run(workerCtx)
 	}
 
 	go func() {
@@ -92,6 +109,7 @@ func main() {
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 
+	stopWorker()
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := server.Shutdown(shutdownCtx); err != nil {

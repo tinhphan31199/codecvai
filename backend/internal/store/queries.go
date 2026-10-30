@@ -439,6 +439,10 @@ func (s *Store) Repository(ctx context.Context, id string) (model.RepoAnalysis, 
 	if err != nil {
 		return model.RepoAnalysis{}, err
 	}
+	repo.Repositories, err = s.CandidateRepositories(ctx, id)
+	if err != nil {
+		return model.RepoAnalysis{}, err
+	}
 	return repo, nil
 }
 

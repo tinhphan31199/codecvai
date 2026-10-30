@@ -210,14 +210,15 @@ type UserAccount struct {
 
 // RepoAnalysis bundles everything the Repository Analysis screen renders.
 type RepoAnalysis struct {
-	CandidateID string          `json:"candidateId"`
-	Repo        string          `json:"repo"`
-	RepoBranch  string          `json:"repoBranch"`
-	Commit      string          `json:"commit"`
-	RepoState   string          `json:"repoState"`
-	Tree        json.RawMessage `json:"tree"`
-	Layers      json.RawMessage `json:"layers"`
-	Findings    []Finding       `json:"findings"`
+	CandidateID  string             `json:"candidateId"`
+	Repo         string             `json:"repo"`
+	RepoBranch   string             `json:"repoBranch"`
+	Commit       string             `json:"commit"`
+	RepoState    string             `json:"repoState"`
+	Tree         json.RawMessage    `json:"tree"`
+	Layers       json.RawMessage    `json:"layers"`
+	Findings     []Finding          `json:"findings"`
+	Repositories []RepositoryRecord `json:"repositories"`
 }
 
 // Dashboard is the aggregate payload for the overview screen.
