@@ -261,21 +261,23 @@ export default function Dashboard({
                           updated: candidate.updated,
                         })}
                       </span>
-                      <div className="queue-evidence">
-                        <EvidenceMeter
-                          verified={ev.verified}
-                          inferred={ev.inferred}
-                          missing={ev.missing}
-                          total={ev.total}
-                        />
-                        <span className="evidence-text">
-                          {t("dashboard.review.evidence", {
-                            covered: ev.covered,
-                            total: ev.total,
-                            missing: ev.missing,
-                          })}
-                        </span>
-                      </div>
+                      {ev.total ? (
+                        <div className="queue-evidence">
+                          <EvidenceMeter
+                            verified={ev.verified}
+                            inferred={ev.inferred}
+                            missing={ev.missing}
+                            total={ev.total}
+                          />
+                          <span className="evidence-text">
+                            {t("dashboard.review.evidence", {
+                              covered: ev.covered,
+                              total: ev.total,
+                              missing: ev.missing,
+                            })}
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
                     <button
                       type="button"
@@ -472,7 +474,7 @@ export default function Dashboard({
                           className="num c-evidence fig"
                           data-label={t("dashboard.recent.colEvidence")}
                         >
-                          {ev.covered}/{ev.total}
+                          {ev.total ? `${ev.covered}/${ev.total}` : "—"}
                         </td>
                         <td
                           className="c-status"

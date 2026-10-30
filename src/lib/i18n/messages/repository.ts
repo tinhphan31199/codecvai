@@ -37,10 +37,9 @@ const vi = {
   "repository.repoStatusSkipped": "Bỏ qua",
 
   "repository.summaryAria": "Tổng quan repository",
-  "repository.branchMeta": "{branch} · {commits} commit · {files} tệp",
+  "repository.filesCount": "{count} tệp",
   "repository.language": "Ngôn ngữ",
-  "repository.tests": "Kiểm thử",
-  "repository.testsValue": "12 test · 68%",
+  "repository.files": "Tệp đã đọc",
   "repository.findings": "Phát hiện",
   "repository.findingsSummary": "{total} · {needed} cần xem",
   "repository.status": "Trạng thái",
@@ -132,10 +131,12 @@ const en: Record<keyof typeof vi, Message> = {
   "repository.repoStatusSkipped": "Skipped",
 
   "repository.summaryAria": "Repository overview",
-  "repository.branchMeta": "{branch} · {commits} commits · {files} files",
+  "repository.filesCount": {
+    one: "{count} file",
+    other: "{count} files",
+  },
   "repository.language": "Language",
-  "repository.tests": "Tests",
-  "repository.testsValue": "12 tests · 68%",
+  "repository.files": "Files read",
   "repository.findings": "Findings",
   "repository.findingsSummary": "{total} · {needed} to review",
   "repository.status": "Status",

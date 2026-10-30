@@ -349,19 +349,25 @@ export default function Candidates({
                           className="c-evidence-cell"
                           data-label={t("candidates.colEvidence")}
                         >
-                          <div className="evidence-cell">
-                            <div className="evidence-top">
-                              <span className="num evidence-count fig">
-                                {ev.covered}/{ev.total}
-                              </span>
+                          {ev.total ? (
+                            <div className="evidence-cell">
+                              <div className="evidence-top">
+                                <span className="num evidence-count fig">
+                                  {ev.covered}/{ev.total}
+                                </span>
+                              </div>
+                              <EvidenceMeter
+                                verified={ev.verified}
+                                inferred={ev.inferred}
+                                missing={ev.missing}
+                                total={ev.total}
+                              />
                             </div>
-                            <EvidenceMeter
-                              verified={ev.verified}
-                              inferred={ev.inferred}
-                              missing={ev.missing}
-                              total={ev.total}
-                            />
-                          </div>
+                          ) : (
+                            <span className="evidence-empty">
+                              {t("candidates.evidenceNone")}
+                            </span>
+                          )}
                         </td>
                         <td
                           className="c-status"

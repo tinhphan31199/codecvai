@@ -94,6 +94,24 @@ function TreeNode({
   );
 }
 
+function firstFilePath(nodes: TreeNodeData[], prefix = ""): string {
+  for (const node of nodes) {
+    const full = prefix ? `${prefix}/${node.name}` : node.name;
+    if (node.type === "file") return full;
+    const child = node.children ? firstFilePath(node.children, full) : "";
+    if (child) return child;
+  }
+  return "";
+}
+
+function countFiles(nodes: TreeNodeData[]): number {
+  return nodes.reduce(
+    (sum, node) =>
+      sum + (node.type === "file" ? 1 : countFiles(node.children ?? [])),
+    0,
+  );
+}
+
 export default function RepositoryScreen({
   id,
   go,
@@ -220,10 +238,10 @@ function RepositoryAnalysis({
   const pendingRepos = repoItems.filter(
     (item) => item.status === "pending" || item.status === "analyzing",
   ).length;
+  const firstTreeFile = firstFilePath(tree);
+  const fileCount = countFiles(tree);
   const [selectedId, setSelectedId] = useState(findings[0]?.id ?? "");
-  const [selectedFile, setSelectedFile] = useState(
-    findings[0]?.file ?? "src/Orders.Infrastructure/Messaging/RabbitMqConsumer.cs",
-  );
+  const [selectedFile, setSelectedFile] = useState(findings[0]?.file ?? "");
   const [states, setStates] = useState<Record<string, FindingState>>({});
   const [filter, setFilter] = useState<"all" | "needs" | "confirmed">("all");
   const [view, setView] = useState<"arch" | "code">("arch");
@@ -242,6 +260,8 @@ function RepositoryAnalysis({
     const timer = window.setInterval(() => refreshRepo(), 5000);
     return () => window.clearInterval(timer);
   }, [pendingRepos, refreshRepo]);
+
+  const activeFile = selectedFile || firstTreeFile;
 
   const stateOf = (finding: Finding) => states[finding.id] ?? finding.state;
   const selected = findings.find((item) => item.id === selectedId) ?? null;
@@ -307,6 +327,35 @@ function RepositoryAnalysis({
         return t("repository.repoStatusUnavailable");
     }
   };
+
+  const primaryRecord =
+    repoItems.find(
+      (item) => item.status === "analyzed" && item.url === primaryRepo,
+    ) ??
+    repoItems.find((item) => item.status === "analyzed") ??
+    null;
+  const branch = repo?.repoBranch || candidate.repoBranch || "";
+  const commit = repo?.commit || candidate.commit || "";
+  const language = (primaryRecord?.context ?? "").split("·")[0].trim();
+  const analyzedAt = (() => {
+    if (!primaryRecord?.updatedAt) return "";
+    const date = new Date(primaryRecord.updatedAt);
+    if (Number.isNaN(date.getTime())) return "";
+    const pad = (value: number) => String(value).padStart(2, "0");
+    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)} · ${pad(
+      date.getHours(),
+    )}:${pad(date.getMinutes())}`;
+  })();
+  const statusClass = primaryRecord
+    ? repoStatusClass(primaryRecord.status)
+    : candidate.repoState === "connected"
+      ? "pill-positive"
+      : "pill-negative";
+  const statusLabel = primaryRecord
+    ? repoStatusLabel(primaryRecord.status)
+    : candidate.repoState === "connected"
+      ? t("repository.connected")
+      : t("repository.repoStatusUnavailable");
 
   if (
     !repositories.length &&
@@ -394,14 +443,23 @@ function RepositoryAnalysis({
         sub={
           <>
             {candidate.name} ·{" "}
-            <span className="mono">{primaryRepo || "—"}</span> ·{" "}
-            <span className="mono">
-              {candidate.repoBranch}@{candidate.commit}
-            </span>{" "}
-            ·{" "}
-            <span className="nowrap">
-              {t("repository.analyzedAt", { date: "26/10 · 14:10" })}
-            </span>
+            <span className="mono">{primaryRepo || "—"}</span>
+            {branch || commit ? (
+              <>
+                {" · "}
+                <span className="mono">
+                  {commit ? (branch ? `${branch}@${commit}` : commit) : branch}
+                </span>
+              </>
+            ) : null}
+            {analyzedAt ? (
+              <>
+                {" · "}
+                <span className="nowrap">
+                  {t("repository.analyzedAt", { date: analyzedAt })}
+                </span>
+              </>
+            ) : null}
           </>
         }
         actions={
@@ -480,24 +538,33 @@ function RepositoryAnalysis({
       >
         <div className="repo-summary-main">
           <span className="repo-path mono">{primaryRepo}</span>
-          <span className="repo-branch">
-            <GitBranch size={13} aria-hidden="true" />
-            {t("repository.branchMeta", {
-              branch: "main",
-              commits: nf(318),
-              files: nf(42),
-            })}
-          </span>
+          {branch || fileCount ? (
+            <span className="repo-branch">
+              <GitBranch size={13} aria-hidden="true" />
+              {[
+                branch,
+                fileCount
+                  ? t("repository.filesCount", { count: fileCount })
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
+          ) : null}
         </div>
         <dl className="repo-facts">
-          <div>
-            <dt>{t("repository.language")}</dt>
-            <dd>C# · .NET 8</dd>
-          </div>
-          <div>
-            <dt>{t("repository.tests")}</dt>
-            <dd className="num">{t("repository.testsValue")}</dd>
-          </div>
+          {language ? (
+            <div>
+              <dt>{t("repository.language")}</dt>
+              <dd>{language}</dd>
+            </div>
+          ) : null}
+          {fileCount ? (
+            <div>
+              <dt>{t("repository.files")}</dt>
+              <dd className="num">{nf(fileCount)}</dd>
+            </div>
+          ) : null}
           <div>
             <dt>{t("repository.findings")}</dt>
             <dd className="num">
@@ -510,9 +577,7 @@ function RepositoryAnalysis({
           <div>
             <dt>{t("repository.status")}</dt>
             <dd>
-              <span className="pill pill-positive">
-                {t("repository.connected")}
-              </span>
+              <span className={`pill ${statusClass}`}>{statusLabel}</span>
             </dd>
           </div>
         </dl>
@@ -522,7 +587,7 @@ function RepositoryAnalysis({
         <aside className="repo-tree card" aria-label={t("repository.tree")}>
           <div className="tree-head">
             <span className="tree-title">{t("repository.tree")}</span>
-            <span className="mono tree-branch">main</span>
+            {branch ? <span className="mono tree-branch">{branch}</span> : null}
           </div>
           <ul className="tree-root">
             {(tree as TreeNodeData[]).map((node) => (
@@ -531,15 +596,19 @@ function RepositoryAnalysis({
                 node={node}
                 path=""
                 depth={0}
-                selected={selectedFile}
+                selected={activeFile}
                 onSelect={selectFile}
               />
             ))}
           </ul>
-          <div className="tree-foot">
-            <span className="mono">{candidate.commit}</span>
-            <span>{t("repository.branchLabel", { branch: "main" })}</span>
-          </div>
+          {commit || branch ? (
+            <div className="tree-foot">
+              {commit ? <span className="mono">{commit}</span> : <span />}
+              {branch ? (
+                <span>{t("repository.branchLabel", { branch })}</span>
+              ) : null}
+            </div>
+          ) : null}
         </aside>
 
         <section className="repo-viewer card" aria-label={t("repository.viewerAria")}>
@@ -748,7 +817,7 @@ function RepositoryAnalysis({
           ) : (
             <EmptyState
               title={t("repository.noFindingInFile", {
-                file: selectedFile.split("/").pop() ?? t("repository.thisFile"),
+                file: activeFile.split("/").pop() || t("repository.thisFile"),
               })}
               detail={t("repository.noFindingInFileDetail")}
             />

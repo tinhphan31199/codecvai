@@ -24,6 +24,7 @@ const vi = {
   "candidates.evidenceAll": "Tất cả",
   "candidates.evidenceVerified": "Có xác minh",
   "candidates.evidenceGap": "Còn thiếu",
+  "candidates.evidenceNone": "Chưa có tiêu chí",
   "candidates.clearFilters": "Xóa bộ lọc",
   "candidates.resultCount": "{count} hồ sơ",
 
@@ -78,6 +79,7 @@ const en: Record<keyof typeof vi, Message> = {
   "candidates.evidenceAll": "All",
   "candidates.evidenceVerified": "Has verification",
   "candidates.evidenceGap": "Has gaps",
+  "candidates.evidenceNone": "No criteria yet",
   "candidates.clearFilters": "Clear filters",
   "candidates.resultCount": {
     one: "{count} candidate",
