@@ -1,7 +1,0 @@
-HTTP/1.1 200 OK
-Cache-Control: private, no-store
-Content-Disposition: attachment; filename=cv.pdf
-Content-Length: 18017
-Content-Type: application/pdf
-Date: Thu, 29 Oct 2026 10:28:25 GMT
-

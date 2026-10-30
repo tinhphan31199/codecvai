@@ -1,5 +1,0 @@
-Nguyen Van Test
-Backend Engineer, 5 years experience.
-Stack: Go, PostgreSQL, Docker, REST API.
-Projects: github.com/luankat0306/VietJob_FrontEnd
-Email: test@example.com

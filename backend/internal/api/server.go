@@ -460,20 +460,29 @@ func cors(allowedOrigins []string, next http.Handler) http.Handler {
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		origin := strings.TrimRight(r.Header.Get("Origin"), "/")
+		w.Header().Add("Vary", "Origin")
+		origin := strings.TrimSpace(strings.TrimRight(r.Header.Get("Origin"), "/"))
+		permitted := false
 		if origin != "" {
-			_, permitted := allowed[origin]
-			if permitted || allowAny {
-				w.Header().Set("Access-Control-Allow-Origin", origin)
-				w.Header().Add("Vary", "Origin")
-				if r.Method == http.MethodOptions {
-					w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-					w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-					w.Header().Set("Access-Control-Max-Age", "600")
-					w.WriteHeader(http.StatusNoContent)
-					return
-				}
+			_, ok := allowed[origin]
+			permitted = ok || allowAny
+		}
+
+		if r.Method == http.MethodOptions {
+			if !permitted {
+				http.Error(w, "Origin not allowed", http.StatusForbidden)
+				return
 			}
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			w.Header().Set("Access-Control-Max-Age", "600")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		if permitted {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
 		}
 		next.ServeHTTP(w, r)
 	})
