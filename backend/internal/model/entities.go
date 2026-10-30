@@ -178,11 +178,34 @@ type Workspace struct {
 	NotifyDigest bool `json:"notifyDigest"`
 }
 
+// Role quyết định phạm vi cấu hình người dùng được thấy.
+const (
+	RoleAdmin  = "admin"
+	RoleMember = "member"
+)
+
 type User struct {
 	ID          string `json:"id"`
 	Username    string `json:"username"`
 	DisplayName string `json:"displayName"`
 	Email       string `json:"email"`
+	Role        string `json:"role"`
+}
+
+// Nguồn tạo tài khoản hiển thị trong tab Người dùng.
+const (
+	AuthSourcePassword = "password"
+	AuthSourceGoogle   = "google"
+)
+
+type UserAccount struct {
+	ID          string `json:"id"`
+	Username    string `json:"username"`
+	DisplayName string `json:"displayName"`
+	Email       string `json:"email"`
+	Role        string `json:"role"`
+	AuthSource  string `json:"authSource"`
+	CreatedAt   string `json:"createdAt"`
 }
 
 // RepoAnalysis bundles everything the Repository Analysis screen renders.

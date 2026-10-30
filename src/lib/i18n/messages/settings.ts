@@ -11,6 +11,9 @@ const vi = {
   "settings.tab.security": "Bảo mật & Thông báo",
   "settings.tab.securitySub":
     "Xác thực hai lớp, tự đăng xuất và các thông báo vận hành.",
+  "settings.tab.users": "Người dùng",
+  "settings.tab.usersSub":
+    "Tài khoản tự đăng ký và tài khoản tạo từ Google.",
   "settings.tab.team": "Thành viên",
   "settings.tab.teamSub":
     "Danh mục thành viên dùng cho reviewer và phân quyền hiển thị.",
@@ -80,6 +83,29 @@ const vi = {
     "Gửi email tổng hợp hoạt động tuyển dụng mỗi thứ Hai.",
   "settings.security.footnote":
     "Cấu hình được lưu ngay vào bảng workspace_settings và áp dụng cho toàn bộ workspace; mật khẩu chỉ đổi cho tài khoản đang đăng nhập.",
+
+  "settings.users.title": "Người dùng",
+  "settings.users.meta": "{count} tài khoản · users",
+  "settings.users.loading": "Đang tải người dùng…",
+  "settings.users.colUser": "Người dùng",
+  "settings.users.colEmail": "Email",
+  "settings.users.colSource": "Đăng nhập",
+  "settings.users.colRole": "Quyền",
+  "settings.users.colCreated": "Ngày tạo",
+  "settings.users.sourceGoogle": "Google",
+  "settings.users.sourcePassword": "Tự đăng ký",
+  "settings.users.roleAdmin": "Quản trị viên",
+  "settings.users.roleMember": "Thành viên",
+  "settings.users.you": "Bạn",
+  "settings.users.makeAdmin": "Cấp admin",
+  "settings.users.removeAdmin": "Bỏ admin",
+  "settings.users.makeAdminAria": "Cấp quyền quản trị cho {name}",
+  "settings.users.removeAdminAria": "Bỏ quyền quản trị của {name}",
+  "settings.users.selfLocked": "Không thể tự đổi quyền của chính mình.",
+  "settings.users.roleUpdated": "Đã đổi quyền của {name} thành {role}.",
+  "settings.users.roleError": "Không đổi được quyền.",
+  "settings.users.footnote":
+    "Tài khoản Google được tạo tự động ở lần đăng nhập đầu tiên. Quản trị viên có thể cấp hoặc bỏ quyền admin ngay trong bảng; không thể tự bỏ quyền của chính mình.",
 
   "settings.team.title": "Thành viên",
   "settings.team.meta": "{count} người · team_members",
@@ -165,6 +191,9 @@ const en: Record<keyof typeof vi, Message> = {
   "settings.tab.security": "Security & notifications",
   "settings.tab.securitySub":
     "Two-factor sign-in, auto sign-out and operational notifications.",
+  "settings.tab.users": "Users",
+  "settings.tab.usersSub":
+    "Self-registered accounts and accounts created from Google.",
   "settings.tab.team": "Team",
   "settings.tab.teamSub":
     "Member directory used for reviewers and visibility permissions.",
@@ -237,6 +266,32 @@ const en: Record<keyof typeof vi, Message> = {
     "Email a summary of recruiting activity every Monday.",
   "settings.security.footnote":
     "Settings save immediately to workspace_settings and apply to the whole workspace; the password only changes for the signed-in account.",
+
+  "settings.users.title": "Users",
+  "settings.users.meta": {
+    one: "{count} account · users",
+    other: "{count} accounts · users",
+  },
+  "settings.users.loading": "Loading users…",
+  "settings.users.colUser": "User",
+  "settings.users.colEmail": "Email",
+  "settings.users.colSource": "Sign-in",
+  "settings.users.colRole": "Role",
+  "settings.users.colCreated": "Created",
+  "settings.users.sourceGoogle": "Google",
+  "settings.users.sourcePassword": "Self sign-up",
+  "settings.users.roleAdmin": "Admin",
+  "settings.users.roleMember": "Member",
+  "settings.users.you": "You",
+  "settings.users.makeAdmin": "Make admin",
+  "settings.users.removeAdmin": "Remove admin",
+  "settings.users.makeAdminAria": "Give admin access to {name}",
+  "settings.users.removeAdminAria": "Remove admin access from {name}",
+  "settings.users.selfLocked": "You can't change your own role.",
+  "settings.users.roleUpdated": "Changed {name}'s role to {role}.",
+  "settings.users.roleError": "Couldn't change the role.",
+  "settings.users.footnote":
+    "Google accounts are created automatically on first sign-in. Admins can grant or remove admin access right in the table; you can't remove your own admin access.",
 
   "settings.team.title": "Team",
   "settings.team.meta": {

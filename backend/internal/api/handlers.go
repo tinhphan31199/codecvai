@@ -46,7 +46,7 @@ func (s *Server) handleWorkspace(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
-	stats, err := s.store.Stats(r.Context())
+	stats, err := s.store.Stats(r.Context(), ownerFilter(r))
 	if err != nil {
 		s.storeError(w, err)
 		return
@@ -55,7 +55,7 @@ func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
-	dashboard, err := s.store.Dashboard(r.Context())
+	dashboard, err := s.store.Dashboard(r.Context(), ownerFilter(r))
 	if err != nil {
 		s.storeError(w, err)
 		return
@@ -72,7 +72,7 @@ func (s *Server) handleAnalysisQueue(w http.ResponseWriter, r *http.Request) {
 		limit = 20
 	}
 
-	items, err := s.store.AnalysisQueue(r.Context(), limit)
+	items, err := s.store.AnalysisQueue(r.Context(), ownerFilter(r), limit)
 	if err != nil {
 		s.storeError(w, err)
 		return
@@ -86,6 +86,7 @@ func (s *Server) handleCandidates(w http.ResponseWriter, r *http.Request) {
 		Status:   r.URL.Query().Get("status"),
 		Position: r.URL.Query().Get("position"),
 		Sort:     r.URL.Query().Get("sort"),
+		OwnerID:  ownerFilter(r),
 	}
 	filter.Limit = queryInt(r, "limit", 100)
 	filter.Offset = queryInt(r, "offset", 0)
@@ -100,6 +101,9 @@ func (s *Server) handleCandidates(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCandidate(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+	if !s.requireCandidate(w, r, id) {
+		return
+	}
 
 	if r.Method == http.MethodPatch {
 		var patch struct {
@@ -140,12 +144,17 @@ func (s *Server) handleCandidate(w http.ResponseWriter, r *http.Request) {
 
 // handleCandidateCV stream bản gốc CV từ bucket private; frontend không bao giờ thấy key hay credential.
 func (s *Server) handleCandidateCV(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if !s.requireCandidate(w, r, id) {
+		return
+	}
+
 	if s.cvStorage == nil {
 		s.fail(w, http.StatusServiceUnavailable, "storage_unavailable", "Máy chủ chưa cấu hình kho lưu CV. Kiểm tra AWS_ENDPOINT_URL_S3, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY và S3_BUCKET.")
 		return
 	}
 
-	key, fileName, err := s.store.CandidateCV(r.Context(), r.PathValue("id"))
+	key, fileName, err := s.store.CandidateCV(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			s.fail(w, http.StatusNotFound, "not_found", "Không tìm thấy ứng viên.")
@@ -195,7 +204,11 @@ func (s *Server) handleCandidateCV(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleRepository(w http.ResponseWriter, r *http.Request) {
-	repo, err := s.store.Repository(r.Context(), r.PathValue("id"))
+	id := r.PathValue("id")
+	if !s.requireCandidate(w, r, id) {
+		return
+	}
+	repo, err := s.store.Repository(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			s.fail(w, http.StatusNotFound, "not_found", "Không tìm thấy ứng viên.")
@@ -208,7 +221,11 @@ func (s *Server) handleRepository(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleQuestions(w http.ResponseWriter, r *http.Request) {
-	questions, err := s.store.Questions(r.Context(), r.PathValue("id"))
+	id := r.PathValue("id")
+	if !s.requireCandidate(w, r, id) {
+		return
+	}
+	questions, err := s.store.Questions(r.Context(), id)
 	if err != nil {
 		s.storeError(w, err)
 		return
@@ -217,6 +234,10 @@ func (s *Server) handleQuestions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleFinding(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if !s.requireCandidate(w, r, id) {
+		return
+	}
 	var patch struct {
 		State string `json:"state"`
 	}
@@ -228,7 +249,7 @@ func (s *Server) handleFinding(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, http.StatusBadRequest, "bad_request", "Thiếu trạng thái phát hiện.")
 		return
 	}
-	if err := s.store.UpdateFindingState(r.Context(), r.PathValue("id"), r.PathValue("findingId"), patch.State); err != nil {
+	if err := s.store.UpdateFindingState(r.Context(), id, r.PathValue("findingId"), patch.State); err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			s.fail(w, http.StatusNotFound, "not_found", "Không tìm thấy phát hiện.")
 			return
@@ -305,7 +326,7 @@ func (s *Server) handlePosition(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleReports(w http.ResponseWriter, r *http.Request) {
-	reports, err := s.store.Reports(r.Context())
+	reports, err := s.store.Reports(r.Context(), ownerFilter(r))
 	if err != nil {
 		s.storeError(w, err)
 		return
@@ -315,6 +336,16 @@ func (s *Server) handleReports(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleReport(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+
+	report, err := s.store.Report(r.Context(), id, ownerFilter(r))
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			s.fail(w, http.StatusNotFound, "not_found", "Không tìm thấy báo cáo.")
+			return
+		}
+		s.storeError(w, err)
+		return
+	}
 
 	if r.Method == http.MethodPatch {
 		var patch struct {
@@ -329,18 +360,10 @@ func (s *Server) handleReport(w http.ResponseWriter, r *http.Request) {
 				s.storeError(w, err)
 				return
 			}
+			report.Status = patch.Status
 		}
 	}
 
-	report, err := s.store.Report(r.Context(), id)
-	if err != nil {
-		if errors.Is(err, store.ErrNotFound) {
-			s.fail(w, http.StatusNotFound, "not_found", "Không tìm thấy báo cáo.")
-			return
-		}
-		s.storeError(w, err)
-		return
-	}
 	writeJSON(w, http.StatusOK, report)
 }
 
@@ -717,6 +740,37 @@ func queryInt(r *http.Request, key string, fallback int) int {
 		return fallback
 	}
 	return n
+}
+
+// ownerFilter scopes candidate data: admins see every profile, members only their own.
+func ownerFilter(r *http.Request) string {
+	user, _ := userFromContext(r.Context())
+	if user.Role == model.RoleAdmin {
+		return ""
+	}
+	return user.ID
+}
+
+// requireCandidate answers 404 when a member asks for a profile they do not own; admins pass.
+func (s *Server) requireCandidate(w http.ResponseWriter, r *http.Request, id string) bool {
+	user, _ := userFromContext(r.Context())
+	if user.Role == model.RoleAdmin {
+		return true
+	}
+	owner, err := s.store.CandidateOwner(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			s.fail(w, http.StatusNotFound, "not_found", "Không tìm thấy ứng viên.")
+			return false
+		}
+		s.storeError(w, err)
+		return false
+	}
+	if owner != user.ID {
+		s.fail(w, http.StatusNotFound, "not_found", "Không tìm thấy ứng viên.")
+		return false
+	}
+	return true
 }
 
 func (s *Server) storeError(w http.ResponseWriter, err error) {

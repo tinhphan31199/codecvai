@@ -160,3 +160,36 @@ func TestAuthenticateLeavesPublicRoutesOpen(t *testing.T) {
 		}
 	}
 }
+
+func TestAdminOnlyGuardsConfigRoutes(t *testing.T) {
+	server := &Server{}
+	called := false
+	guard := server.adminOnly(func(w http.ResponseWriter, _ *http.Request) {
+		called = true
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	for _, role := range []string{model.RoleMember, ""} {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodPost, "/api/levels", nil)
+		req = req.WithContext(context.WithValue(req.Context(), userContextKey{}, model.User{Role: role}))
+		guard(rec, req)
+		if rec.Code != http.StatusForbidden {
+			t.Fatalf("role %q status = %d, want 403", role, rec.Code)
+		}
+		if code := errorCode(t, rec); code != "forbidden" {
+			t.Fatalf("role %q code = %q", role, code)
+		}
+	}
+	if called {
+		t.Fatal("member request reached the handler")
+	}
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/levels", nil)
+	req = req.WithContext(context.WithValue(req.Context(), userContextKey{}, model.User{Role: model.RoleAdmin}))
+	guard(rec, req)
+	if rec.Code != http.StatusNoContent || !called {
+		t.Fatalf("admin status = %d called = %v", rec.Code, called)
+	}
+}

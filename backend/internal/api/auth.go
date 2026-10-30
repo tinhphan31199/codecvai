@@ -58,6 +58,18 @@ func (s *Server) authenticate(next http.Handler) http.Handler {
 	})
 }
 
+// adminOnly chặn các tuyến cấu hình dành riêng cho quản trị viên.
+func (s *Server) adminOnly(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, ok := userFromContext(r.Context())
+		if !ok || user.Role != model.RoleAdmin {
+			s.fail(w, http.StatusForbidden, "forbidden", "Chỉ quản trị viên được thay đổi cấu hình này.")
+			return
+		}
+		next(w, r)
+	}
+}
+
 func isPublicRoute(r *http.Request) bool {
 	switch r.Method + " " + r.URL.Path {
 	case "GET /healthz", "POST /api/auth/login", "POST /api/auth/register",

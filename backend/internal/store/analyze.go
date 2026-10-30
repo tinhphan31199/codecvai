@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 // SaveAnalysisInput carries the result of an analyze-cv request so it can be
 // written into the candidates table.
 type SaveAnalysisInput struct {
+	OwnerID  string // account that ran the analysis; empty keeps the profile admin-only
 	Position string // position title shown on the card
 	Level    string
 	Model    string
@@ -107,13 +109,13 @@ func (s *Store) SaveAnalysis(ctx context.Context, in SaveAnalysisInput) (string,
 		})
 	}
 
-	if err := s.insertAnalysisCandidate(ctx, candidate, criteria, questions, in.FileName, in.CVKey, now); err != nil {
+	if err := s.insertAnalysisCandidate(ctx, in.OwnerID, candidate, criteria, questions, in.FileName, in.CVKey, now); err != nil {
 		return "", err
 	}
 	return id, nil
 }
 
-func (s *Store) insertAnalysisCandidate(ctx context.Context, candidate model.CandidateRecord, criteria []model.Criterion, questions []model.Question, fileName, cvKey string, analyzedAt time.Time) error {
+func (s *Store) insertAnalysisCandidate(ctx context.Context, ownerID string, candidate model.CandidateRecord, criteria []model.Criterion, questions []model.Question, fileName, cvKey string, analyzedAt time.Time) error {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -123,17 +125,22 @@ func (s *Store) insertAnalysisCandidate(ctx context.Context, candidate model.Can
 	strengths, _ := json.Marshal(nonNil(candidate.Strengths))
 	verify, _ := json.Marshal(nonNil(candidate.Verify))
 
+	var owner any
+	if strings.TrimSpace(ownerID) != "" {
+		owner = ownerID
+	}
+
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO candidates (
 			id, name, initials, hue, role, position, level, status, updated, updated_at,
 			email, phone, location, years, created_at, source, reviewer, summary,
 			strengths, verify, repo, repo_branch, commit, repo_state, notes, stage_index,
-			cv_file, cv_key, analyzed_at
+			cv_file, cv_key, analyzed_at, owner_id
 		) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
 			$11, $12, $13, $14, $15, $16, $17, $18,
 			$19, $20, $21, $22, $23, $24, $25, $26,
-			$27, $28, $29
+			$27, $28, $29, $30
 		)`,
 		candidate.ID, candidate.Name, candidate.Initials, candidate.Hue,
 		candidate.Role, candidate.Position, candidate.Level, candidate.Status,
@@ -141,7 +148,7 @@ func (s *Store) insertAnalysisCandidate(ctx context.Context, candidate model.Can
 		candidate.Location, candidate.Years, candidate.CreatedAt, candidate.Source,
 		candidate.Reviewer, candidate.Summary, strengths, verify, candidate.Repo,
 		candidate.RepoBranch, candidate.Commit, candidate.RepoState, candidate.Notes,
-		candidate.StageIndex, fileName, cvKey, analyzedAt,
+		candidate.StageIndex, fileName, cvKey, analyzedAt, owner,
 	); err != nil {
 		return fmt.Errorf("store: save candidate: %w", err)
 	}
@@ -178,16 +185,25 @@ func (s *Store) insertAnalysisCandidate(ctx context.Context, candidate model.Can
 }
 
 // AnalysisQueue lists completed CV analyses, newest first, with their criteria count.
-func (s *Store) AnalysisQueue(ctx context.Context, limit int) ([]model.AnalysisQueueItem, error) {
+func (s *Store) AnalysisQueue(ctx context.Context, ownerID string, limit int) ([]model.AnalysisQueueItem, error) {
+	where := `WHERE c.analyzed_at IS NOT NULL`
+	args := []any{}
+	argn := 1
+	if ownerID != "" {
+		where += fmt.Sprintf(` AND c.owner_id = $%d`, argn)
+		args = append(args, ownerID)
+		argn++
+	}
+
 	rows, err := s.pool.Query(ctx, `
 		SELECT c.id, c.cv_file, c.name, c.position, c.level, c.status, c.analyzed_at,
 		       count(cr.id)
 		FROM candidates c
 		LEFT JOIN criteria cr ON cr.candidate_id = c.id
-		WHERE c.analyzed_at IS NOT NULL
+		`+where+`
 		GROUP BY c.id
 		ORDER BY c.analyzed_at DESC
-		LIMIT $1`, limit)
+		LIMIT $`+strconv.Itoa(argn), append(args, limit)...)
 	if err != nil {
 		return nil, fmt.Errorf("store: analysis queue: %w", err)
 	}

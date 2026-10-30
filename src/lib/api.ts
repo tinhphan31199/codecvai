@@ -8,6 +8,7 @@ import {
   saveSession,
   saveSessionUser,
   type AuthUser,
+  type UserRole,
 } from "@/lib/auth";
 import { getLang, translate } from "@/lib/i18n";
 
@@ -97,6 +98,16 @@ export interface Level {
 export interface Team {
   name: string;
   rank: number;
+}
+
+export interface AppUser {
+  id: string;
+  username: string;
+  displayName: string;
+  email: string;
+  role: UserRole;
+  authSource: "google" | "password";
+  createdAt: string;
 }
 
 export interface AnalysisQueueItem {
@@ -368,6 +379,11 @@ export function useLevels(): QueryResult<Level[]> {
 export function useTeams(): QueryResult<Team[]> {
   const result = useQuery<{ teams: Team[] }>("/api/teams");
   return { ...result, data: result.data ? result.data.teams : null };
+}
+
+export function useUsers(): QueryResult<AppUser[]> {
+  const result = useQuery<{ users: AppUser[] }>("/api/users");
+  return { ...result, data: result.data ? result.data.users : null };
 }
 
 export function useAnalysisQueue(limit = 5): QueryResult<AnalysisQueueItem[]> {
@@ -696,6 +712,18 @@ export async function deleteTeam(name: string): Promise<void> {
     method: "DELETE",
   });
   invalidate("/api/teams");
+}
+
+export async function updateUserRole(
+  id: string,
+  role: UserRole,
+): Promise<AppUser> {
+  const updated = await requestJSON<AppUser>(
+    `/api/users/${encodeURIComponent(id)}`,
+    { method: "PATCH", body: JSON.stringify({ role }) },
+  );
+  invalidate("/api/users");
+  return updated;
 }
 
 export async function saveWorkspaceSettings(

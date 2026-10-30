@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
+import Image from "next/image";
 import {
   Check,
   ChevronRight,
@@ -22,30 +23,15 @@ import { useT } from "@/lib/i18n";
 
 export function LogoMark({ size = 26 }: { size?: number }) {
   return (
-    <svg
+    <Image
+      src="/codecvai-app-icon.svg"
       width={size}
       height={size}
-      viewBox="0 0 28 28"
-      fill="none"
+      alt=""
       aria-hidden="true"
       className="logo-mark"
-    >
-      <path
-        d="M8.5 4.5h8.2L21.5 9v14.5h-13V4.5Z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-      <path d="M16.7 4.5V9h4.8" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-      <path
-        d="m11.6 13.4-2 2.6 2 2.6M16.4 13.4l2 2.6-2 2.6"
-        stroke="var(--accent)"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="m14.9 12.6-1.8 7" stroke="var(--accent)" strokeWidth="1.7" strokeLinecap="round" />
-    </svg>
+      unoptimized
+    />
   );
 }
 

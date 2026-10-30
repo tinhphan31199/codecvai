@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   title: "CodeCV AI — Recruitment intelligence",
   description:
     "Đánh giá ứng viên bằng bằng chứng: phân tích CV, repository, sinh câu hỏi phỏng vấn và rubric chấm điểm.",
+  icons: {
+    icon: { url: "/codecvai-app-icon.svg", type: "image/svg+xml" },
+  },
 };
 
 export const viewport: Viewport = {

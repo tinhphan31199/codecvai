@@ -2,11 +2,14 @@
 
 import { useSyncExternalStore } from "react";
 
+export type UserRole = "admin" | "member";
+
 export interface AuthUser {
   id: string;
   username: string;
   displayName: string;
   email?: string;
+  role?: UserRole;
 }
 
 export interface AuthSession {

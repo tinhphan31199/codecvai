@@ -1,0 +1,78 @@
+<svg id="codecvaiLogo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-full h-full max-w-[420px] max-h-[420px] glow-effect drop-shadow-2xl">
+                <defs>
+                    <!-- Background Squircle Gradient -->
+                    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ffffff"/>
+                        <stop offset="100%" stop-color="#f0f7ff"/>
+                    </linearGradient>
+
+                    <!-- Icon Main Gradient (C & Elements) -->
+                    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#0284c7"/>
+                        <stop offset="50%" stop-color="#0369a1"/>
+                        <stop offset="100%" stop-color="#0f172a"/>
+                    </linearGradient>
+
+                    <!-- Bracket Left Gradient -->
+                    <linearGradient id="bracketLeftGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#0ea5e9"/>
+                        <stop offset="100%" stop-color="#0284c7"/>
+                    </linearGradient>
+
+                    <!-- Bracket Right Gradient -->
+                    <linearGradient id="bracketRightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#06b6d4"/>
+                        <stop offset="100%" stop-color="#0d9488"/>
+                    </linearGradient>
+
+                    <!-- Center Glow / Play Dot -->
+                    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8"/>
+                        <stop offset="100%" stop-color="#0284c7"/>
+                    </linearGradient>
+
+                    <!-- Soft Shadow Filter for Outer Squircle -->
+                    <filter id="appShadow" x="-10%" y="-10%" width="120%" height="120%">
+                        <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#0284c7" flood-opacity="0.15"/>
+                        <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.08"/>
+                    </filter>
+
+                    <!-- Inner Shadow for App Card Surface -->
+                    <filter id="innerGlow" x="-10%" y="-10%" width="120%" height="120%">
+                        <feGaussianBlur stdDeviation="8" result="blur"/>
+                        <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowDiff"/>
+                        <feFlood flood-color="#ffffff" flood-opacity="0.6"/>
+                        <feComposite in2="shadowDiff" operator="in"/>
+                        <feComposite in2="SourceGraphic" operator="over"/>
+                    </filter>
+                </defs>
+
+                <!-- App Icon Squircle Container -->
+                <rect x="32" y="32" width="448" height="448" rx="108" fill="url(#bgGradient)" filter="url(#appShadow)" stroke="#ffffff" stroke-width="4"/>
+
+                <!-- Subtle Inner Rim Border -->
+                <rect x="32" y="32" width="448" height="448" rx="108" fill="none" stroke="url(#bracketLeftGrad)" stroke-width="1.5" stroke-opacity="0.3"/>
+
+                <!-- LOGO ICON GROUP (Centered Perfectly) -->
+                <g transform="translate(0, 0)">
+                    
+                    <!-- Left Code Bracket < -->
+                    <path d="M 124 212 L 80 256 L 124 300" fill="none" stroke="url(#bracketLeftGrad)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+
+                    <!-- Right Code Bracket > -->
+                    <path d="M 388 212 L 432 256 L 388 300" fill="none" stroke="url(#bracketRightGrad)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+
+                    <!-- Main Codec 'C' Loop Shape -->
+                    <!-- Outer C Path -->
+                    <path d="M 315 170 &#10;                             C 285 136, 220 132, 180 172 &#10;                             C 135 217, 135 295, 180 340 &#10;                             C 225 385, 290 380, 325 342 &#10;                             C 334 332, 324 318, 312 326 &#10;                             C 282 356, 232 356, 202 324 &#10;                             C 168 288, 168 224, 202 188 &#10;                             C 234 154, 282 156, 308 184 &#10;                             C 316 192, 325 180, 315 170 Z" fill="url(#iconGradient)"/>
+
+                    <!-- Inner Codec Play/Node Element -->
+                    <!-- Center Glowing Dot -->
+                    <circle cx="256" cy="236" r="18" fill="url(#glowGrad)"/>
+                    <circle cx="256" cy="236" r="28" fill="#38bdf8" opacity="0.25"/>
+
+                    <!-- Play Lever / Code Curve Arc Inside C -->
+                    <path d="M 226 288 C 240 306, 272 306, 290 274 L 306 242" fill="none" stroke="url(#bracketLeftGrad)" stroke-width="18" stroke-linecap="round"/>
+
+                </g>
+            </svg>

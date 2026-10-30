@@ -18,6 +18,7 @@ type CandidateFilter struct {
 	Status   string
 	Position string
 	Sort     string
+	OwnerID  string // empty lists every profile (admin); otherwise only rows owned by this account
 	Limit    int
 	Offset   int
 }
@@ -55,8 +56,17 @@ func (s *Store) Workspace(ctx context.Context) (model.Workspace, error) {
 	}, nil
 }
 
-func (s *Store) Stats(ctx context.Context) (model.Stats, error) {
+func (s *Store) Stats(ctx context.Context, ownerID string) (model.Stats, error) {
 	var stats model.Stats
+	where := ""
+	andOwner := ""
+	args := []any{}
+	if ownerID != "" {
+		where = ` WHERE owner_id = $1`
+		andOwner = ` AND owner_id = $1`
+		args = append(args, ownerID)
+	}
+
 	if err := s.pool.QueryRow(ctx, `
 		SELECT
 			COUNT(*),
@@ -66,7 +76,7 @@ func (s *Store) Stats(ctx context.Context) (model.Stats, error) {
 			COUNT(*) FILTER (WHERE status = 'failed'),
 			COUNT(*) FILTER (WHERE status = 'archived'),
 			(SELECT COUNT(*) FROM positions)
-		FROM candidates`).Scan(
+		FROM candidates`+where, args...).Scan(
 		&stats.Total, &stats.Completed, &stats.Review, &stats.Processing,
 		&stats.Failed, &stats.Archived, &stats.Positions,
 	); err != nil {
@@ -79,8 +89,8 @@ func (s *Store) Stats(ctx context.Context) (model.Stats, error) {
 		FROM (
 			SELECT to_timestamp(updated_at, 'DD/MM/YYYY · HH24:MI') AS ts
 			FROM candidates
-			WHERE updated_at ~ '^\d{2}/\d{2}/\d{4} · \d{2}:\d{2}$'
-		) t`).Scan(&stats.Updated, &stats.UpdatedAt); err != nil {
+			WHERE updated_at ~ '^\d{2}/\d{2}/\d{4} · \d{2}:\d{2}$'`+andOwner+`
+		) t`, args...).Scan(&stats.Updated, &stats.UpdatedAt); err != nil {
 		return model.Stats{}, fmt.Errorf("store: stats updated: %w", err)
 	}
 
@@ -265,6 +275,11 @@ func (s *Store) ListCandidates(ctx context.Context, filter CandidateFilter) ([]m
 		args = append(args, filter.Position)
 		argn++
 	}
+	if filter.OwnerID != "" {
+		where = append(where, fmt.Sprintf(`owner_id = $%d`, argn))
+		args = append(args, filter.OwnerID)
+		argn++
+	}
 
 	orderBy := "updated_at DESC"
 	switch filter.Sort {
@@ -316,13 +331,24 @@ func (s *Store) ListCandidates(ctx context.Context, filter CandidateFilter) ([]m
 	return candidates, nil
 }
 
-func (s *Store) RecentCandidates(ctx context.Context, limit int) ([]model.CandidateRecord, error) {
+func (s *Store) RecentCandidates(ctx context.Context, ownerID string, limit int) ([]model.CandidateRecord, error) {
 	if limit <= 0 {
 		limit = 5
 	}
-	rows, err := s.pool.Query(ctx, `
-		SELECT `+candidateCols+` FROM candidates
-		WHERE status IN ('completed', 'review') ORDER BY updated_at DESC LIMIT $1`, limit)
+	query := `
+		SELECT ` + candidateCols + ` FROM candidates
+		WHERE status IN ('completed', 'review')`
+	args := []any{}
+	argn := 1
+	if ownerID != "" {
+		query += fmt.Sprintf(` AND owner_id = $%d`, argn)
+		args = append(args, ownerID)
+		argn++
+	}
+	query += fmt.Sprintf(` ORDER BY updated_at DESC LIMIT $%d`, argn)
+	args = append(args, limit)
+
+	rows, err := s.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("store: recent candidates: %w", err)
 	}
@@ -345,6 +371,20 @@ func (s *Store) RecentCandidates(ctx context.Context, limit int) ([]model.Candid
 		}
 	}
 	return candidates, nil
+}
+
+// CandidateOwner returns the account that owns a profile; "" for rows created
+// before ownership existed (admin-only).
+func (s *Store) CandidateOwner(ctx context.Context, id string) (string, error) {
+	var owner string
+	err := s.pool.QueryRow(ctx, `SELECT COALESCE(owner_id, '') FROM candidates WHERE id = $1`, id).Scan(&owner)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	if err != nil {
+		return "", fmt.Errorf("store: candidate owner %s: %w", id, err)
+	}
+	return owner, nil
 }
 
 func (s *Store) Candidate(ctx context.Context, id string) (model.CandidateRecord, error) {
@@ -460,10 +500,18 @@ func (s *Store) Questions(ctx context.Context, id string) ([]model.Question, err
 	return questions, rows.Err()
 }
 
-func (s *Store) Reports(ctx context.Context) ([]model.Report, error) {
-	rows, err := s.pool.Query(ctx, `
-		SELECT id, candidate_id, candidate, position, version, status, reviewer, created
-		FROM reports ORDER BY created DESC`)
+func (s *Store) Reports(ctx context.Context, ownerID string) ([]model.Report, error) {
+	query := `
+		SELECT r.id, r.candidate_id, r.candidate, r.position, r.version, r.status, r.reviewer, r.created
+		FROM reports r`
+	args := []any{}
+	if ownerID != "" {
+		query += ` JOIN candidates c ON c.id = r.candidate_id WHERE c.owner_id = $1`
+		args = append(args, ownerID)
+	}
+	query += ` ORDER BY r.created DESC`
+
+	rows, err := s.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("store: reports: %w", err)
 	}
@@ -482,11 +530,19 @@ func (s *Store) Reports(ctx context.Context) ([]model.Report, error) {
 	return reports, rows.Err()
 }
 
-func (s *Store) Report(ctx context.Context, id string) (model.Report, error) {
+func (s *Store) Report(ctx context.Context, id, ownerID string) (model.Report, error) {
 	var report model.Report
-	err := s.pool.QueryRow(ctx, `
-		SELECT id, candidate_id, candidate, position, version, status, reviewer, created
-		FROM reports WHERE id = $1`, id).
+	query := `
+		SELECT r.id, r.candidate_id, r.candidate, r.position, r.version, r.status, r.reviewer, r.created
+		FROM reports r`
+	args := []any{id}
+	if ownerID != "" {
+		query += ` JOIN candidates c ON c.id = r.candidate_id WHERE r.id = $1 AND c.owner_id = $2`
+		args = append(args, ownerID)
+	} else {
+		query += ` WHERE r.id = $1`
+	}
+	err := s.pool.QueryRow(ctx, query, args...).
 		Scan(&report.ID, &report.CandidateID, &report.Candidate, &report.Position,
 			&report.Version, &report.Status, &report.Reviewer, &report.Created)
 	if err != nil {
@@ -904,16 +960,16 @@ func wrapConfigError(op string, err error) error {
 	return fmt.Errorf("%s: %w", op, err)
 }
 
-func (s *Store) Dashboard(ctx context.Context) (model.Dashboard, error) {
-	review, err := s.ListCandidates(ctx, CandidateFilter{Status: "review", Sort: "updated", Limit: 50})
+func (s *Store) Dashboard(ctx context.Context, ownerID string) (model.Dashboard, error) {
+	review, err := s.ListCandidates(ctx, CandidateFilter{Status: "review", Sort: "updated", OwnerID: ownerID, Limit: 50})
 	if err != nil {
 		return model.Dashboard{}, err
 	}
-	processing, err := s.ListCandidates(ctx, CandidateFilter{Status: "processing", Sort: "updated", Limit: 50})
+	processing, err := s.ListCandidates(ctx, CandidateFilter{Status: "processing", Sort: "updated", OwnerID: ownerID, Limit: 50})
 	if err != nil {
 		return model.Dashboard{}, err
 	}
-	recent, err := s.RecentCandidates(ctx, 5)
+	recent, err := s.RecentCandidates(ctx, ownerID, 5)
 	if err != nil {
 		return model.Dashboard{}, err
 	}

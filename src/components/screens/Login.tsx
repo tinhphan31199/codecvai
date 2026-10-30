@@ -90,7 +90,11 @@ export default function Login() {
 
   return (
     <div className="auth-page">
-      <div className="auth-lang lang-switch" role="group" aria-label={t("shell.language")}>
+      <div
+        className="auth-lang lang-switch"
+        role="group"
+        aria-label={t("shell.language")}
+      >
         <button
           type="button"
           className={`lang-option${lang === "vi" ? " is-on" : ""}`}
@@ -111,9 +115,7 @@ export default function Login() {
 
       <section className="auth-card" aria-labelledby="auth-title">
         <header className="auth-head">
-          <span className="auth-mark">
-            <LogoMark size={26} />
-          </span>
+          <LogoMark size={56} />
           <div className="auth-head-text">
             <span className="brand-name">CodeCV AI</span>
             <p className="auth-sub">{t("auth.subtitle")}</p>
@@ -198,7 +200,9 @@ export default function Login() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                autoComplete={
+                  mode === "login" ? "current-password" : "new-password"
+                }
                 required
                 minLength={mode === "register" ? 8 : undefined}
                 maxLength={72}
@@ -231,7 +235,11 @@ export default function Login() {
             </p>
           ) : null}
 
-          <button type="submit" className="btn btn-primary auth-submit" disabled={busy}>
+          <button
+            type="submit"
+            className="btn btn-primary auth-submit"
+            disabled={busy}
+          >
             {busy ? (
               <Loader2 className="spin" size={15} aria-hidden="true" />
             ) : (
@@ -246,14 +254,6 @@ export default function Login() {
                 : t("auth.submitRegister")}
           </button>
         </form>
-
-        <p className="auth-note">
-          {mode === "register"
-            ? t("auth.registerNote")
-            : googleClientId
-              ? t("auth.googleCreateNote")
-              : t("auth.sessionNote")}
-        </p>
       </section>
     </div>
   );

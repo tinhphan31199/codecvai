@@ -8,9 +8,11 @@ import {
   ListOrdered,
   PlugZap,
   ShieldCheck,
+  UserRound,
   Users,
 } from "lucide-react";
 import type { Screen } from "@/data/codecv";
+import { useAuthSession } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { PageHead } from "../ui";
 import SecurityTab from "./settings/SecurityTab";
@@ -21,6 +23,7 @@ import PositionsTab from "./settings/PositionsTab";
 import ModelsTab from "./settings/ModelsTab";
 import ProvidersTab from "./settings/ProvidersTab";
 import StagesTab from "./settings/StagesTab";
+import UsersTab from "./settings/UsersTab";
 
 const TABS = [
   {
@@ -28,6 +31,12 @@ const TABS = [
     labelKey: "settings.tab.security",
     icon: ShieldCheck,
     subKey: "settings.tab.securitySub",
+  },
+  {
+    key: "users",
+    labelKey: "settings.tab.users",
+    icon: UserRound,
+    subKey: "settings.tab.usersSub",
   },
   {
     key: "team",
@@ -83,17 +92,20 @@ export default function SettingsScreen({
   go: (screen: Screen, id?: string) => void;
 }) {
   const t = useT();
-  const active: SettingsTabKey = TABS.some((item) => item.key === tab)
+  const session = useAuthSession();
+  const isAdmin = session?.user.role === "admin";
+  const tabs = isAdmin ? TABS : TABS.filter((item) => item.key === "security");
+  const active: SettingsTabKey = tabs.some((item) => item.key === tab)
     ? (tab as SettingsTabKey)
-    : TABS[0].key;
-  const meta = TABS.find((item) => item.key === active) ?? TABS[0];
+    : tabs[0].key;
+  const meta = tabs.find((item) => item.key === active) ?? tabs[0];
 
   return (
     <div className="screen">
       <PageHead title={t("screen.settings")} sub={t(meta.subKey)} />
 
       <nav className="settings-tabs" aria-label={t("settings.tabsAria")}>
-        {TABS.map((item) => {
+        {tabs.map((item) => {
           const Icon = item.icon;
           const on = item.key === active;
           return (
@@ -115,6 +127,7 @@ export default function SettingsScreen({
       </nav>
 
       {active === "security" ? <SecurityTab /> : null}
+      {active === "users" ? <UsersTab /> : null}
       {active === "team" ? <TeamTab /> : null}
       {active === "levels" ? <LevelsTab /> : null}
       {active === "teams" ? <TeamsTab /> : null}
