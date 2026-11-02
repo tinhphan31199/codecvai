@@ -15,6 +15,7 @@ import { jobsMessages } from "./messages/jobs";
 import { reportsMessages } from "./messages/reports";
 import { settingsMessages } from "./messages/settings";
 import { settingsCrudMessages } from "./messages/settingsCrud";
+import { helpMessages } from "./messages/help";
 
 export type Lang = "vi" | "en";
 
@@ -34,6 +35,7 @@ const vi = {
   ...reportsMessages.vi,
   ...settingsMessages.vi,
   ...settingsCrudMessages.vi,
+  ...helpMessages.vi,
 };
 
 const en: Record<keyof typeof vi, Message> = {
@@ -50,6 +52,7 @@ const en: Record<keyof typeof vi, Message> = {
   ...reportsMessages.en,
   ...settingsMessages.en,
   ...settingsCrudMessages.en,
+  ...helpMessages.en,
 };
 
 export type MessageKey = keyof typeof vi;

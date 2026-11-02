@@ -57,6 +57,16 @@ const vi = {
   "candidate.connectRepo": "Kết nối repository",
   "candidate.moreFindings":
     "Còn {count} phát hiện khác trong phân tích đầy đủ.",
+  "candidate.repoScannedMeta": "Đã quét {analyzed}/{total} nguồn GitHub",
+  "candidate.repoScanPending":
+    "Đang quét {count} nguồn ở luồng nền…",
+  "candidate.repoScanMore":
+    "Còn {count} nguồn đã quét trong phân tích đầy đủ.",
+  "candidate.repoScanFoot":
+    "Dữ liệu đọc trực tiếp từ GitHub · chưa có phát hiện mã nguồn.",
+  "candidate.repoEmptyConnectedDetail":
+    "Repository đã được đọc nhưng chưa có phát hiện mã nguồn. Mở phân tích để xem dữ liệu GitHub đã đọc.",
+  "candidate.openRepoScanAria": "Mở dữ liệu quét của {label}",
 
   "candidate.questionsTitle": "Câu hỏi phỏng vấn",
   "candidate.questionsMeta": "{count} câu · bám theo bằng chứng",
@@ -166,6 +176,20 @@ const en: Record<keyof typeof vi, Message> = {
     one: "{count} more finding in the full analysis.",
     other: "{count} more findings in the full analysis.",
   },
+  "candidate.repoScannedMeta": "Scanned {analyzed}/{total} GitHub sources",
+  "candidate.repoScanPending": {
+    one: "{count} source is being scanned in the background…",
+    other: "{count} sources are being scanned in the background…",
+  },
+  "candidate.repoScanMore": {
+    one: "{count} more scanned source in the full analysis.",
+    other: "{count} more scanned sources in the full analysis.",
+  },
+  "candidate.repoScanFoot":
+    "Read directly from GitHub · no source-code findings yet.",
+  "candidate.repoEmptyConnectedDetail":
+    "The repository has been read but there are no source-code findings yet. Open the analysis to see the scanned GitHub data.",
+  "candidate.openRepoScanAria": "Open scan data for {label}",
 
   "candidate.questionsTitle": "Interview questions",
   "candidate.questionsMeta": {

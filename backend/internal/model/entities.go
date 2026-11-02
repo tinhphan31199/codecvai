@@ -208,6 +208,14 @@ type UserAccount struct {
 	CreatedAt   string `json:"createdAt"`
 }
 
+// RepositoryChatMessage is one stored turn of the repository Q&A panel.
+type RepositoryChatMessage struct {
+	ID        string `json:"id"`
+	Role      string `json:"role"`
+	Content   string `json:"content"`
+	CreatedAt string `json:"createdAt"`
+}
+
 // RepoAnalysis bundles everything the Repository Analysis screen renders.
 type RepoAnalysis struct {
 	CandidateID  string             `json:"candidateId"`
@@ -217,6 +225,8 @@ type RepoAnalysis struct {
 	RepoState    string             `json:"repoState"`
 	Tree         json.RawMessage    `json:"tree"`
 	Layers       json.RawMessage    `json:"layers"`
+	Details      *RepoDetails       `json:"details"`
+	Summary      *RepoSummary       `json:"summary"`
 	Findings     []Finding          `json:"findings"`
 	Repositories []RepositoryRecord `json:"repositories"`
 }

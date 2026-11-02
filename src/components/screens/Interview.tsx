@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import {
   Check,
   ChevronLeft,
@@ -8,12 +8,13 @@ import {
   Clock,
   Download,
   MessageSquare,
+  Pencil,
   Search,
   X,
 } from "lucide-react";
 import type { CandidateStatus, Question, Screen } from "@/data/codecv";
 import { generateQuestions, statusMeta } from "@/data/codecv";
-import { useCandidate, useCandidates } from "@/lib/api";
+import { patchCandidate, useCandidate, useCandidates } from "@/lib/api";
 import { useT, type MessageKey } from "@/lib/i18n";
 import {
   Avatar,
@@ -24,6 +25,7 @@ import {
   ScreenLoader,
   StatusPill,
 } from "../ui";
+import { InterviewSheetPreview } from "./InterviewSheet";
 
 const categoryKeys: Partial<Record<string, MessageKey>> = {
   Architecture: "interview.category.architecture",
@@ -75,6 +77,12 @@ export default function InterviewStudio({
   const [asked, setAsked] = useState<Record<string, boolean>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [savedNotes, setSavedNotes] = useState<Record<string, boolean>>({});
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingReviewer, setEditingReviewer] = useState(false);
+  const [reviewerDraft, setReviewerDraft] = useState("");
+  const [savingReviewer, setSavingReviewer] = useState(false);
+  const [reviewerError, setReviewerError] = useState<string | null>(null);
+  const [savedReviewer, setSavedReviewer] = useState<string | null>(null);
 
   if (loading) {
     return <ScreenLoader title={t("screen.interview")} />;
@@ -135,6 +143,7 @@ export default function InterviewStudio({
 
   const ratedCount = Object.keys(ratings).length;
   const askedCount = Object.keys(asked).filter((key) => asked[key]).length;
+  const reviewer = savedReviewer ?? candidate.reviewer ?? "";
 
   const toggleRating = (criterionId: string, value: number) => {
     setRatings((prev) => {
@@ -145,54 +154,37 @@ export default function InterviewStudio({
     });
   };
 
-  const exportSheet = () => {
-    const lines = [
-      t("interview.export.docTitle"),
-      "",
-      `**${candidate.name}** · ${candidate.position}`,
-      t("interview.export.interviewer", {
-        reviewer: candidate.reviewer || "—",
-        updated: candidate.updatedAt,
-      }),
-      "",
-      t("interview.export.rubric"),
-      ...candidate.criteria.map(
-        (item) =>
-          t("interview.export.rating", {
-            label: item.label,
-            rating:
-              ratings[item.id] !== undefined
-                ? `${ratings[item.id]}/4`
-                : t("interview.export.unrated"),
-          }),
-      ),
-      "",
-      t("interview.export.asked"),
-      ...orderedQuestions
-        .filter((item) => asked[item.id])
-        .map((item, index) => `${index + 1}. ${item.text}`),
-      "",
-      t("interview.export.notes"),
-      ...(Object.keys(notes).some((key) => notes[key]?.trim())
-        ? orderedQuestions
-            .filter((item) => notes[item.id]?.trim())
-            .map((item) =>
-              t("interview.export.noteLine", {
-                index: orderedQuestions.indexOf(item) + 1,
-                note: notes[item.id] ?? "",
-              }),
-            )
-        : [t("interview.export.noNotes")]),
-    ];
-    const blob = new Blob([lines.join("\n")], {
-      type: "text/markdown;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `CodeCV_interview_${candidate.id}.md`;
-    link.click();
-    URL.revokeObjectURL(url);
+  const startReviewerEdit = () => {
+    setReviewerDraft(reviewer);
+    setReviewerError(null);
+    setEditingReviewer(true);
+  };
+
+  const cancelReviewerEdit = () => {
+    if (savingReviewer) return;
+    setEditingReviewer(false);
+    setReviewerError(null);
+  };
+
+  const saveReviewer = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const next = reviewerDraft.trim();
+    if (!next || next === reviewer) {
+      setEditingReviewer(false);
+      setReviewerError(null);
+      return;
+    }
+    setSavingReviewer(true);
+    setReviewerError(null);
+    try {
+      const updated = await patchCandidate(candidate.id, { reviewer: next });
+      setSavedReviewer(updated.reviewer ?? "");
+      setEditingReviewer(false);
+    } catch (err) {
+      setReviewerError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSavingReviewer(false);
+    }
   };
 
   return (
@@ -213,7 +205,11 @@ export default function InterviewStudio({
             >
               {t("interview.openProfile")}
             </button>
-            <button type="button" className="btn btn-primary" onClick={exportSheet}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setSheetOpen(true)}
+            >
               <Download size={15} aria-hidden="true" />
               {t("interview.export")}
             </button>
@@ -542,9 +538,69 @@ export default function InterviewStudio({
           <section className="card">
             <CardHead title={t("interview.session.title")} />
             <dl className="info-list">
-              <div>
+              <div
+                className={`session-reviewer${
+                  editingReviewer ? " is-editing" : ""
+                }`}
+              >
                 <dt>{t("interview.session.interviewer")}</dt>
-                <dd>{candidate.reviewer || "—"}</dd>
+                <dd>
+                  {editingReviewer ? (
+                    <form className="reviewer-form" onSubmit={saveReviewer}>
+                      <input
+                        className="reviewer-input"
+                        value={reviewerDraft}
+                        onChange={(event) =>
+                          setReviewerDraft(event.target.value)
+                        }
+                        placeholder={t(
+                          "interview.session.reviewerPlaceholder",
+                        )}
+                        aria-label={t("interview.session.interviewer")}
+                        maxLength={120}
+                        autoFocus
+                        disabled={savingReviewer}
+                      />
+                      <div className="reviewer-actions">
+                        <button
+                          type="submit"
+                          className="btn btn-primary btn-sm"
+                          disabled={savingReviewer || !reviewerDraft.trim()}
+                        >
+                          {savingReviewer
+                            ? t("interview.session.reviewerSaving")
+                            : t("interview.session.reviewerSave")}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          onClick={cancelReviewerEdit}
+                          disabled={savingReviewer}
+                        >
+                          {t("interview.session.reviewerCancel")}
+                        </button>
+                      </div>
+                      {reviewerError ? (
+                        <span className="reviewer-error" role="alert">
+                          {reviewerError}
+                        </span>
+                      ) : null}
+                    </form>
+                  ) : (
+                    <span className="reviewer-display">
+                      <span>{reviewer || "—"}</span>
+                      <button
+                        type="button"
+                        className="icon-btn reviewer-edit"
+                        onClick={startReviewerEdit}
+                        aria-label={t("interview.session.reviewerEdit")}
+                        title={t("interview.session.reviewerEdit")}
+                      >
+                        <Pencil size={13} aria-hidden="true" />
+                      </button>
+                    </span>
+                  )}
+                </dd>
               </div>
               <div>
                 <dt>{t("interview.session.updated")}</dt>
@@ -572,6 +628,17 @@ export default function InterviewStudio({
           </section>
         </aside>
       </div>
+
+      {sheetOpen ? (
+        <InterviewSheetPreview
+          candidate={{ ...candidate, reviewer }}
+          questions={orderedQuestions}
+          ratings={ratings}
+          asked={asked}
+          notes={notes}
+          onClose={() => setSheetOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }

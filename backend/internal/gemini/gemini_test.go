@@ -229,6 +229,28 @@ func TestUploadFileMapsHTTPError(t *testing.T) {
 	}
 }
 
+func TestGenerateJSONMarksModelUnavailable(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = io.WriteString(w, `{"error":{"message":"model not found"}}`)
+	}))
+	defer server.Close()
+
+	client := New(server.URL+"/v1beta", "test-key")
+	_, err := client.GenerateJSON(context.Background(), "gemini", "system", "prompt", map[string]any{}, 64)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+
+	var geminiErr *Error
+	if !errors.As(err, &geminiErr) {
+		t.Fatalf("expected *Error, got %T", err)
+	}
+	if geminiErr.Code != "model_unavailable" {
+		t.Fatalf("code = %q, want model_unavailable", geminiErr.Code)
+	}
+}
+
 func TestExtractLinksSendsFileAndParsesLinks(t *testing.T) {
 	var captured map[string]any
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

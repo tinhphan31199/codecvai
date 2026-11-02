@@ -9,7 +9,8 @@ export type Screen =
   | "interview"
   | "jobs"
   | "reports"
-  | "settings";
+  | "settings"
+  | "help";
 
 export type CandidateStatus =
   | "completed"

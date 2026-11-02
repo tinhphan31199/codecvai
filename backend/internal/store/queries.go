@@ -410,7 +410,9 @@ func (s *Store) Candidate(ctx context.Context, id string) (model.CandidateRecord
 	return candidate, nil
 }
 
-func (s *Store) Repository(ctx context.Context, id string) (model.RepoAnalysis, error) {
+// Repository returns the analysis payload for one repository of the candidate.
+// An empty repository reference resolves to the candidate's primary repository.
+func (s *Store) Repository(ctx context.Context, id, repoRef string) (model.RepoAnalysis, error) {
 	var repo model.RepoAnalysis
 	var treeText, layersText string
 	err := s.pool.QueryRow(ctx, `
@@ -425,25 +427,72 @@ func (s *Store) Repository(ctx context.Context, id string) (model.RepoAnalysis, 
 		}
 		return model.RepoAnalysis{}, fmt.Errorf("store: repository: %w", err)
 	}
+	repo.Tree = json.RawMessage("[]")
 	if treeText != "" {
 		repo.Tree = json.RawMessage(treeText)
-	} else {
-		repo.Tree = json.RawMessage("[]")
 	}
 	if layersText != "" {
 		repo.Layers = json.RawMessage(layersText)
 	} else {
 		repo.Layers = json.RawMessage("[]")
 	}
-	repo.Findings, err = s.findings(ctx, id)
-	if err != nil {
-		return model.RepoAnalysis{}, err
-	}
+	repo.Findings = make([]model.Finding, 0)
 	repo.Repositories, err = s.CandidateRepositories(ctx, id)
 	if err != nil {
 		return model.RepoAnalysis{}, err
 	}
+
+	// Cây thư mục và thông tin chi tiết thuộc repo đã chọn, không phải cột cũ
+	// trên candidates; dòng cũ chưa có cây sẽ được đọc lại từ GitHub.
+	if selected := PickRepository(repo.Repositories, repo.Repo, repoRef); selected != nil {
+		repo.Repo = selected.URL
+		if repoRef != "" {
+			// Cây, nhánh và commit của lần chọn tường minh không lấy từ repo khác.
+			repo.Tree = json.RawMessage("[]")
+			repo.RepoBranch = ""
+			repo.Commit = ""
+		}
+		if len(selected.Tree) > 0 {
+			if encoded, err := json.Marshal(selected.Tree); err == nil {
+				repo.Tree = json.RawMessage(encoded)
+			}
+		}
+		repo.Details = selected.Details
+		repo.Summary = selected.Summary
+		if repo.RepoBranch == "" && selected.Details != nil {
+			repo.RepoBranch = selected.Details.DefaultBranch
+		}
+		if repo.Commit == "" && selected.Details != nil && len(selected.Details.Commits) > 0 {
+			repo.Commit = selected.Details.Commits[0].SHA
+		}
+		repo.Findings, err = s.findingsForRepo(ctx, id, selected.URL)
+		if err != nil {
+			return model.RepoAnalysis{}, err
+		}
+	}
 	return repo, nil
+}
+
+func (s *Store) findingsForRepo(ctx context.Context, id, repoURL string) ([]model.Finding, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT id, severity, title, module, file, line, state, rationale, verification, code, hit_line
+		FROM findings WHERE candidate_id = $1 AND repo_url = $2 ORDER BY id`, id, repoURL)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	findings := make([]model.Finding, 0)
+	for rows.Next() {
+		var finding model.Finding
+		if err := rows.Scan(&finding.ID, &finding.Severity, &finding.Title, &finding.Module,
+			&finding.File, &finding.Line, &finding.State, &finding.Rationale,
+			&finding.Verification, &finding.Code, &finding.HitLine); err != nil {
+			return nil, err
+		}
+		findings = append(findings, finding)
+	}
+	return findings, rows.Err()
 }
 
 func (s *Store) findings(ctx context.Context, id string) ([]model.Finding, error) {
@@ -568,10 +617,18 @@ func (s *Store) UpdateCandidateStatus(ctx context.Context, id, status string) er
 	return err
 }
 
-func (s *Store) UpdateCandidateFields(ctx context.Context, id, notes, reviewer, repo string) error {
-	_, err := s.pool.Exec(ctx, `
-		UPDATE candidates SET notes = $1, reviewer = $2, repo = $3 WHERE id = $4`,
-		notes, reviewer, repo, id)
+func (s *Store) UpdateCandidateNotes(ctx context.Context, id, notes string) error {
+	_, err := s.pool.Exec(ctx, `UPDATE candidates SET notes = $1 WHERE id = $2`, notes, id)
+	return err
+}
+
+func (s *Store) UpdateCandidateReviewer(ctx context.Context, id, reviewer string) error {
+	_, err := s.pool.Exec(ctx, `UPDATE candidates SET reviewer = $1 WHERE id = $2`, reviewer, id)
+	return err
+}
+
+func (s *Store) UpdateCandidateRepo(ctx context.Context, id, repo string) error {
+	_, err := s.pool.Exec(ctx, `UPDATE candidates SET repo = $1 WHERE id = $2`, repo, id)
 	return err
 }
 
@@ -641,6 +698,30 @@ func (s *Store) Models(ctx context.Context) ([]model.AIModel, error) {
 			return nil, err
 		}
 		HideModelKey(&m)
+		models = append(models, m)
+	}
+	return models, rows.Err()
+}
+
+// ActiveModels lists every enabled model in display order, raw API keys
+// included so the gateway can call the provider directly. Background work
+// starts with the first row and may move on to the next one of the same
+// provider when a provider no longer serves the first model code.
+func (s *Store) ActiveModels(ctx context.Context) ([]model.AIModel, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT id, name, provider, note, active, api_key
+		FROM ai_models WHERE active ORDER BY id`)
+	if err != nil {
+		return nil, fmt.Errorf("store: active models: %w", err)
+	}
+	defer rows.Close()
+
+	models := make([]model.AIModel, 0)
+	for rows.Next() {
+		var m model.AIModel
+		if err := rows.Scan(&m.ID, &m.Name, &m.Provider, &m.Note, &m.Active, &m.APIKey); err != nil {
+			return nil, fmt.Errorf("store: active models scan: %w", err)
+		}
 		models = append(models, m)
 	}
 	return models, rows.Err()

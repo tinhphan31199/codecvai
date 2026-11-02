@@ -1,27 +1,45 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import {
   Check,
   ChevronRight,
   Clipboard,
   FileCode2,
   Folder,
+  FolderOpen,
   GitBranch,
+  Info,
   Layers,
+  Loader2,
   MessageSquare,
+  Send,
   ShieldAlert,
 } from "lucide-react";
 import type { Finding, FindingState, Screen } from "@/data/codecv";
 import { findingStateMeta, severityMeta } from "@/data/codecv";
 import {
+  analyzeRepositoryFindings,
   patchFinding,
+  retryRepositories,
+  sendRepositoryChatMessage,
   useCandidate,
   useCandidates,
   useRepository,
+  useRepositoryChat,
+  useRepositoryFile,
   type RepoRecord,
+  type RepositoryChatMessage,
+  type TreeNode,
 } from "@/lib/api";
-import { useNumberFormat, useT } from "@/lib/i18n";
+import { useNumberFormat, useT, type MessageKey } from "@/lib/i18n";
 import {
   Avatar,
   CardHead,
@@ -32,35 +50,50 @@ import {
   ScreenLoader,
 } from "../ui";
 
-type TreeNodeData = {
-  name: string;
-  type: "folder" | "file";
-  active?: boolean;
-  children?: TreeNodeData[];
-};
-
 function TreeNode({
   node,
   path,
   depth,
   selected,
+  openFolders,
+  toggles,
+  onToggle,
   onSelect,
 }: {
-  node: TreeNodeData;
+  node: TreeNode;
   path: string;
   depth: number;
   selected: string;
+  openFolders: Set<string>;
+  toggles: Record<string, boolean>;
+  onToggle: (path: string, open: boolean) => void;
   onSelect: (path: string) => void;
 }) {
   const full = path ? `${path}/${node.name}` : node.name;
   if (node.type === "folder") {
+    const open = toggles[full] ?? (depth === 0 || openFolders.has(full));
     return (
       <li>
-        <div className="tree-folder" style={{ paddingLeft: depth * 12 + 4 }}>
-          <Folder size={13} aria-hidden="true" />
+        <button
+          type="button"
+          className={`tree-folder${open ? " is-open" : ""}`}
+          style={{ paddingLeft: depth * 12 + 4 }}
+          aria-expanded={open}
+          onClick={() => onToggle(full, open)}
+        >
+          <ChevronRight
+            className="tree-caret"
+            size={12}
+            aria-hidden="true"
+          />
+          {open ? (
+            <FolderOpen size={13} aria-hidden="true" />
+          ) : (
+            <Folder size={13} aria-hidden="true" />
+          )}
           <span>{node.name}</span>
-        </div>
-        {node.children ? (
+        </button>
+        {open && node.children ? (
           <ul>
             {node.children.map((child) => (
               <TreeNode
@@ -69,6 +102,9 @@ function TreeNode({
                 path={full}
                 depth={depth + 1}
                 selected={selected}
+                openFolders={openFolders}
+                toggles={toggles}
+                onToggle={onToggle}
                 onSelect={onSelect}
               />
             ))}
@@ -87,6 +123,7 @@ function TreeNode({
         aria-current={active ? "true" : undefined}
         onClick={() => onSelect(full)}
       >
+        <span className="tree-caret-space" aria-hidden="true" />
         <FileCode2 size={13} aria-hidden="true" />
         <span>{node.name}</span>
       </button>
@@ -94,7 +131,18 @@ function TreeNode({
   );
 }
 
-function firstFilePath(nodes: TreeNodeData[], prefix = ""): string {
+function ancestorFolders(file: string): Set<string> {
+  const parts = file.split("/");
+  const folders = new Set<string>();
+  let path = "";
+  for (let index = 0; index < parts.length - 1; index += 1) {
+    path = path ? `${path}/${parts[index]}` : parts[index];
+    folders.add(path);
+  }
+  return folders;
+}
+
+function firstFilePath(nodes: TreeNode[], prefix = ""): string {
   for (const node of nodes) {
     const full = prefix ? `${prefix}/${node.name}` : node.name;
     if (node.type === "file") return full;
@@ -104,12 +152,57 @@ function firstFilePath(nodes: TreeNodeData[], prefix = ""): string {
   return "";
 }
 
-function countFiles(nodes: TreeNodeData[]): number {
+function countFiles(nodes: TreeNode[]): number {
   return nodes.reduce(
     (sum, node) =>
       sum + (node.type === "file" ? 1 : countFiles(node.children ?? [])),
     0,
   );
+}
+
+const summaryFlagKeys: Record<string, MessageKey> = {
+  manifest: "repository.flagManifest",
+  tests: "repository.flagTests",
+  docker: "repository.flagDocker",
+  ci: "repository.flagCi",
+  docs: "repository.flagDocs",
+  license: "repository.flagLicense",
+  migrations: "repository.flagMigrations",
+  env: "repository.flagEnv",
+};
+
+const keyFileKindKeys: Record<string, MessageKey> = {
+  manifest: "repository.keyKindManifest",
+  container: "repository.keyKindContainer",
+  ci: "repository.keyKindCi",
+  docs: "repository.keyKindDocs",
+  license: "repository.keyKindLicense",
+  config: "repository.keyKindConfig",
+  entry: "repository.keyKindEntry",
+};
+
+function moduleWidth(files: number, max: number): number {
+  return Math.max(4, Math.round((files / Math.max(1, max)) * 100));
+}
+
+const TREE_MIN_WIDTH = 160;
+const TREE_MAX_WIDTH = 420;
+const TREE_DEFAULT_WIDTH = 188;
+const TREE_RAIL_WIDTH = 320;
+const TREE_MIN_VIEWER = 260;
+const TREE_GAP = 16;
+let treeWidthMemory = TREE_DEFAULT_WIDTH;
+
+function clampTreeWidth(width: number, layoutWidth: number): number {
+  const maxByViewer =
+    layoutWidth > 0
+      ? layoutWidth - TREE_RAIL_WIDTH - TREE_GAP * 2 - TREE_MIN_VIEWER
+      : TREE_MAX_WIDTH;
+  const max = Math.max(
+    TREE_MIN_WIDTH,
+    Math.min(TREE_MAX_WIDTH, maxByViewer),
+  );
+  return Math.min(Math.max(Math.round(width), TREE_MIN_WIDTH), max);
 }
 
 export default function RepositoryScreen({
@@ -123,6 +216,253 @@ export default function RepositoryScreen({
     return <RepositoryPicker go={go} />;
   }
   return <RepositoryAnalysis id={id} go={go} />;
+}
+
+const CHAT_QUESTION_LIMIT = 2000;
+
+function chatTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)} ${pad(
+    date.getHours(),
+  )}:${pad(date.getMinutes())}`;
+}
+
+function RepositoryChat({
+  candidateId,
+  repo,
+  ready,
+}: {
+  candidateId: string;
+  repo: string;
+  ready: boolean;
+}) {
+  const t = useT();
+  const history = useRepositoryChat(candidateId, repo || undefined);
+  const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
+  const [pendingQuestion, setPendingQuestion] = useState("");
+  const [added, setAdded] = useState<RepositoryChatMessage[]>([]);
+  const logRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // Lịch sử đã tải và các lượt vừa gửi có thể trùng sau khi tải lại; lọc theo id.
+  const messages: RepositoryChatMessage[] = [];
+  const seen = new Set<string>();
+  for (const message of [...(history.data ?? []), ...added]) {
+    if (seen.has(message.id)) continue;
+    seen.add(message.id);
+    messages.push(message);
+  }
+
+  useEffect(() => {
+    const log = logRef.current;
+    if (log) log.scrollTop = log.scrollHeight;
+  }, [messages.length, sending]);
+
+  const send = async () => {
+    const question = draft.trim();
+    if (!question || !repo || !ready || sending) return;
+    setSending(true);
+    setSendError("");
+    setPendingQuestion(question);
+    setDraft("");
+    try {
+      const saved = await sendRepositoryChatMessage(
+        candidateId,
+        repo || undefined,
+        question,
+      );
+      setAdded((prev) => [...prev, ...saved]);
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : String(err));
+      setDraft(question);
+    } finally {
+      setPendingQuestion("");
+      setSending(false);
+    }
+  };
+
+  const applySuggestion = (text: string) => {
+    setDraft(text);
+    inputRef.current?.focus();
+  };
+
+  const onComposerKeyDown = (
+    event: ReactKeyboardEvent<HTMLTextAreaElement>,
+  ) => {
+    if (event.key !== "Enter" || event.shiftKey) return;
+    if (event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    void send();
+  };
+
+  const showEmpty =
+    !history.loading && !history.error && !messages.length && !sending;
+  const suggestions = [
+    t("repository.chatSuggestion1"),
+    t("repository.chatSuggestion2"),
+    t("repository.chatSuggestion3"),
+  ];
+
+  return (
+    <section className="repo-chat card" aria-label={t("repository.chatAria")}>
+      <CardHead
+        title={t("repository.chatTitle")}
+        meta={t("repository.chatMeta")}
+      />
+      {history.loading && !history.data ? (
+        <div className="chat-state" role="status" aria-live="polite">
+          <Loader2 className="spin" size={18} aria-hidden="true" />
+          <span>{t("repository.chatLoading")}</span>
+        </div>
+      ) : history.error && !messages.length ? (
+        <div className="chat-state">
+          <p>{history.error}</p>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={history.refetch}
+          >
+            {t("repository.chatRetry")}
+          </button>
+        </div>
+      ) : (
+        <div className="chat-log" ref={logRef} role="log" aria-live="polite">
+          {showEmpty ? (
+            <div className="chat-empty">
+              <p className="chat-empty-title">
+                {t("repository.chatEmptyTitle")}
+              </p>
+              <p className="chat-empty-detail">
+                {t("repository.chatEmptyDetail")}
+              </p>
+              {ready ? (
+                <div className="chat-suggestions">
+                  {suggestions.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      className="chat-suggestion"
+                      onClick={() => applySuggestion(suggestion)}
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="chat-notice">
+                  {t("repository.chatNotReady")}
+                </p>
+              )}
+            </div>
+          ) : null}
+          {messages.map((message) => {
+            const mine = message.role === "user";
+            return (
+              <article
+                key={message.id}
+                className={`chat-turn is-${mine ? "user" : "assistant"}`}
+              >
+                <div className="chat-author">
+                  <span>
+                    {mine
+                      ? t("repository.chatYou")
+                      : t("repository.chatAssistant")}
+                  </span>
+                  {message.createdAt ? (
+                    <span className="chat-time num">
+                      {chatTime(message.createdAt)}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="chat-bubble">{message.content}</div>
+              </article>
+            );
+          })}
+          {pendingQuestion ? (
+            <article className="chat-turn is-user">
+              <div className="chat-author">
+                <span>{t("repository.chatYou")}</span>
+              </div>
+              <div className="chat-bubble">{pendingQuestion}</div>
+            </article>
+          ) : null}
+          {sending ? (
+            <article className="chat-turn is-assistant">
+              <div className="chat-author">
+                <span>{t("repository.chatAssistant")}</span>
+                <span>{t("repository.chatThinking")}</span>
+              </div>
+              <div
+                className="chat-bubble"
+                role="status"
+                aria-label={t("repository.chatThinking")}
+              >
+                <span className="chat-typing" aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </span>
+              </div>
+            </article>
+          ) : null}
+        </div>
+      )}
+      {sendError ? (
+        <p className="chat-error" role="alert">
+          {sendError}
+        </p>
+      ) : null}
+      <form
+        className="chat-composer"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void send();
+        }}
+      >
+        <label className="visually-hidden" htmlFor="repository-chat-input">
+          {t("repository.chatPlaceholder")}
+        </label>
+        <textarea
+          id="repository-chat-input"
+          ref={inputRef}
+          className="chat-input"
+          rows={2}
+          maxLength={CHAT_QUESTION_LIMIT}
+          value={draft}
+          disabled={!ready || !repo}
+          placeholder={
+            ready
+              ? t("repository.chatPlaceholder")
+              : t("repository.chatNotReady")
+          }
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={onComposerKeyDown}
+        />
+        <button
+          type="submit"
+          className="btn btn-primary chat-send"
+          disabled={!ready || !repo || sending || !draft.trim()}
+        >
+          {sending ? (
+            <Loader2 className="spin" size={14} aria-hidden="true" />
+          ) : (
+            <Send size={14} aria-hidden="true" />
+          )}
+          {sending
+            ? t("repository.chatSending")
+            : t("repository.chatSend")}
+        </button>
+      </form>
+      <div className="chat-foot">
+        <span className="foot-note">{t("repository.chatHint")}</span>
+        <span className="foot-note">{t("repository.chatFoot")}</span>
+      </div>
+    </section>
+  );
 }
 
 function RepositoryPicker({
@@ -223,49 +563,129 @@ function RepositoryAnalysis({
   id: string;
   go: (screen: Screen, id?: string) => void;
 }) {
-  const { data: candidate, loading, error, refetch } = useCandidate(id);
-  const { data: repo, refresh: refreshRepo } = useRepository(id);
+  const {
+    data: candidate,
+    loading,
+    error,
+    refetch,
+    refresh: refreshCandidate,
+  } = useCandidate(id);
+  const [selectedRepo, setSelectedRepo] = useState("");
+  const { data: repo, refresh: refreshRepo } = useRepository(id, selectedRepo);
   const t = useT();
   const nf = useNumberFormat();
-  const findings = candidate?.findings ?? [];
+  const findings = repo?.findings ?? [];
   const tree = repo?.tree ?? [];
   const layers = repo?.layers ?? [];
+  const details = repo?.details ?? null;
+  const summary = repo?.summary ?? null;
   const repositories = repo?.repositories ?? [];
   const repoItems = repositories.filter((item) => item.kind === "repo");
-  const analyzedRepos = repoItems.filter(
+  const viewableRepos = repoItems.filter(
     (item) => item.status === "analyzed",
-  ).length;
+  );
+  const analyzedRepos = viewableRepos.length;
   const pendingRepos = repoItems.filter(
     (item) => item.status === "pending" || item.status === "analyzing",
   ).length;
+  const findingsRecord =
+    repoItems.find(
+      (item) => item.status === "analyzed" && item.url === repo?.repo,
+    ) ?? null;
+  const findingsState = findingsRecord?.findingsState ?? "";
+  const findingsBusy =
+    findingsState === "pending" || findingsState === "analyzing";
   const firstTreeFile = firstFilePath(tree);
   const fileCount = countFiles(tree);
-  const [selectedId, setSelectedId] = useState(findings[0]?.id ?? "");
-  const [selectedFile, setSelectedFile] = useState(findings[0]?.file ?? "");
+  const fileTotal = details?.fileCount ?? fileCount;
+  const [selectedId, setSelectedId] = useState("");
+  const [selectedFile, setSelectedFile] = useState("");
+  const [folderToggles, setFolderToggles] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [treeWidth, setTreeWidth] = useState(treeWidthMemory);
+  const [resizingTree, setResizingTree] = useState(false);
+  const layoutRef = useRef<HTMLDivElement | null>(null);
+  const treeDrag = useRef<{
+    startX: number;
+    startWidth: number;
+    layoutWidth: number;
+  } | null>(null);
   const [states, setStates] = useState<Record<string, FindingState>>({});
   const [filter, setFilter] = useState<"all" | "needs" | "confirmed">("all");
-  const [view, setView] = useState<"arch" | "code">("arch");
+  const [view, setView] = useState<"overview" | "arch" | "code">("overview");
   const [layerId, setLayerId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [fileCopied, setFileCopied] = useState(false);
+  const [retryingLabel, setRetryingLabel] = useState<string | null>(null);
+  const [retryError, setRetryError] = useState("");
+  const [analyzingFindings, setAnalyzingFindings] = useState(false);
+  const [findingsError, setFindingsError] = useState("");
 
   useEffect(() => {
-    if (findings.length) {
-      setSelectedId(findings[0].id);
-      setSelectedFile(findings[0].file);
-    }
-  }, [findings]);
-
-  useEffect(() => {
-    if (!pendingRepos) return;
-    const timer = window.setInterval(() => refreshRepo(), 5000);
+    if (!pendingRepos && !findingsBusy) return;
+    const timer = window.setInterval(() => {
+      refreshRepo();
+      refreshCandidate();
+    }, 5000);
     return () => window.clearInterval(timer);
-  }, [pendingRepos, refreshRepo]);
+  }, [pendingRepos, findingsBusy, refreshRepo, refreshCandidate]);
+
+  useEffect(
+    () => () => document.body.classList.remove("is-col-resizing"),
+    [],
+  );
+
+  // Cây thư mục có thể rỗng với hồ sơ cũ; thử lại sẽ đưa repo về hàng đợi đọc.
+  const retryRepository = async (label?: string) => {
+    setRetryingLabel(label ?? "");
+    setRetryError("");
+    try {
+      await retryRepositories(id, label);
+      refreshRepo();
+      refreshCandidate();
+    } catch (err) {
+      setRetryError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setRetryingLabel(null);
+    }
+  };
+
+  const analyzeFindings = async () => {
+    setAnalyzingFindings(true);
+    setFindingsError("");
+    try {
+      await analyzeRepositoryFindings(id, selectedRepo || repo?.repo || undefined);
+      refreshRepo();
+    } catch (err) {
+      setFindingsError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setAnalyzingFindings(false);
+    }
+  };
 
   const activeFile = selectedFile || firstTreeFile;
-
+  const openFolders = ancestorFolders(activeFile);
   const stateOf = (finding: Finding) => states[finding.id] ?? finding.state;
-  const selected = findings.find((item) => item.id === selectedId) ?? null;
+  const explicitSelected =
+    findings.find((item) => item.id === selectedId) ?? null;
+  // Hồ sơ cũ chưa có cây thư mục: tab mã nguồn mở phát hiện đầu tiên.
+  const selected =
+    explicitSelected ??
+    (view === "code" && !activeFile ? (findings[0] ?? null) : null);
   const layer = layers.find((item) => item.id === layerId) ?? null;
+  const fileQuery = useRepositoryFile(
+    id,
+    view === "code" && !selected && activeFile ? activeFile : null,
+    selectedRepo,
+  );
+  const fileData =
+    fileQuery.data && fileQuery.data.path === activeFile
+      ? fileQuery.data
+      : null;
+  const fileHits = new Set(
+    findings.filter((item) => item.file === activeFile).map((item) => item.line),
+  );
 
   if (loading) {
     return <ScreenLoader title={t("screen.repository")} />;
@@ -301,6 +721,8 @@ function RepositoryAnalysis({
   }
 
   const primaryRepo =
+    selectedRepo ||
+    repo?.repo ||
     candidate.repo ||
     repoItems.find((item) => item.status === "analyzed")?.url ||
     repoItems[0]?.url ||
@@ -334,9 +756,34 @@ function RepositoryAnalysis({
     ) ??
     repoItems.find((item) => item.status === "analyzed") ??
     null;
-  const branch = repo?.repoBranch || candidate.repoBranch || "";
-  const commit = repo?.commit || candidate.commit || "";
-  const language = (primaryRecord?.context ?? "").split("·")[0].trim();
+  const branch =
+    repo?.repoBranch || (selectedRepo ? "" : candidate.repoBranch) || "";
+  const commit =
+    repo?.commit || (selectedRepo ? "" : candidate.commit) || "";
+  const language =
+    details?.language ||
+    details?.languages[0]?.name ||
+    (primaryRecord?.context ?? "").split("·")[0].trim();
+  const primaryPending =
+    primaryRecord?.status === "pending" || primaryRecord?.status === "analyzing";
+  const primaryNeedsRetry = primaryRecord
+    ? primaryRecord.status === "unavailable" ||
+      primaryRecord.status === "skipped" ||
+      (primaryRecord.status === "analyzed" && !primaryRecord.hasTree)
+    : false;
+  const truncatedFiles = Math.max(0, fileTotal - fileCount);
+  const formatRepoDate = (value: string) => {
+    if (!value) return "—";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    const pad = (part: number) => String(part).padStart(2, "0");
+    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
+  };
+  const formatSize = (kb: number) => {
+    if (!kb) return "—";
+    if (kb >= 1024) return `${nf(Math.round((kb / 1024) * 10) / 10)} MB`;
+    return `${nf(kb)} KB`;
+  };
   const analyzedAt = (() => {
     if (!primaryRecord?.updatedAt) return "";
     const date = new Date(primaryRecord.updatedAt);
@@ -391,9 +838,80 @@ function RepositoryAnalysis({
 
   const selectFile = (path: string) => {
     setSelectedFile(path);
+    setSelectedId("");
     setView("code");
-    const match = findings.find((item) => item.file === path);
-    setSelectedId(match?.id ?? "");
+  };
+
+  // Đổi repo thì bỏ mọi lựa chọn thuộc repo cũ để cây và khung xem tải lại.
+  const switchRepo = (url: string) => {
+    if (!url || url === primaryRepo) return;
+    setSelectedRepo(url);
+    setSelectedFile("");
+    setSelectedId("");
+    setFolderToggles({});
+    setFileCopied(false);
+    setLayerId(null);
+    setFilter("all");
+    setView("overview");
+  };
+
+  const toggleFolder = (path: string, open: boolean) => {
+    setFolderToggles((prev) => ({ ...prev, [path]: !open }));
+  };
+
+  const applyTreeWidth = (width: number, layoutWidth: number) => {
+    const next = clampTreeWidth(width, layoutWidth);
+    treeWidthMemory = next;
+    setTreeWidth(next);
+  };
+
+  const currentLayoutWidth = () =>
+    layoutRef.current?.getBoundingClientRect().width ?? 0;
+
+  const startTreeDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    treeDrag.current = {
+      startX: event.clientX,
+      startWidth: treeWidth,
+      layoutWidth: currentLayoutWidth(),
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setResizingTree(true);
+    document.body.classList.add("is-col-resizing");
+  };
+
+  const moveTreeDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const drag = treeDrag.current;
+    if (!drag) return;
+    applyTreeWidth(
+      drag.startWidth + event.clientX - drag.startX,
+      drag.layoutWidth,
+    );
+  };
+
+  const endTreeDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!treeDrag.current) return;
+    treeDrag.current = null;
+    setResizingTree(false);
+    document.body.classList.remove("is-col-resizing");
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const resizeTreeByKeyboard = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+  ) => {
+    if (event.key === "Home") {
+      event.preventDefault();
+      applyTreeWidth(TREE_DEFAULT_WIDTH, currentLayoutWidth());
+      return;
+    }
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const delta = event.key === "ArrowRight" ? 16 : -16;
+    applyTreeWidth(treeWidth + delta, currentLayoutWidth());
   };
 
   const setFindingState = async (finding: Finding, state: FindingState) => {
@@ -432,9 +950,155 @@ function RepositoryAnalysis({
     }
   };
 
+  const copyFile = async () => {
+    if (!fileData) return;
+    try {
+      await navigator.clipboard.writeText(fileData.content);
+      setFileCopied(true);
+      window.setTimeout(() => setFileCopied(false), 1600);
+    } catch {
+      setFileCopied(false);
+    }
+  };
+
   const startLine = selected
     ? Math.max(1, selected.line - (selected.hitLine - 1))
     : 1;
+
+  const summaryBlock = summary ? (
+    <section
+      className="code-summary"
+      aria-label={t("repository.codeSummaryAria")}
+    >
+      <div className="summary-head">
+        <h3 className="summary-title">{t("repository.codeSummary")}</h3>
+        <span className="summary-meta">
+          {t("repository.codeSummaryMeta", {
+            files: nf(summary.files),
+            folders: nf(summary.folders),
+          })}
+        </span>
+      </div>
+      <div className="summary-stats">
+        <span className="summary-stat">
+          <span className="summary-stat-value num">{nf(summary.files)}</span>
+          <span className="summary-stat-label">
+            {t("repository.summaryFiles")}
+          </span>
+        </span>
+        <span className="summary-stat">
+          <span className="summary-stat-value num">{nf(summary.folders)}</span>
+          <span className="summary-stat-label">
+            {t("repository.summaryFolders")}
+          </span>
+        </span>
+        <span className="summary-stat">
+          <span className="summary-stat-value num">
+            {formatSize(summary.sizeKb)}
+          </span>
+          <span className="summary-stat-label">
+            {t("repository.summarySize")}
+          </span>
+        </span>
+        <span className="summary-stat">
+          <span className="summary-stat-value num">{nf(summary.tests)}</span>
+          <span className="summary-stat-label">
+            {t("repository.summaryTests")}
+          </span>
+        </span>
+      </div>
+      {summary.flags.length ? (
+        <div className="summary-flags">
+          {summary.flags.map((flag) => {
+            const key = summaryFlagKeys[flag];
+            return key ? (
+              <span className="summary-flag" key={flag}>
+                {t(key)}
+              </span>
+            ) : null;
+          })}
+        </div>
+      ) : null}
+      {summary.modules.length || summary.fileTypes.length ? (
+        <div className="summary-grid">
+          {summary.modules.length ? (
+            <section className="summary-block">
+              <h4 className="mini-title">{t("repository.summaryModules")}</h4>
+              <ul className="module-list">
+                {summary.modules.map((module) => (
+                  <li className="module-row" key={module.name}>
+                    <span className="module-name mono">{module.name}/</span>
+                    <span className="module-track" aria-hidden="true">
+                      <span
+                        className="module-fill"
+                        style={{
+                          width: `${moduleWidth(
+                            module.files,
+                            summary.modules[0].files,
+                          )}%`,
+                        }}
+                      />
+                    </span>
+                    <span className="module-count num">
+                      {nf(module.files)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+          {summary.fileTypes.length ? (
+            <section className="summary-block">
+              <h4 className="mini-title">
+                {t("repository.summaryFileTypes")}
+              </h4>
+              <div className="topic-list">
+                {summary.fileTypes.map((type) => (
+                  <span className="topic-chip" key={type.ext}>
+                    {type.ext}{" "}
+                    <span className="filetype-count num">
+                      {nf(type.count)}
+                    </span>
+                  </span>
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </div>
+      ) : null}
+      {summary.keyFiles.length ? (
+        <section className="summary-block">
+          <h4 className="mini-title">{t("repository.summaryKeyFiles")}</h4>
+          <ul className="keyfile-list">
+            {summary.keyFiles.map((file) => {
+              const kindKey = keyFileKindKeys[file.kind];
+              return (
+                <li className="keyfile-row" key={file.path}>
+                  <span className="keyfile-path mono">{file.path}</span>
+                  <span className="keyfile-kind">
+                    {kindKey ? t(kindKey) : file.kind}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+      {summary.entrypoints.length ? (
+        <section className="summary-block">
+          <h4 className="mini-title">{t("repository.summaryEntrypoints")}</h4>
+          <div className="topic-list">
+            {summary.entrypoints.map((entry) => (
+              <span className="topic-chip mono" key={entry}>
+                {entry}
+              </span>
+            ))}
+          </div>
+        </section>
+      ) : null}
+      <p className="summary-foot">{t("repository.summaryFootnote")}</p>
+    </section>
+  ) : null;
 
   return (
     <div className="screen">
@@ -497,39 +1161,91 @@ function RepositoryAnalysis({
             })}
           />
           <ul className="saved-repo-list">
-            {repositories.map((item) => (
-              <li className="saved-repo" key={`${item.kind}-${item.label}`}>
-                <GitBranch size={13} aria-hidden="true" />
-                <span className="saved-repo-main">
-                  <a
-                    className="saved-repo-label mono"
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {item.label}
-                  </a>
-                  {item.context ? (
-                    <span className="saved-repo-context">{item.context}</span>
-                  ) : null}
-                  {item.detail ? (
-                    <span className="saved-repo-detail">{item.detail}</span>
-                  ) : null}
-                </span>
-                <span className={`pill ${repoStatusClass(item.status)}`}>
-                  {repoStatusLabel(item.status)}
-                </span>
-              </li>
-            ))}
+            {repositories.map((item) => {
+              const reread = item.status === "analyzed";
+              const canRetry =
+                item.kind === "repo" &&
+                (item.status === "unavailable" ||
+                  item.status === "skipped" ||
+                  (reread && !item.hasTree));
+              return (
+                <li className="saved-repo" key={`${item.kind}-${item.label}`}>
+                  <GitBranch size={13} aria-hidden="true" />
+                  <span className="saved-repo-main">
+                    <a
+                      className="saved-repo-label mono"
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {item.label}
+                    </a>
+                    {item.context ? (
+                      <span className="saved-repo-context">{item.context}</span>
+                    ) : null}
+                    {item.detail ? (
+                      <span className="saved-repo-detail">{item.detail}</span>
+                    ) : null}
+                  </span>
+                  <span className="saved-repo-side">
+                    <span className={`pill ${repoStatusClass(item.status)}`}>
+                      {repoStatusLabel(item.status)}
+                    </span>
+                    {canRetry ? (
+                      <button
+                        type="button"
+                        className="text-btn"
+                        disabled={retryingLabel === item.label}
+                        aria-label={t(
+                          reread
+                            ? "repository.rereadAria"
+                            : "repository.retryAria",
+                          { label: item.label },
+                        )}
+                        onClick={() => void retryRepository(item.label)}
+                      >
+                        {retryingLabel === item.label
+                          ? t("repository.retrying")
+                          : t(
+                              reread ? "repository.reread" : "repository.retry",
+                            )}
+                      </button>
+                    ) : null}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
-          {pendingRepos ? (
-            <div className="card-foot">
-              <span className="foot-note">
-                {t("repository.savedPendingNote", { count: pendingRepos })}
-              </span>
-            </div>
+          {retryError ? (
+            <p className="retry-error" role="alert">
+              {retryError}
+            </p>
           ) : null}
         </section>
+      ) : null}
+
+      {viewableRepos.length > 1 ? (
+        <div className="repo-switch">
+          <label className="repo-switch-label" htmlFor="repo-view-select">
+            <GitBranch size={13} aria-hidden="true" />
+            {t("repository.pickerLabel")}
+          </label>
+          <select
+            id="repo-view-select"
+            className="repo-switch-select mono"
+            value={primaryRepo}
+            onChange={(event) => switchRepo(event.target.value)}
+          >
+            {viewableRepos.map((item) => (
+              <option key={item.url} value={item.url}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+          <span className="repo-switch-hint">
+            {t("repository.pickerHint")}
+          </span>
+        </div>
       ) : null}
 
       <section
@@ -538,13 +1254,13 @@ function RepositoryAnalysis({
       >
         <div className="repo-summary-main">
           <span className="repo-path mono">{primaryRepo}</span>
-          {branch || fileCount ? (
+          {branch || fileTotal ? (
             <span className="repo-branch">
               <GitBranch size={13} aria-hidden="true" />
               {[
                 branch,
-                fileCount
-                  ? t("repository.filesCount", { count: fileCount })
+                fileTotal
+                  ? t("repository.filesCount", { count: fileTotal })
                   : "",
               ]
                 .filter(Boolean)
@@ -559,10 +1275,22 @@ function RepositoryAnalysis({
               <dd>{language}</dd>
             </div>
           ) : null}
-          {fileCount ? (
+          {fileTotal ? (
             <div>
               <dt>{t("repository.files")}</dt>
-              <dd className="num">{nf(fileCount)}</dd>
+              <dd className="num">{nf(fileTotal)}</dd>
+            </div>
+          ) : null}
+          {details ? (
+            <div>
+              <dt>{t("repository.stars")}</dt>
+              <dd className="num">{nf(details.stars)}</dd>
+            </div>
+          ) : null}
+          {details ? (
+            <div>
+              <dt>{t("repository.forks")}</dt>
+              <dd className="num">{nf(details.forks)}</dd>
             </div>
           ) : null}
           <div>
@@ -583,33 +1311,92 @@ function RepositoryAnalysis({
         </dl>
       </section>
 
-      <div className="repo-layout">
-        <aside className="repo-tree card" aria-label={t("repository.tree")}>
-          <div className="tree-head">
-            <span className="tree-title">{t("repository.tree")}</span>
-            {branch ? <span className="mono tree-branch">{branch}</span> : null}
-          </div>
-          <ul className="tree-root">
-            {(tree as TreeNodeData[]).map((node) => (
-              <TreeNode
-                key={node.name}
-                node={node}
-                path=""
-                depth={0}
-                selected={activeFile}
-                onSelect={selectFile}
-              />
-            ))}
-          </ul>
-          {commit || branch ? (
-            <div className="tree-foot">
-              {commit ? <span className="mono">{commit}</span> : <span />}
+      <div
+        className="repo-layout"
+        ref={layoutRef}
+        style={{ "--tree-width": `${treeWidth}px` } as CSSProperties}
+      >
+        <div className="repo-tree-wrap">
+          <aside className="repo-tree card" aria-label={t("repository.tree")}>
+            <div className="tree-head">
+              <span className="tree-title">{t("repository.tree")}</span>
               {branch ? (
-                <span>{t("repository.branchLabel", { branch })}</span>
+                <span className="mono tree-branch">{branch}</span>
               ) : null}
             </div>
-          ) : null}
-        </aside>
+            {tree.length ? (
+              <ul className="tree-root">
+                {tree.map((node) => (
+                  <TreeNode
+                    key={node.name}
+                    node={node}
+                    path=""
+                    depth={0}
+                    selected={activeFile}
+                    openFolders={openFolders}
+                    toggles={folderToggles}
+                    onToggle={toggleFolder}
+                    onSelect={selectFile}
+                  />
+                ))}
+              </ul>
+            ) : (
+              <div className="tree-empty">
+                <p>
+                  {primaryPending
+                    ? t("repository.treePending")
+                    : t("repository.treeEmpty")}
+                </p>
+                {primaryNeedsRetry ? (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    disabled={retryingLabel !== null}
+                    onClick={() => void retryRepository()}
+                  >
+                    {retryingLabel !== null
+                      ? t("repository.retrying")
+                      : t("repository.reread")}
+                  </button>
+                ) : null}
+              </div>
+            )}
+            {truncatedFiles > 0 ? (
+              <p className="tree-note">
+                {t("repository.treeTruncated", { count: truncatedFiles })}
+              </p>
+            ) : null}
+            {commit || branch ? (
+              <div className="tree-foot">
+                {commit ? <span className="mono">{commit}</span> : <span />}
+                {branch ? (
+                  <span>{t("repository.branchLabel", { branch })}</span>
+                ) : null}
+              </div>
+            ) : null}
+          </aside>
+
+          <button
+            type="button"
+            className={`tree-resizer${resizingTree ? " is-active" : ""}`}
+            role="separator"
+            aria-orientation="vertical"
+            aria-label={t("repository.treeResizeAria")}
+            aria-valuemin={TREE_MIN_WIDTH}
+            aria-valuemax={TREE_MAX_WIDTH}
+            aria-valuenow={treeWidth}
+            title={t("repository.treeResizeAria")}
+            onPointerDown={startTreeDrag}
+            onPointerMove={moveTreeDrag}
+            onPointerUp={endTreeDrag}
+            onPointerCancel={endTreeDrag}
+            onLostPointerCapture={endTreeDrag}
+            onDoubleClick={() =>
+              applyTreeWidth(TREE_DEFAULT_WIDTH, currentLayoutWidth())
+            }
+            onKeyDown={resizeTreeByKeyboard}
+          />
+        </div>
 
         <section className="repo-viewer card" aria-label={t("repository.viewerAria")}>
           <div className="viewer-tabs-bar">
@@ -621,13 +1408,25 @@ function RepositoryAnalysis({
               <button
                 type="button"
                 role="tab"
-                aria-selected={view === "arch"}
-                className={`detail-tab${view === "arch" ? " is-on" : ""}`}
-                onClick={() => setView("arch")}
+                aria-selected={view === "overview"}
+                className={`detail-tab${view === "overview" ? " is-on" : ""}`}
+                onClick={() => setView("overview")}
               >
-                <Layers size={13} aria-hidden="true" />
-                {t("repository.archTab")}
+                <Info size={13} aria-hidden="true" />
+                {t("repository.overviewTab")}
               </button>
+              {layers.length ? (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={view === "arch"}
+                  className={`detail-tab${view === "arch" ? " is-on" : ""}`}
+                  onClick={() => setView("arch")}
+                >
+                  <Layers size={13} aria-hidden="true" />
+                  {t("repository.archTab")}
+                </button>
+              ) : null}
               <button
                 type="button"
                 role="tab"
@@ -650,7 +1449,155 @@ function RepositoryAnalysis({
             ) : null}
           </div>
 
-          {view === "arch" ? (
+          {view === "overview" ? (
+            <div className="repo-overview">
+              {details ? (
+                <>
+                  <p className="overview-desc">
+                    {details.description || t("repository.noDescription")}
+                  </p>
+                  {summaryBlock}
+                  <dl className="overview-facts">
+                    <div>
+                      <dt>{t("repository.stars")}</dt>
+                      <dd className="num">{nf(details.stars)}</dd>
+                    </div>
+                    <div>
+                      <dt>{t("repository.forks")}</dt>
+                      <dd className="num">{nf(details.forks)}</dd>
+                    </div>
+                    <div>
+                      <dt>{t("repository.watchers")}</dt>
+                      <dd className="num">{nf(details.watchers)}</dd>
+                    </div>
+                    <div>
+                      <dt>{t("repository.openIssues")}</dt>
+                      <dd className="num">{nf(details.openIssues)}</dd>
+                    </div>
+                    <div>
+                      <dt>{t("repository.size")}</dt>
+                      <dd className="num">{formatSize(details.sizeKb)}</dd>
+                    </div>
+                    <div>
+                      <dt>{t("repository.license")}</dt>
+                      <dd>{details.license || "—"}</dd>
+                    </div>
+                    <div>
+                      <dt>{t("repository.created")}</dt>
+                      <dd className="num">{formatRepoDate(details.createdAt)}</dd>
+                    </div>
+                    <div>
+                      <dt>{t("repository.pushed")}</dt>
+                      <dd className="num">{formatRepoDate(details.pushedAt)}</dd>
+                    </div>
+                    {details.homepage ? (
+                      <div>
+                        <dt>{t("repository.homepage")}</dt>
+                        <dd>
+                          <a
+                            className="overview-link"
+                            href={details.homepage}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {details.homepage.replace(/^https?:\/\//, "")}
+                          </a>
+                        </dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                  {details.languages.length ? (
+                    <section className="overview-block">
+                      <h3 className="mini-title">{t("repository.languages")}</h3>
+                      <ul className="lang-list">
+                        {details.languages.map((lang) => (
+                          <li className="lang-row" key={lang.name}>
+                            <span className="lang-name">{lang.name}</span>
+                            <span className="lang-track" aria-hidden="true">
+                              <span
+                                className="lang-fill"
+                                style={{
+                                  width: `${Math.max(2, Math.min(100, lang.percent))}%`,
+                                }}
+                              />
+                            </span>
+                            <span className="lang-pct num">
+                              {nf(Math.round(lang.percent * 10) / 10)}%
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  ) : null}
+                  {details.topics.length ? (
+                    <section className="overview-block">
+                      <h3 className="mini-title">{t("repository.topics")}</h3>
+                      <div className="topic-list">
+                        {details.topics.map((topic) => (
+                          <span className="topic-chip" key={topic}>
+                            {topic}
+                          </span>
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
+                  {details.commits.length ? (
+                    <section className="overview-block">
+                      <h3 className="mini-title">{t("repository.commits")}</h3>
+                      <ul className="commit-list">
+                        {details.commits.map((item) => (
+                          <li className="commit-row" key={item.sha}>
+                            <span className="commit-sha mono">{item.sha}</span>
+                            <span className="commit-msg">{item.message}</span>
+                            <span className="commit-date num">
+                              {formatRepoDate(item.date)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  ) : null}
+                  {details.readme ? (
+                    <section className="overview-block">
+                      <h3 className="mini-title">{t("repository.readme")}</h3>
+                      <pre className="repo-readme">{details.readme}</pre>
+                      {details.readmeChars >
+                      Array.from(details.readme).length ? (
+                        <p className="foot-note">
+                          {t("repository.readmeTrimmed", {
+                            count: details.readmeChars,
+                          })}
+                        </p>
+                      ) : null}
+                    </section>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  {summaryBlock}
+                  <div className="overview-empty">
+                    <p>
+                      {primaryPending
+                        ? t("repository.detailsPending")
+                        : t("repository.detailsMissing")}
+                    </p>
+                    {primaryNeedsRetry ? (
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        disabled={retryingLabel !== null}
+                        onClick={() => void retryRepository()}
+                      >
+                        {retryingLabel !== null
+                          ? t("repository.retrying")
+                          : t("repository.reread")}
+                      </button>
+                    ) : null}
+                  </div>
+                </>
+              )}
+            </div>
+          ) : view === "arch" ? (
             <div className="arch-map">
               <p className="arch-intro">{t("repository.archIntro")}</p>
               <div className="arch-flow">
@@ -814,12 +1761,76 @@ function RepositoryAnalysis({
                 </div>
               </div>
             </>
+          ) : activeFile ? (
+            fileData ? (
+              <>
+                <div className="viewer-head">
+                  <div className="viewer-path">
+                    <FileCode2 size={15} aria-hidden="true" />
+                    <span className="mono">{fileData.path}</span>
+                  </div>
+                  <div className="viewer-actions">
+                    {fileData.truncated ? (
+                      <span className="pill pill-neutral">
+                        {t("repository.fileTruncated")}
+                      </span>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      aria-label={t("repository.copyFile")}
+                      onClick={copyFile}
+                    >
+                      {fileCopied ? (
+                        <Check size={15} />
+                      ) : (
+                        <Clipboard size={15} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <pre
+                  className="code-block code-block-file"
+                  aria-label={t("repository.fileAria")}
+                >
+                  <code>
+                    {fileData.content.split("\n").map((line, index) => {
+                      const lineNo = index + 1;
+                      const hit = fileHits.has(lineNo);
+                      return (
+                        <span
+                          className={`code-line${hit ? " is-hit" : ""}`}
+                          key={`${lineNo}-${index}`}
+                        >
+                          <span className="ln num" aria-hidden="true">
+                            {lineNo}
+                          </span>
+                          <span className="code-text">{line || " "}</span>
+                        </span>
+                      );
+                    })}
+                  </code>
+                </pre>
+                <p className="code-note">{t("repository.fileFootnote")}</p>
+              </>
+            ) : fileQuery.error && !fileQuery.loading ? (
+              <div className="file-state">
+                <p>{fileQuery.error}</p>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={fileQuery.refetch}
+                >
+                  {t("repository.fileRetry")}
+                </button>
+              </div>
+            ) : (
+              <Loading label={t("repository.fileLoading")} />
+            )
           ) : (
             <EmptyState
-              title={t("repository.noFindingInFile", {
-                file: activeFile.split("/").pop() || t("repository.thisFile"),
-              })}
-              detail={t("repository.noFindingInFileDetail")}
+              title={t("repository.noFile")}
+              detail={t("repository.noFileDetail")}
             />
           )}
         </section>
@@ -831,53 +1842,138 @@ function RepositoryAnalysis({
           <CardHead
             title={t("repository.findings")}
             meta={
-              layer
-                ? t("repository.filteredByLayer", {
-                    visible: visibleFindings.length,
-                    total: findings.length,
-                    layer: layer.label,
-                  })
-                : t("repository.findingsSummary", {
-                    total: findings.length,
-                    needed,
-                  })
+              findingsState === "analyzing"
+                ? t("repository.findingsAnalyzingMeta")
+                : findingsState === "pending"
+                  ? t("repository.findingsPendingMeta")
+                  : findingsState === "failed"
+                    ? t("repository.findingsFailedMeta")
+                    : findingsState === ""
+                      ? t("repository.findingsNotRunMeta")
+                      : layer
+                        ? t("repository.filteredByLayer", {
+                            visible: visibleFindings.length,
+                            total: findings.length,
+                            layer: layer.label,
+                          })
+                        : t("repository.findingsSummary", {
+                            total: findings.length,
+                            needed,
+                          })
             }
           />
-          <div
-            className="chip-group chip-group-sm"
-            role="group"
-            aria-label={t("repository.filterAria")}
-          >
-            <button
-              type="button"
-              className={`chip${filter === "all" ? " is-on" : ""}`}
-              aria-pressed={filter === "all"}
-              onClick={() => setFilter("all")}
+          {findings.length > 0 && !findingsBusy ? (
+            <div
+              className="chip-group chip-group-sm"
+              role="group"
+              aria-label={t("repository.filterAria")}
             >
-              {t("repository.filterAll")}{" "}
-              <span className="num">{findings.length}</span>
-            </button>
-            <button
-              type="button"
-              className={`chip${filter === "needs" ? " is-on" : ""}`}
-              aria-pressed={filter === "needs"}
-              onClick={() => setFilter("needs")}
-            >
-              {t("repository.filterNeeds")}{" "}
-              <span className="num">{needed}</span>
-            </button>
-            <button
-              type="button"
-              className={`chip${filter === "confirmed" ? " is-on" : ""}`}
-              aria-pressed={filter === "confirmed"}
-              onClick={() => setFilter("confirmed")}
-            >
-              {t("finding.confirmed")}{" "}
-              <span className="num">{confirmed}</span>
-            </button>
-          </div>
+              <button
+                type="button"
+                className={`chip${filter === "all" ? " is-on" : ""}`}
+                aria-pressed={filter === "all"}
+                onClick={() => setFilter("all")}
+              >
+                {t("repository.filterAll")}{" "}
+                <span className="num">{findings.length}</span>
+              </button>
+              <button
+                type="button"
+                className={`chip${filter === "needs" ? " is-on" : ""}`}
+                aria-pressed={filter === "needs"}
+                onClick={() => setFilter("needs")}
+              >
+                {t("repository.filterNeeds")}{" "}
+                <span className="num">{needed}</span>
+              </button>
+              <button
+                type="button"
+                className={`chip${filter === "confirmed" ? " is-on" : ""}`}
+                aria-pressed={filter === "confirmed"}
+                onClick={() => setFilter("confirmed")}
+              >
+                {t("finding.confirmed")}{" "}
+                <span className="num">{confirmed}</span>
+              </button>
+            </div>
+          ) : null}
+          {!findingsBusy &&
+          findings.length > 0 &&
+          (findingsState === "failed" || findingsState === "") ? (
+            <div className="rail-notice">
+              <span>
+                {findingsState === "failed"
+                  ? findingsRecord?.findingsDetail ||
+                    t("repository.findingsFailedDetail")
+                  : t("repository.findingsNotRunDetail")}
+              </span>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={analyzeFindings}
+                disabled={analyzingFindings}
+              >
+                {analyzingFindings
+                  ? t("repository.findingsQueueing")
+                  : findingsState === "failed"
+                    ? t("repository.findingsRetry")
+                    : t("repository.findingsAnalyze")}
+              </button>
+            </div>
+          ) : null}
           <div className="finding-rail-list">
-            {visibleFindings.length ? (
+            {findingsBusy ? (
+              <div className="rail-state">
+                <p className="rail-state-title">
+                  {findingsState === "analyzing"
+                    ? t("repository.findingsAnalyzingTitle")
+                    : t("repository.findingsPendingTitle")}
+                </p>
+                <p className="rail-state-detail">
+                  {findingsRecord?.findingsDetail ||
+                    t("repository.findingsRunningDetail")}
+                </p>
+              </div>
+            ) : findingsState === "failed" && !findings.length ? (
+              <div className="rail-state is-error">
+                <p className="rail-state-title">
+                  {t("repository.findingsFailedTitle")}
+                </p>
+                <p className="rail-state-detail">
+                  {findingsRecord?.findingsDetail ||
+                    t("repository.findingsFailedDetail")}
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={analyzeFindings}
+                  disabled={analyzingFindings}
+                >
+                  {analyzingFindings
+                    ? t("repository.findingsQueueing")
+                    : t("repository.findingsRetry")}
+                </button>
+              </div>
+            ) : findingsState === "" && !findings.length ? (
+              <div className="rail-state">
+                <p className="rail-state-title">
+                  {t("repository.findingsNotRunTitle")}
+                </p>
+                <p className="rail-state-detail">
+                  {t("repository.findingsNotRunDetail")}
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={analyzeFindings}
+                  disabled={analyzingFindings}
+                >
+                  {analyzingFindings
+                    ? t("repository.findingsQueueing")
+                    : t("repository.findingsAnalyze")}
+                </button>
+              </div>
+            ) : visibleFindings.length ? (
               visibleFindings.map((finding) => (
                 <button
                   type="button"
@@ -911,14 +2007,27 @@ function RepositoryAnalysis({
                 </button>
               ))
             ) : (
-              <p className="rail-empty">{t("repository.railEmpty")}</p>
+              <p className="rail-empty">
+                {findings.length
+                  ? t("repository.railEmpty")
+                  : t("repository.railClean")}
+              </p>
             )}
           </div>
           <div className="card-foot">
-            <span className="foot-note">{t("repository.railFootnote")}</span>
+            <span className="foot-note">
+              {findingsError || t("repository.railFootnote")}
+            </span>
           </div>
         </aside>
       </div>
+
+      <RepositoryChat
+        key={primaryRepo}
+        candidateId={candidate.id}
+        repo={primaryRepo}
+        ready={tree.length > 0}
+      />
     </div>
   );
 }

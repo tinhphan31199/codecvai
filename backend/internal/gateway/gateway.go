@@ -23,6 +23,19 @@ func (e *Error) Error() string {
 	return e.Message
 }
 
+// ModelUnavailable marks a provider rejecting the model code itself, so
+// background work may retry with another enabled model of the same provider.
+func (e *Error) ModelUnavailable() bool {
+	return e.Code == "model_unavailable"
+}
+
+// IsModelUnavailable reports whether the provider rejected the model code
+// itself, letting callers try another enabled model of the same provider.
+func IsModelUnavailable(err error) bool {
+	var target interface{ ModelUnavailable() bool }
+	return errors.As(err, &target) && target.ModelUnavailable()
+}
+
 // ConfigStore là phần store mà gateway cần: model đã chọn và cấu hình provider.
 type ConfigStore interface {
 	ModelByID(ctx context.Context, id string) (model.AIModel, error)
@@ -243,7 +256,7 @@ func providerHTTPError(target upstream, status int) *Error {
 		}
 	case http.StatusNotFound:
 		return &Error{
-			Code:    "upstream_error",
+			Code:    "model_unavailable",
 			Message: fmt.Sprintf("Model %s không khả dụng với %s. Kiểm tra mã model hoặc chọn model khác.", target.modelID, target.provider),
 		}
 	case http.StatusTooManyRequests:

@@ -108,6 +108,11 @@ func New(cfg Config) http.Handler {
 	mux.HandleFunc("PATCH /api/candidates/{id}", withStore(server, server.handleCandidate))
 	mux.HandleFunc("GET /api/candidates/{id}/cv", withStore(server, server.handleCandidateCV))
 	mux.HandleFunc("GET /api/candidates/{id}/repository", withStore(server, server.handleRepository))
+	mux.HandleFunc("GET /api/candidates/{id}/repository/file", withStore(server, server.handleRepositoryFile))
+	mux.HandleFunc("POST /api/candidates/{id}/repositories/retry", withStore(server, server.handleRepositoriesRetry))
+	mux.HandleFunc("POST /api/candidates/{id}/repository/findings", withStore(server, server.handleRepositoryFindingsQueue))
+	mux.HandleFunc("GET /api/candidates/{id}/repository/chat", withStore(server, server.handleRepositoryChat))
+	mux.HandleFunc("POST /api/candidates/{id}/repository/chat", withStore(server, server.handleRepositoryChat))
 	mux.HandleFunc("GET /api/candidates/{id}/questions", withStore(server, server.handleQuestions))
 	mux.HandleFunc("PATCH /api/candidates/{id}/findings/{findingId}", withStore(server, server.handleFinding))
 	mux.HandleFunc("GET /api/positions", withStore(server, server.handlePositions))
@@ -343,7 +348,7 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 		Repositories: savedRepos,
 	}); err != nil {
 		log.Printf("[analyze-cv] persist failed: %v", err)
-	} else if s.repoQueue != nil && queued > 0 {
+	} else if s.repoQueue != nil && len(savedRepos) > 0 {
 		s.repoQueue.Notify()
 	}
 
@@ -366,6 +371,10 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 func savedRepositoryRecords(evidence github.Evidence) []model.RepositoryRecord {
 	records := make([]model.RepositoryRecord, 0, len(evidence.Repositories)+len(evidence.Discovered))
 	for _, repository := range evidence.Repositories {
+		owner, name := "", ""
+		if repository.Kind == model.RepositoryRepo {
+			owner, name = githubOwnerName(repository.Label)
+		}
 		records = append(records, model.RepositoryRecord{
 			URL:     repository.URL,
 			Label:   repository.Label,
@@ -374,9 +383,24 @@ func savedRepositoryRecords(evidence github.Evidence) []model.RepositoryRecord {
 			Context: repository.Context,
 			Detail:  repository.Detail,
 			Source:  "cv",
+			Tree:    repository.Tree,
+			Details: repository.Details,
+			Summary: repository.Summary,
+			Owner:   owner,
+			Name:    name,
 		})
 	}
 	return append(records, evidence.Discovered...)
+}
+
+// githubOwnerName reads "github.com/owner/repo" so direct CV repos can be
+// queued again by the background worker.
+func githubOwnerName(label string) (string, string) {
+	parts := strings.Split(strings.TrimSpace(label), "/")
+	if len(parts) != 3 || !strings.EqualFold(parts[0], "github.com") {
+		return "", ""
+	}
+	return parts[1], parts[2]
 }
 
 // storeCV lưu bản gốc CV lên bucket private; lỗi chỉ log để phân tích vẫn thành công.
@@ -408,6 +432,10 @@ func cvContentType(fileType cvextract.Type) string {
 
 // GitHub đọc cấu hình từ DB mỗi lần phân tích; thiếu cấu hình thì dùng mặc định công khai.
 func (s *Server) githubEvidence(ctx context.Context, extraction links.Extraction) github.Evidence {
+	return s.githubClient(ctx).Evidence(ctx, extraction)
+}
+
+func (s *Server) githubClient(ctx context.Context) *github.Client {
 	baseURL := "https://api.github.com"
 	token := ""
 	if s.store != nil {
@@ -422,7 +450,7 @@ func (s *Server) githubEvidence(ctx context.Context, extraction links.Extraction
 			log.Printf("[analyze-cv] github config lookup failed: %v", err)
 		}
 	}
-	return github.New(baseURL, token).Evidence(ctx, extraction)
+	return github.New(baseURL, token)
 }
 
 // Base URL và key của provider AI cũng nằm ở DB; fallback chỉ để server vẫn chạy khi thiếu dòng cấu hình.
@@ -516,7 +544,7 @@ func errorStatus(code string) int {
 		return http.StatusUnprocessableEntity
 	case "missing_key":
 		return http.StatusServiceUnavailable
-	case "upstream_error", "invalid_output":
+	case "upstream_error", "invalid_output", "model_unavailable":
 		return http.StatusBadGateway
 	default:
 		return http.StatusBadRequest

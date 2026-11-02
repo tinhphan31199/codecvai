@@ -14,6 +14,7 @@ import (
 	"codecv/backend/internal/api"
 	"codecv/backend/internal/auth"
 	"codecv/backend/internal/config"
+	"codecv/backend/internal/gateway"
 	"codecv/backend/internal/repoqueue"
 	"codecv/backend/internal/storage"
 	"codecv/backend/internal/store"
@@ -69,6 +70,7 @@ func main() {
 	var repoWorker *repoqueue.Worker
 	if dataStore != nil {
 		repoWorker = repoqueue.New(dataStore)
+		repoWorker.SetReviewer(gateway.New(dataStore))
 	}
 
 	handlerConfig := api.Config{

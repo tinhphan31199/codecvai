@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -10,8 +11,10 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"codecv/backend/internal/gemini"
+	"codecv/backend/internal/github"
 	"codecv/backend/internal/model"
 	"codecv/backend/internal/storage"
 	"codecv/backend/internal/store"
@@ -107,23 +110,37 @@ func (s *Server) handleCandidate(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodPatch {
 		var patch struct {
-			Status   string `json:"status"`
-			Notes    string `json:"notes"`
-			Reviewer string `json:"reviewer"`
-			Repo     string `json:"repo"`
+			Status   *string `json:"status"`
+			Notes    *string `json:"notes"`
+			Reviewer *string `json:"reviewer"`
+			Repo     *string `json:"repo"`
 		}
 		if err := decodeJSON(r, &patch); err != nil {
 			s.fail(w, http.StatusBadRequest, "bad_request", "Không đọc được dữ liệu gửi lên.")
 			return
 		}
-		if patch.Status != "" {
-			if err := s.store.UpdateCandidateStatus(r.Context(), id, patch.Status); err != nil {
+		if patch.Status != nil && *patch.Status != "" {
+			if err := s.store.UpdateCandidateStatus(r.Context(), id, *patch.Status); err != nil {
 				s.storeError(w, err)
 				return
 			}
 		}
-		if patch.Notes != "" || patch.Reviewer != "" || patch.Repo != "" {
-			if err := s.store.UpdateCandidateFields(r.Context(), id, patch.Notes, patch.Reviewer, patch.Repo); err != nil {
+		if patch.Notes != nil {
+			if err := s.store.UpdateCandidateNotes(r.Context(), id, *patch.Notes); err != nil {
+				s.storeError(w, err)
+				return
+			}
+		}
+		if patch.Reviewer != nil {
+			if reviewer := strings.TrimSpace(*patch.Reviewer); reviewer != "" {
+				if err := s.store.UpdateCandidateReviewer(r.Context(), id, reviewer); err != nil {
+					s.storeError(w, err)
+					return
+				}
+			}
+		}
+		if patch.Repo != nil {
+			if err := s.store.UpdateCandidateRepo(r.Context(), id, *patch.Repo); err != nil {
 				s.storeError(w, err)
 				return
 			}
@@ -208,7 +225,8 @@ func (s *Server) handleRepository(w http.ResponseWriter, r *http.Request) {
 	if !s.requireCandidate(w, r, id) {
 		return
 	}
-	repo, err := s.store.Repository(r.Context(), id)
+	repoRef := strings.TrimSpace(r.URL.Query().Get("repo"))
+	repo, err := s.store.Repository(r.Context(), id, repoRef)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			s.fail(w, http.StatusNotFound, "not_found", "Không tìm thấy ứng viên.")
@@ -218,6 +236,111 @@ func (s *Server) handleRepository(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, repo)
+}
+
+// handleRepositoryFile streams one blob from the analyzed tree so the code
+// viewer can show real file content even when no finding points at it.
+func (s *Server) handleRepositoryFile(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if !s.requireCandidate(w, r, id) {
+		return
+	}
+	filePath := strings.TrimSpace(r.URL.Query().Get("path"))
+	if filePath == "" || len(filePath) > 400 {
+		s.fail(w, http.StatusBadRequest, "bad_request", "Thiếu đường dẫn tệp.")
+		return
+	}
+	owner, name, sha, err := s.store.RepositoryTarget(r.Context(), id, filePath, strings.TrimSpace(r.URL.Query().Get("repo")))
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			s.fail(w, http.StatusNotFound, "not_found", "Không tìm thấy tệp trong repository đã đọc.")
+			return
+		}
+		s.storeError(w, err)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
+	defer cancel()
+	content, truncated, err := s.githubClient(r.Context()).File(ctx, owner, name, sha)
+	if err != nil {
+		var fileErr *github.FileError
+		if errors.As(err, &fileErr) {
+			switch fileErr.Code {
+			case "not_found":
+				s.fail(w, http.StatusNotFound, "not_found", "Không tìm thấy tệp trong repository.")
+			case "binary":
+				s.fail(w, http.StatusUnsupportedMediaType, "binary_file", "Tệp nhị phân nên không hiển thị được nội dung.")
+			case "rate_limited":
+				s.fail(w, http.StatusTooManyRequests, "rate_limited", "GitHub giới hạn lượt gọi API, thử lại sau.")
+			case "timeout":
+				s.fail(w, http.StatusGatewayTimeout, "timeout", "Hết thời gian đọc tệp từ GitHub.")
+			default:
+				s.fail(w, http.StatusBadGateway, "github_error", "Không đọc được tệp từ GitHub.")
+			}
+			return
+		}
+		s.fail(w, http.StatusBadGateway, "github_error", "Không đọc được tệp từ GitHub.")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"path":      filePath,
+		"content":   content,
+		"truncated": truncated,
+	})
+}
+
+// handleRepositoriesRetry queues failed repository reads again; a label limits
+// the retry to one row, an empty body retries every failed row of the candidate.
+func (s *Server) handleRepositoriesRetry(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if !s.requireCandidate(w, r, id) {
+		return
+	}
+	var body struct {
+		Label string `json:"label"`
+	}
+	if err := decodeJSON(r, &body); err != nil && !errors.Is(err, io.EOF) {
+		s.fail(w, http.StatusBadRequest, "bad_request", "Không đọc được dữ liệu gửi lên.")
+		return
+	}
+	queued, err := s.store.RetryRepositories(r.Context(), id, strings.TrimSpace(body.Label))
+	if err != nil {
+		s.storeError(w, err)
+		return
+	}
+	if queued > 0 && s.repoQueue != nil {
+		s.repoQueue.Notify()
+	}
+	writeJSON(w, http.StatusOK, map[string]int{"queued": queued})
+}
+
+func (s *Server) handleRepositoryFindingsQueue(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if !s.requireCandidate(w, r, id) {
+		return
+	}
+	var body struct {
+		Repo string `json:"repo"`
+	}
+	if err := decodeJSON(r, &body); err != nil && !errors.Is(err, io.EOF) {
+		s.fail(w, http.StatusBadRequest, "bad_request", "Không đọc được dữ liệu gửi lên.")
+		return
+	}
+	repoURL, queued, err := s.store.QueueRepositoryFindings(r.Context(), id, strings.TrimSpace(body.Repo))
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			s.fail(w, http.StatusNotFound, "not_found", "Repository chưa được đọc xong nên chưa phân tích phát hiện được.")
+			return
+		}
+		s.storeError(w, err)
+		return
+	}
+	if queued && s.repoQueue != nil {
+		s.repoQueue.Notify()
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"repo": repoURL, "queued": queued})
 }
 
 func (s *Server) handleQuestions(w http.ResponseWriter, r *http.Request) {

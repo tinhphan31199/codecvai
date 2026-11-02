@@ -47,6 +47,7 @@ import InterviewStudio, { InterviewPicker } from "./screens/Interview";
 import Jobs from "./screens/Jobs";
 import Reports from "./screens/Reports";
 import SettingsScreen from "./screens/Settings";
+import Help from "./screens/Help";
 
 type Route = { screen: Screen; id?: string };
 
@@ -60,6 +61,7 @@ const ROUTES: Screen[] = [
   "jobs",
   "reports",
   "settings",
+  "help",
 ];
 
 function parseHash(rawHash: string): Route {
@@ -105,6 +107,7 @@ const screenTitles: Record<Screen, MessageKey> = {
   jobs: "screen.jobs",
   reports: "screen.reports",
   settings: "screen.settings",
+  help: "screen.help",
 };
 
 const activeKey = (screen: Screen) =>
@@ -331,7 +334,15 @@ function Shell() {
             EN
           </button>
         </div>
-        <a className="nav-item" href="#settings" onClick={(e) => { e.preventDefault(); go("settings"); }}>
+        <a
+          className={`nav-item${route.screen === "help" ? " is-on" : ""}`}
+          href="#help"
+          aria-current={route.screen === "help" ? "page" : undefined}
+          onClick={(e) => {
+            e.preventDefault();
+            go("help");
+          }}
+        >
           <HelpCircle size={16} aria-hidden="true" />
           <span className="nav-label">{t("shell.helpDocs")}</span>
         </a>
@@ -396,7 +407,13 @@ function Shell() {
           <button type="button" className="icon-btn" aria-label={t("shell.notifications")}>
             <Bell size={17} />
           </button>
-          <button type="button" className="icon-btn" aria-label={t("shell.help")}>
+          <button
+            type="button"
+            className="icon-btn"
+            aria-label={t("shell.help")}
+            title={t("shell.help")}
+            onClick={() => go("help")}
+          >
             <HelpCircle size={17} />
           </button>
           <button
@@ -473,6 +490,7 @@ function Shell() {
             {route.screen === "settings" ? (
               <SettingsScreen tab={route.id} go={go} />
             ) : null}
+            {route.screen === "help" ? <Help go={go} /> : null}
           </div>
         </div>
       </div>

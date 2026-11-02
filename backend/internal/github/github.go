@@ -1,11 +1,13 @@
 package github
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"sort"
@@ -17,6 +19,7 @@ import (
 
 	"codecv/backend/internal/links"
 	"codecv/backend/internal/model"
+	"codecv/backend/internal/reposummary"
 )
 
 const (
@@ -24,12 +27,16 @@ const (
 	totalBudget       = 20 * time.Second
 	maxContextChars   = 24_000
 	maxReadmeChars    = 3_000
+	maxReadmePreview  = 1_200
 	maxProfileReadmes = 3
 	maxProfileListed  = 24
 	maxProfilePages   = 3
 	maxQueueRepos     = 20
 	maxRootEntries    = 40
 	maxCommits        = 6
+	maxTreeNodes      = 800
+	maxTreeDepth      = 10
+	maxPreviewChars   = 40_000
 	perPage           = 100
 	maxResponseBytes  = 4 << 20
 
@@ -44,6 +51,22 @@ var (
 	errTimeout     = errors.New("timeout")
 	errNetwork     = errors.New("network")
 )
+
+// FileError reports why a repository file could not be read; Code is one of
+// not_found, binary, rate_limited, timeout or network.
+type FileError struct {
+	Code string
+}
+
+func (e *FileError) Error() string { return "github file: " + e.Code }
+
+// ignoredTreeDirs keeps generated dependency folders out of the stored tree.
+var ignoredTreeDirs = map[string]struct{}{
+	".git": {}, "node_modules": {}, "vendor": {}, "dist": {}, "build": {},
+	".next": {}, ".nuxt": {}, "out": {}, "coverage": {}, "target": {},
+	"__pycache__": {}, ".venv": {}, "venv": {}, ".idea": {}, ".vscode": {},
+	"bower_components": {}, "pods": {}, "deriveddata": {}, ".cache": {}, ".turbo": {},
+}
 
 type Client struct {
 	baseURL string
@@ -171,6 +194,44 @@ func (c *Client) Repo(ctx context.Context, owner, name string) model.Repository 
 	return repository
 }
 
+// File reads one blob stored in the repository tree, keeping the preview
+// bounded so a large file cannot flood the API response.
+func (c *Client) File(ctx context.Context, owner, name, sha string) (string, bool, error) {
+	if strings.TrimSpace(owner) == "" || strings.TrimSpace(name) == "" || strings.TrimSpace(sha) == "" {
+		return "", false, &FileError{Code: "not_found"}
+	}
+	deadline := time.Now().Add(2 * requestTimeout)
+	path := "/repos/" + url.PathEscape(owner) + "/" + url.PathEscape(name) +
+		"/git/blobs/" + url.PathEscape(sha)
+	body, err := c.get(ctx, deadline, path, readmeAccept)
+	if err != nil {
+		return "", false, &FileError{Code: fileErrorCode(err)}
+	}
+	if bytes.IndexByte(body, 0) >= 0 || !utf8.Valid(body) {
+		return "", false, &FileError{Code: "binary"}
+	}
+	text := string(body)
+	truncated := false
+	if utf8.RuneCountInString(text) > maxPreviewChars {
+		text = truncateRunes(text, maxPreviewChars)
+		truncated = true
+	}
+	return text, truncated, nil
+}
+
+func fileErrorCode(err error) string {
+	switch {
+	case errors.Is(err, errNotFound):
+		return "not_found"
+	case errors.Is(err, errRateLimited):
+		return "rate_limited"
+	case errors.Is(err, errTimeout):
+		return "timeout"
+	default:
+		return "network"
+	}
+}
+
 type githubRepo struct {
 	Name          string   `json:"name"`
 	FullName      string   `json:"full_name"`
@@ -178,12 +239,19 @@ type githubRepo struct {
 	Language      string   `json:"language"`
 	Stars         int      `json:"stargazers_count"`
 	Forks         int      `json:"forks_count"`
+	Subscribers   int      `json:"subscribers_count"`
+	OpenIssues    int      `json:"open_issues_count"`
+	Size          int      `json:"size"`
 	Topics        []string `json:"topics"`
 	PushedAt      string   `json:"pushed_at"`
+	CreatedAt     string   `json:"created_at"`
 	Archived      bool     `json:"archived"`
 	Fork          bool     `json:"fork"`
 	Homepage      string   `json:"homepage"`
 	DefaultBranch string   `json:"default_branch"`
+	License       struct {
+		Name string `json:"name"`
+	} `json:"license"`
 }
 
 type githubUser struct {
@@ -211,6 +279,18 @@ type githubCommit struct {
 type githubContent struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
+}
+
+type githubTreeEntry struct {
+	Path string `json:"path"`
+	Type string `json:"type"`
+	SHA  string `json:"sha"`
+	Size int64  `json:"size"`
+}
+
+type githubTreeResponse struct {
+	Tree      []githubTreeEntry `json:"tree"`
+	Truncated bool              `json:"truncated"`
 }
 
 func (c *Client) inspectRepo(
@@ -241,9 +321,10 @@ func (c *Client) inspectRepo(
 		readme    string
 		contents  []githubContent
 		commits   []githubCommit
+		treeData  githubTreeResponse
 	)
 
-	wg.Add(4)
+	wg.Add(5)
 	go func() {
 		defer wg.Done()
 		data, err := c.get(ctx, deadline, repoPath+"/languages", jsonAccept)
@@ -287,6 +368,20 @@ func (c *Client) inspectRepo(
 			commits = parsed
 		}
 	}()
+	go func() {
+		defer wg.Done()
+		branch := defaultIfEmpty(repo.DefaultBranch, "HEAD")
+		data, err := c.get(
+			ctx,
+			deadline,
+			repoPath+"/git/trees/"+url.PathEscape(branch)+"?recursive=1",
+			jsonAccept,
+		)
+		if err != nil {
+			return
+		}
+		_ = json.Unmarshal(data, &treeData)
+	}()
 	wg.Wait()
 
 	section := repoSection(target, repo, languages, readme, contents, commits)
@@ -312,6 +407,10 @@ func (c *Client) inspectRepo(
 	base.Status = model.RepositoryAnalyzed
 	base.Context = truncateRunes(strings.Join(summary, " · "), 160)
 	base.Detail = "Đã đọc repo · " + commitDetail + " · " + readmeDetail
+	tree, fileCount, treeTruncated := buildRepoTree(treeData)
+	base.Tree = tree
+	base.Details = buildDetails(target, repo, languages, readme, commits, fileCount, treeTruncated)
+	base.Summary = reposummary.Build(base.Tree)
 	return base, section
 }
 
@@ -703,6 +802,186 @@ func repoSection(
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+type treeBuildNode struct {
+	name     string
+	typ      string
+	sha      string
+	size     int64
+	children []*treeBuildNode
+	index    map[string]*treeBuildNode
+}
+
+// buildRepoTree turns the recursive GitHub tree into the nested shape the
+// Repository screen renders, dropping dependency folders and capping the node
+// count so one huge monorepo cannot bloat the stored JSON.
+func buildRepoTree(payload githubTreeResponse) ([]model.RepoTreeNode, int, bool) {
+	totalFiles := 0
+	kept := make([]githubTreeEntry, 0, len(payload.Tree))
+	for _, entry := range payload.Tree {
+		path := strings.TrimSpace(entry.Path)
+		if path == "" || (entry.Type != "blob" && entry.Type != "tree") {
+			continue
+		}
+		if strings.Count(path, "/") >= maxTreeDepth || hasIgnoredTreeDir(path) {
+			continue
+		}
+		kept = append(kept, entry)
+		if entry.Type == "blob" {
+			totalFiles++
+		}
+	}
+	sort.Slice(kept, func(i, j int) bool { return kept[i].Path < kept[j].Path })
+
+	root := &treeBuildNode{typ: "folder", index: map[string]*treeBuildNode{}}
+	nodes := 0
+	truncated := payload.Truncated
+	for _, entry := range kept {
+		parts := strings.Split(entry.Path, "/")
+		parent := root
+		for i, part := range parts {
+			if child, ok := parent.index[part]; ok {
+				parent = child
+				continue
+			}
+			if nodes >= maxTreeNodes {
+				truncated = true
+				break
+			}
+			kind := "folder"
+			if i == len(parts)-1 && entry.Type == "blob" {
+				kind = "file"
+			}
+			child := &treeBuildNode{name: part, typ: kind, index: map[string]*treeBuildNode{}}
+			if kind == "file" {
+				child.sha = clip(entry.SHA, 64)
+				child.size = entry.Size
+			}
+			parent.children = append(parent.children, child)
+			parent.index[part] = child
+			parent = child
+			nodes++
+		}
+	}
+
+	return treeNodes(root.children), totalFiles, truncated
+}
+
+func treeNodes(nodes []*treeBuildNode) []model.RepoTreeNode {
+	sort.SliceStable(nodes, func(i, j int) bool {
+		if nodes[i].typ != nodes[j].typ {
+			return nodes[i].typ == "folder"
+		}
+		return strings.ToLower(nodes[i].name) < strings.ToLower(nodes[j].name)
+	})
+	tree := make([]model.RepoTreeNode, 0, len(nodes))
+	for _, node := range nodes {
+		tree = append(tree, model.RepoTreeNode{
+			Name:     node.name,
+			Type:     node.typ,
+			SHA:      node.sha,
+			Size:     node.size,
+			Children: treeNodes(node.children),
+		})
+	}
+	return tree
+}
+
+func hasIgnoredTreeDir(path string) bool {
+	parts := strings.Split(path, "/")
+	for _, part := range parts[:len(parts)-1] {
+		if _, ignored := ignoredTreeDirs[strings.ToLower(part)]; ignored {
+			return true
+		}
+	}
+	return false
+}
+
+func buildDetails(
+	target links.Target,
+	repo githubRepo,
+	languages map[string]float64,
+	readme string,
+	commits []githubCommit,
+	fileCount int,
+	treeTruncated bool,
+) *model.RepoDetails {
+	fullName := clip(repo.FullName, 140)
+	if fullName == "" {
+		fullName = target.Owner + "/" + target.Repo
+	}
+	readmeText := clip(readme, maxReadmeChars)
+	preview := clip(readme, maxReadmePreview)
+
+	topics := make([]string, 0, min(12, len(repo.Topics)))
+	for _, topic := range repo.Topics[:min(12, len(repo.Topics))] {
+		if value := oneLine(topic, 40); value != "" {
+			topics = append(topics, value)
+		}
+	}
+
+	details := &model.RepoDetails{
+		FullName:      fullName,
+		Description:   oneLine(repo.Description, 400),
+		Language:      oneLine(repo.Language, 60),
+		Languages:     languageDetails(languages),
+		Topics:        topics,
+		Stars:         repo.Stars,
+		Forks:         repo.Forks,
+		Watchers:      repo.Subscribers,
+		OpenIssues:    repo.OpenIssues,
+		SizeKB:        repo.Size,
+		DefaultBranch: clip(repo.DefaultBranch, 120),
+		PushedAt:      isoDate(repo.PushedAt),
+		CreatedAt:     isoDate(repo.CreatedAt),
+		Homepage:      clip(repo.Homepage, 200),
+		License:       oneLine(repo.License.Name, 80),
+		Fork:          repo.Fork,
+		Archived:      repo.Archived,
+		Readme:        preview,
+		ReadmeChars:   utf8.RuneCountInString(readmeText),
+		FileCount:     fileCount,
+		TreeTruncated: treeTruncated,
+		Commits:       make([]model.RepoCommit, 0, min(maxCommits, len(commits))),
+	}
+	for _, commit := range commits[:min(maxCommits, len(commits))] {
+		details.Commits = append(details.Commits, model.RepoCommit{
+			SHA:     clip(commit.SHA, 7),
+			Message: oneLine(commit.Commit.Message, 140),
+			Date:    isoDate(commit.Commit.Author.Date),
+		})
+	}
+	return details
+}
+
+func languageDetails(languages map[string]float64) []model.RepoLanguage {
+	type language struct {
+		name  string
+		bytes float64
+	}
+	list := make([]language, 0, len(languages))
+	total := 0.0
+	for name, size := range languages {
+		if size <= 0 {
+			continue
+		}
+		list = append(list, language{name: name, bytes: size})
+		total += size
+	}
+	if total == 0 {
+		return []model.RepoLanguage{}
+	}
+	sort.Slice(list, func(i, j int) bool { return list[i].bytes > list[j].bytes })
+
+	details := make([]model.RepoLanguage, 0, len(list))
+	for _, item := range list {
+		details = append(details, model.RepoLanguage{
+			Name:    item.name,
+			Percent: math.Round(item.bytes/total*1000) / 10,
+		})
+	}
+	return details
 }
 
 func languageSummary(languages map[string]float64) string {

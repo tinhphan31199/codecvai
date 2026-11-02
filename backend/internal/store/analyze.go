@@ -186,13 +186,39 @@ func (s *Store) insertAnalysisCandidate(ctx context.Context, ownerID string, can
 	}
 
 	for idx, repository := range repositories {
+		var treeJSON, detailsJSON, summaryJSON any
+		if len(repository.Tree) > 0 {
+			if encoded, err := json.Marshal(repository.Tree); err == nil {
+				treeJSON = string(encoded)
+			}
+		}
+		if repository.Details != nil {
+			if encoded, err := json.Marshal(repository.Details); err == nil {
+				detailsJSON = string(encoded)
+			}
+		}
+		if repository.Summary != nil {
+			if encoded, err := json.Marshal(repository.Summary); err == nil {
+				summaryJSON = string(encoded)
+			}
+		}
+		// The primary repository is already read during the request, so its AI
+		// findings analysis is queued for the worker right away.
+		findingsState := ""
+		if repository.Kind == model.RepositoryRepo &&
+			repository.Status == model.RepositoryAnalyzed &&
+			len(repository.Tree) > 0 &&
+			strings.EqualFold(strings.TrimSpace(repository.URL), strings.TrimSpace(candidate.Repo)) {
+			findingsState = model.RepositoryFindingsPending
+		}
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO candidate_repositories (
-				candidate_id, idx, url, label, kind, status, context, detail, source, owner, repo_name, updated_at
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, now())`,
+				candidate_id, idx, url, label, kind, status, context, detail, source, owner, repo_name,
+				tree, details, summary, findings_state, updated_at
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13::jsonb, $14::jsonb, $15, now())`,
 			candidate.ID, idx, repository.URL, repository.Label, repository.Kind,
 			repository.Status, repository.Context, repository.Detail, repository.Source,
-			repository.Owner, repository.Name,
+			repository.Owner, repository.Name, treeJSON, detailsJSON, summaryJSON, findingsState,
 		); err != nil {
 			return fmt.Errorf("store: save repositories: %w", err)
 		}

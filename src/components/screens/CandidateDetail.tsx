@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   ChevronRight,
   Download,
+  GitBranch,
   MessageSquare,
   ShieldAlert,
   Sparkles,
@@ -19,7 +20,14 @@ import {
   getSkills,
   severityMeta,
 } from "@/data/codecv";
-import { downloadCandidateCv, patchCandidate, useCandidate } from "@/lib/api";
+import {
+  downloadCandidateCv,
+  patchCandidate,
+  retryRepositories,
+  useCandidate,
+  useRepository,
+  type RepoRecord,
+} from "@/lib/api";
 import { useT, type MessageKey } from "@/lib/i18n";
 import {
   Avatar,
@@ -52,7 +60,14 @@ export default function CandidateDetail({
   go: (screen: Screen, id?: string) => void;
 }) {
   const t = useT();
-  const { data: candidate, loading, error, refetch } = useCandidate(id);
+  const {
+    data: candidate,
+    loading,
+    error,
+    refetch,
+    refresh: refreshCandidate,
+  } = useCandidate(id);
+  const { data: repoScan, refresh: refreshRepoScan } = useRepository(id);
   const overviewRef = useRef<HTMLDivElement>(null);
   const evidenceRef = useRef<HTMLDivElement>(null);
   const repoRef = useRef<HTMLDivElement>(null);
@@ -64,6 +79,8 @@ export default function CandidateDetail({
   const [saving, setSaving] = useState(false);
   const [cvBusy, setCvBusy] = useState(false);
   const [cvError, setCvError] = useState<string | null>(null);
+  const [retryingScan, setRetryingScan] = useState<string | null>(null);
+  const [scanError, setScanError] = useState("");
 
   const downloadCv = async () => {
     if (!candidate || cvBusy) return;
@@ -86,6 +103,35 @@ export default function CandidateDetail({
       setNoteSaved(false);
     }
   }, [candidate]);
+
+  const pendingScans = (repoScan?.repositories ?? []).filter(
+    (item) =>
+      item.kind === "repo" &&
+      (item.status === "pending" || item.status === "analyzing"),
+  ).length;
+
+  useEffect(() => {
+    if (!pendingScans) return;
+    const timer = window.setInterval(() => {
+      refreshRepoScan();
+      refreshCandidate();
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [pendingScans, refreshRepoScan, refreshCandidate]);
+
+  const retryScan = async (label: string) => {
+    setRetryingScan(label);
+    setScanError("");
+    try {
+      await retryRepositories(id, label);
+      refreshRepoScan();
+      refreshCandidate();
+    } catch (err) {
+      setScanError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setRetryingScan(null);
+    }
+  };
 
   if (loading) {
     return <ScreenLoader title={t("screen.candidate")} />;
@@ -126,6 +172,45 @@ export default function CandidateDetail({
   const history = buildHistory(candidate);
   const findings = candidate.findings ?? [];
   const missing = candidate.criteria.filter((item) => item.state === "missing");
+
+  const scanRecords = (repoScan?.repositories ?? []).filter(
+    (item) => item.kind !== "link",
+  );
+  const analyzedScans = scanRecords.filter(
+    (item) => item.status === "analyzed",
+  );
+  const scanningScans = scanRecords.filter(
+    (item) => item.status === "pending" || item.status === "analyzing",
+  );
+  const orderedScans = [
+    ...analyzedScans,
+    ...scanningScans,
+    ...scanRecords.filter(
+      (item) => item.status === "unavailable" || item.status === "skipped",
+    ),
+  ];
+
+  const scanStatusLabel = (status: RepoRecord["status"]) => {
+    switch (status) {
+      case "analyzed":
+        return t("repository.repoStatusAnalyzed");
+      case "analyzing":
+        return t("repository.repoStatusAnalyzing");
+      case "pending":
+        return t("repository.repoStatusPending");
+      case "skipped":
+        return t("repository.repoStatusSkipped");
+      default:
+        return t("repository.repoStatusUnavailable");
+    }
+  };
+
+  const scanPillClass = (status: RepoRecord["status"]) =>
+    status === "analyzed"
+      ? "pill-positive"
+      : status === "unavailable"
+        ? "pill-negative"
+        : "pill-neutral";
 
   const jump = (key: TabKey, ref: RefObject<HTMLDivElement | null>) => {
     setTab(key);
@@ -449,16 +534,27 @@ export default function CandidateDetail({
             <CardHead
               title={t("candidate.repoFindingsTitle")}
               meta={
-                candidate.repo
+                findings.length
                   ? t("candidate.repoFindingsMeta", {
-                      repo: candidate.repo,
+                      repo: candidate.repo ?? "—",
                       commit: candidate.commit ?? "—",
                       count: findings.length,
                     })
-                  : t("candidate.repoNotConnected")
+                  : scanRecords.length
+                    ? t("candidate.repoScannedMeta", {
+                        analyzed: analyzedScans.length,
+                        total: scanRecords.length,
+                      })
+                    : candidate.repo
+                      ? t("candidate.repoFindingsMeta", {
+                          repo: candidate.repo,
+                          commit: candidate.commit ?? "—",
+                          count: 0,
+                        })
+                      : t("candidate.repoNotConnected")
               }
               action={
-                candidate.repo ? (
+                findings.length || scanRecords.length ? (
                   <button
                     type="button"
                     className="card-link"
@@ -508,17 +604,98 @@ export default function CandidateDetail({
                   </div>
                 ))}
               </div>
+            ) : orderedScans.length ? (
+              <div className="scan-list">
+                {orderedScans.slice(0, 3).map((item) => {
+                  const scanLabel =
+                    item.kind === "profile"
+                      ? item.label
+                      : item.label.replace(/^github\.com\//, "");
+                  return (
+                    <div className="scan-row" key={item.label}>
+                      <GitBranch size={13} aria-hidden="true" />
+                      <div className="scan-main">
+                        <div className="scan-title-row">
+                          <span
+                            className="scan-label mono"
+                            title={item.label}
+                          >
+                            {scanLabel}
+                          </span>
+                          <span className={`pill ${scanPillClass(item.status)}`}>
+                            {scanStatusLabel(item.status)}
+                          </span>
+                        </div>
+                        {item.context ? (
+                          <p className="scan-context">{item.context}</p>
+                        ) : null}
+                        {item.detail ? (
+                          <span className="scan-detail">{item.detail}</span>
+                        ) : null}
+                      </div>
+                      {item.kind === "repo" &&
+                      (item.status === "unavailable" ||
+                        item.status === "skipped" ||
+                        (item.status === "analyzed" && !item.hasTree)) ? (
+                        <button
+                          type="button"
+                          className="text-btn scan-retry"
+                          disabled={retryingScan === item.label}
+                          aria-label={t(
+                            item.status === "analyzed"
+                              ? "repository.rereadAria"
+                              : "repository.retryAria",
+                            { label: scanLabel },
+                          )}
+                          onClick={() => void retryScan(item.label)}
+                        >
+                          {retryingScan === item.label
+                            ? t("repository.retrying")
+                            : item.status === "analyzed"
+                              ? t("repository.reread")
+                              : t("repository.retry")}
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        aria-label={t("candidate.openRepoScanAria", {
+                          label: scanLabel,
+                        })}
+                        onClick={() => go("repository", candidate.id)}
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  );
+                })}
+                {scanError ? (
+                  <p className="retry-error" role="alert">
+                    {scanError}
+                  </p>
+                ) : null}
+              </div>
             ) : (
               <EmptyState
                 title={t("candidate.repoEmptyTitle")}
-                detail={t("candidate.repoEmptyDetail")}
+                detail={
+                  candidate.repo
+                    ? t("candidate.repoEmptyConnectedDetail")
+                    : t("candidate.repoEmptyDetail")
+                }
                 action={
                   <button
                     type="button"
                     className="btn btn-ghost"
-                    onClick={() => go("upload")}
+                    onClick={() =>
+                      candidate.repo
+                        ? go("repository", candidate.id)
+                        : go("upload")
+                    }
                   >
-                    {t("candidate.connectRepo")}
+                    {candidate.repo
+                      ? t("candidate.openAnalysis")
+                      : t("candidate.connectRepo")}
                   </button>
                 }
               />
@@ -527,6 +704,21 @@ export default function CandidateDetail({
               <div className="card-foot">
                 <span className="foot-note">
                   {t("candidate.moreFindings", { count: findings.length - 3 })}
+                </span>
+              </div>
+            ) : null}
+            {!findings.length && orderedScans.length ? (
+              <div className="card-foot">
+                <span className="foot-note">
+                  {scanningScans.length
+                    ? t("candidate.repoScanPending", {
+                        count: scanningScans.length,
+                      })
+                    : orderedScans.length > 3
+                      ? t("candidate.repoScanMore", {
+                          count: orderedScans.length - 3,
+                        })
+                      : t("candidate.repoScanFoot")}
                 </span>
               </div>
             ) : null}

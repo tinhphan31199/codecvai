@@ -125,6 +125,8 @@ export interface TreeNode {
   name: string;
   type: "folder" | "file";
   active?: boolean;
+  sha?: string;
+  size?: number;
   children?: TreeNode[];
 }
 
@@ -146,6 +148,78 @@ export interface RepoRecord {
   detail: string;
   source: string;
   updatedAt: string;
+  hasTree: boolean;
+  findingsState: "pending" | "analyzing" | "analyzed" | "failed" | "";
+  findingsDetail: string;
+}
+
+export interface RepoLanguage {
+  name: string;
+  percent: number;
+}
+
+export interface RepoCommit {
+  sha: string;
+  message: string;
+  date: string;
+}
+
+export interface RepoDetails {
+  fullName: string;
+  description: string;
+  language: string;
+  languages: RepoLanguage[];
+  topics: string[];
+  stars: number;
+  forks: number;
+  watchers: number;
+  openIssues: number;
+  sizeKb: number;
+  defaultBranch: string;
+  pushedAt: string;
+  createdAt: string;
+  homepage: string;
+  license: string;
+  fork: boolean;
+  archived: boolean;
+  readme: string;
+  readmeChars: number;
+  fileCount: number;
+  treeTruncated: boolean;
+  commits: RepoCommit[];
+}
+
+export interface RepoFile {
+  path: string;
+  content: string;
+  truncated: boolean;
+}
+
+export interface RepoModule {
+  name: string;
+  files: number;
+}
+
+export interface RepoFileType {
+  ext: string;
+  count: number;
+}
+
+export interface RepoKeyFile {
+  path: string;
+  kind: string;
+}
+
+export interface RepoSummary {
+  files: number;
+  folders: number;
+  sizeKb: number;
+  tests: number;
+  flags: string[];
+  modules: RepoModule[];
+  fileTypes: RepoFileType[];
+  keyFiles: RepoKeyFile[];
+  entrypoints: string[];
 }
 
 export interface RepoAnalysis {
@@ -156,8 +230,22 @@ export interface RepoAnalysis {
   repoState: string;
   tree: TreeNode[];
   layers: ArchitectureLayer[];
+  details: RepoDetails | null;
+  summary: RepoSummary | null;
   findings: Finding[];
   repositories: RepoRecord[];
+}
+
+export interface RepositoryChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: string;
+}
+
+interface RepositoryChatHistory {
+  repo: string;
+  messages: RepositoryChatMessage[];
 }
 
 export interface Dashboard {
@@ -253,14 +341,19 @@ export interface QueryResult<T> {
   refresh: () => void;
 }
 
-function useQuery<T>(path: string): QueryResult<T> {
+function useQuery<T>(path: string | null): QueryResult<T> {
   const [data, setData] = useState<T | null>(
-    cache.has(path) ? (cache.get(path) as T) : null,
+    path && cache.has(path) ? (cache.get(path) as T) : null,
   );
-  const [loading, setLoading] = useState(!cache.has(path));
+  const [loading, setLoading] = useState(path ? !cache.has(path) : false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    if (!path) {
+      setData(null);
+      setLoading(false);
+      return;
+    }
     const cached = cache.get(path) as T | undefined;
     if (cached !== undefined) {
       setData(cached);
@@ -296,6 +389,7 @@ function useQuery<T>(path: string): QueryResult<T> {
   }, [load]);
 
   const refetch = useCallback(async () => {
+    if (!path) return;
     invalidate(path);
     setLoading(true);
     try {
@@ -312,6 +406,7 @@ function useQuery<T>(path: string): QueryResult<T> {
 
   // refresh cập nhật dữ liệu tại chỗ, không bật loading để không nháy màn hình.
   const refresh = useCallback(async () => {
+    if (!path) return;
     try {
       const json = await requestJSON<T>(path);
       cache.set(path, json);
@@ -359,10 +454,38 @@ export function useCandidate(id: string): QueryResult<Candidate> {
   return useQuery<Candidate>(`/api/candidates/${encodeURIComponent(id)}`);
 }
 
-export function useRepository(id: string): QueryResult<RepoAnalysis> {
+export function useRepository(
+  id: string,
+  repo?: string,
+): QueryResult<RepoAnalysis> {
+  const query = repo ? `?repo=${encodeURIComponent(repo)}` : "";
   return useQuery<RepoAnalysis>(
-    `/api/candidates/${encodeURIComponent(id)}/repository`,
+    `/api/candidates/${encodeURIComponent(id)}/repository${query}`,
   );
+}
+
+export function useRepositoryFile(
+  id: string,
+  path: string | null,
+  repo?: string,
+): QueryResult<RepoFile> {
+  const query = repo ? `&repo=${encodeURIComponent(repo)}` : "";
+  return useQuery<RepoFile>(
+    path
+      ? `/api/candidates/${encodeURIComponent(id)}/repository/file?path=${encodeURIComponent(path)}${query}`
+      : null,
+  );
+}
+
+export function useRepositoryChat(
+  id: string,
+  repo?: string,
+): QueryResult<RepositoryChatMessage[]> {
+  const query = repo ? `?repo=${encodeURIComponent(repo)}` : "";
+  const result = useQuery<RepositoryChatHistory>(
+    `/api/candidates/${encodeURIComponent(id)}/repository/chat${query}`,
+  );
+  return { ...result, data: result.data ? result.data.messages : null };
 }
 
 export function usePositions(): QueryResult<Position[]> {
@@ -773,4 +896,50 @@ export async function patchFinding(
   );
   invalidate(`/api/candidates/${encodeURIComponent(candidateId)}`);
   invalidate(`/api/candidates/${encodeURIComponent(candidateId)}/repository`);
+}
+
+export async function retryRepositories(
+  candidateId: string,
+  label?: string,
+): Promise<number> {
+  const result = await requestJSON<{ queued: number }>(
+    `/api/candidates/${encodeURIComponent(candidateId)}/repositories/retry`,
+    { method: "POST", body: JSON.stringify(label ? { label } : {}) },
+  );
+  invalidate(`/api/candidates/${encodeURIComponent(candidateId)}`);
+  invalidate(`/api/candidates/${encodeURIComponent(candidateId)}/repository`);
+  return result.queued;
+}
+
+export async function analyzeRepositoryFindings(
+  candidateId: string,
+  repo?: string,
+): Promise<{ repo: string; queued: boolean }> {
+  const result = await requestJSON<{ repo: string; queued: boolean }>(
+    `/api/candidates/${encodeURIComponent(candidateId)}/repository/findings`,
+    { method: "POST", body: JSON.stringify(repo ? { repo } : {}) },
+  );
+  invalidate(`/api/candidates/${encodeURIComponent(candidateId)}`);
+  invalidate(`/api/candidates/${encodeURIComponent(candidateId)}/repository`);
+  return result;
+}
+
+export async function sendRepositoryChatMessage(
+  candidateId: string,
+  repo: string | undefined,
+  message: string,
+): Promise<RepositoryChatMessage[]> {
+  const query = repo ? `?repo=${encodeURIComponent(repo)}` : "";
+  const result = await requestJSON<RepositoryChatHistory>(
+    `/api/candidates/${encodeURIComponent(candidateId)}/repository/chat${query}`,
+    {
+      method: "POST",
+      body: JSON.stringify(repo ? { repo, message } : { message }),
+    },
+  );
+  // Lần mount sau tải lại lịch sử đầy đủ thay vì bản cache trước khi gửi.
+  invalidate(
+    `/api/candidates/${encodeURIComponent(candidateId)}/repository/chat${query}`,
+  );
+  return result.messages;
 }

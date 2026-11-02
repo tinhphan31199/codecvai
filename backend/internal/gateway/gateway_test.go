@@ -13,6 +13,7 @@ import (
 	"codecv/backend/internal/analysis"
 	"codecv/backend/internal/model"
 	"codecv/backend/internal/positions"
+	"codecv/backend/internal/reporeview"
 	"codecv/backend/internal/store"
 )
 
@@ -689,5 +690,81 @@ func TestExtractLinksSkipsTextOnlyProviders(t *testing.T) {
 	}
 	if len(fake.requests) != 0 {
 		t.Fatalf("no upstream call should happen, got %d", len(fake.requests))
+	}
+}
+
+func TestChatRepositoryGoogleSendsPlainPrompt(t *testing.T) {
+	fake := newFakeProvider(t)
+	fake.payload = `{"candidates":[{"content":{"parts":[{"text":"Repo là ứng dụng demo Go."}]},"finishReason":"STOP"}]}`
+	gateway := newTestGateway(fake, model.AIModel{
+		ID: "gemini-3.5-flash-lite", Name: "Gemini", Provider: "Google", Active: true,
+	})
+
+	answer, err := gateway.ChatRepository(context.Background(), "gemini-3.5-flash-lite", reporeview.ChatInput{
+		RepositoryURL: "https://github.com/octo/demo",
+		Question:      "Repo này làm gì?",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if answer != "Repo là ứng dụng demo Go." {
+		t.Fatalf("answer = %q", answer)
+	}
+	if len(fake.requests) != 1 {
+		t.Fatalf("requests = %d, want one", len(fake.requests))
+	}
+	config, _ := fake.requests[0].body["generationConfig"].(map[string]any)
+	if config == nil {
+		t.Fatalf("missing generation config: %+v", fake.requests[0].body)
+	}
+	if _, exists := config["responseMimeType"]; exists {
+		t.Fatalf("chat must ask for plain text: %+v", config)
+	}
+	if fake.requests[0].body["systemInstruction"] == nil {
+		t.Fatal("chat request is missing the system instruction")
+	}
+}
+
+func TestChatRepositoryOpenAIDoesNotForceJSON(t *testing.T) {
+	fake := newFakeProvider(t)
+	gateway := newTestGateway(fake, model.AIModel{
+		ID: "gpt-5", Name: "GPT", Provider: "OpenAI", Active: true,
+	})
+
+	answer, err := gateway.ChatRepository(context.Background(), "gpt-5", reporeview.ChatInput{
+		RepositoryURL: "https://github.com/octo/demo",
+		Question:      "Repo này làm gì?",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if answer != analysisJSON {
+		t.Fatalf("answer = %q", answer)
+	}
+	if len(fake.requests) != 1 || fake.requests[0].path != "/v1/chat/completions" {
+		t.Fatalf("unexpected requests: %+v", fake.requests)
+	}
+	if _, exists := fake.requests[0].body["response_format"]; exists {
+		t.Fatalf("chat must not force a JSON response: %+v", fake.requests[0].body)
+	}
+}
+
+func TestChatRepositoryAnthropicUsesMessagesAPI(t *testing.T) {
+	fake := newFakeProvider(t)
+	gateway := newTestGateway(fake, model.AIModel{
+		ID: "claude-sonnet-4-5", Name: "Claude", Provider: "Anthropic", Active: true,
+	})
+
+	if _, err := gateway.ChatRepository(context.Background(), "claude-sonnet-4-5", reporeview.ChatInput{
+		RepositoryURL: "https://github.com/octo/demo",
+		Question:      "Repo này làm gì?",
+	}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(fake.requests) != 1 || fake.requests[0].path != "/v1/messages" {
+		t.Fatalf("unexpected requests: %+v", fake.requests)
+	}
+	if fake.requests[0].body["system"] == nil {
+		t.Fatal("anthropic chat is missing the system prompt")
 	}
 }

@@ -460,6 +460,50 @@ func (c *Client) ExtractLinks(ctx context.Context, modelID, fileURI, mimeType st
 	return urls, nil
 }
 
+// GenerateJSON runs one JSON-only request; used by the repository reviewer.
+func (c *Client) GenerateJSON(ctx context.Context, modelID, system, prompt string, schema map[string]any, maxTokens int) (string, error) {
+	if maxTokens <= 0 {
+		maxTokens = 4096
+	}
+	payload := map[string]any{
+		"systemInstruction": map[string]any{
+			"parts": []map[string]string{{"text": system}},
+		},
+		"contents": []map[string]any{
+			{"role": "user", "parts": []map[string]string{{"text": prompt}}},
+		},
+		"generationConfig": map[string]any{
+			"temperature":      0.2,
+			"topP":             0.9,
+			"maxOutputTokens":  maxTokens,
+			"responseMimeType": "application/json",
+			"responseSchema":   schema,
+		},
+	}
+	return c.generate(ctx, modelID, payload)
+}
+
+// GenerateText runs one plain-text request; used by the repository Q&A panel.
+func (c *Client) GenerateText(ctx context.Context, modelID, system, prompt string, maxTokens int) (string, error) {
+	if maxTokens <= 0 {
+		maxTokens = 2048
+	}
+	payload := map[string]any{
+		"systemInstruction": map[string]any{
+			"parts": []map[string]string{{"text": system}},
+		},
+		"contents": []map[string]any{
+			{"role": "user", "parts": []map[string]string{{"text": prompt}}},
+		},
+		"generationConfig": map[string]any{
+			"temperature":     0.3,
+			"topP":            0.9,
+			"maxOutputTokens": maxTokens,
+		},
+	}
+	return c.generate(ctx, modelID, payload)
+}
+
 func (c *Client) generate(ctx context.Context, modelID string, payload map[string]any) (string, error) {
 	endpoint := c.baseURL + "/models/" + url.PathEscape(modelID) + ":generateContent"
 
@@ -521,7 +565,7 @@ func upstreamError(status int, modelID string) *Error {
 		}
 	case http.StatusNotFound:
 		return &Error{
-			Code:    "upstream_error",
+			Code:    "model_unavailable",
 			Message: fmt.Sprintf("Model %s không khả dụng với API key hiện tại. Chọn model khác hoặc kiểm tra quyền truy cập.", modelID),
 		}
 	case http.StatusTooManyRequests:
