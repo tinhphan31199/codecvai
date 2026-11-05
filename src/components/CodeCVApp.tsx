@@ -21,6 +21,7 @@ import {
   MessagesSquare,
   Search,
   Settings as SettingsIcon,
+  Store,
   UploadCloud,
   Users,
   X,
@@ -41,6 +42,7 @@ import Login from "./screens/Login";
 import Dashboard from "./screens/Dashboard";
 import UploadCV from "./screens/UploadCV";
 import Candidates from "./screens/Candidates";
+import Market from "./screens/Market";
 import CandidateDetail from "./screens/CandidateDetail";
 import RepositoryScreen from "./screens/Repository";
 import InterviewStudio, { InterviewPicker } from "./screens/Interview";
@@ -55,6 +57,7 @@ const ROUTES: Screen[] = [
   "overview",
   "upload",
   "candidates",
+  "market",
   "candidate",
   "repository",
   "interview",
@@ -89,6 +92,7 @@ const navItems: {
 }[] = [
   { key: "overview", labelKey: "nav.dashboard", icon: LayoutDashboard, count: null },
   { key: "candidates", labelKey: "nav.candidates", icon: Users, count: 0 },
+  { key: "market", labelKey: "nav.market", icon: Store, count: null },
   { key: "upload", labelKey: "nav.upload", icon: UploadCloud, count: null },
   { key: "repository", labelKey: "nav.repository", icon: FolderGit2, count: null },
   { key: "interview", labelKey: "nav.interview", icon: MessagesSquare, count: null },
@@ -101,6 +105,7 @@ const screenTitles: Record<Screen, MessageKey> = {
   overview: "screen.dashboard",
   upload: "screen.upload",
   candidates: "screen.candidates",
+  market: "screen.market",
   candidate: "screen.candidate",
   repository: "screen.repository",
   interview: "screen.interview",
@@ -468,6 +473,7 @@ function Shell() {
                 setQuery={setListQuery}
               />
             ) : null}
+            {route.screen === "market" ? <Market /> : null}
             {route.screen === "candidate" ? (
               <CandidateDetail key={route.id ?? "an"} id={route.id ?? "an"} go={go} />
             ) : null}

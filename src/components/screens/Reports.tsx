@@ -5,10 +5,12 @@ import { ChevronRight, Download, FileText } from "lucide-react";
 import type { Screen } from "@/data/codecv";
 import { reportStatusMeta, statusMeta } from "@/data/codecv";
 import {
+  patchReportStatus,
   useCandidates,
   usePositions,
   useReports,
   useStats,
+  type Report,
 } from "@/lib/api";
 import { useT, type MessageKey } from "@/lib/i18n";
 import { CardHead, EmptyState, LoadError, PageHead, ScreenLoader } from "../ui";
@@ -37,12 +39,19 @@ export default function Reports({
   const [tab, setTab] = useState<ReportTab>("candidates");
   const [range, setRange] = useState("7");
   const t = useT();
+  const today = (() => {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, "0");
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    return `${day}/${month}`;
+  })();
   const stats = useStats();
   const {
     data: reports,
     loading: reportsLoading,
     error: reportsError,
     refetch: refetchReports,
+    refresh: refreshReports,
   } = useReports();
   const {
     data: candidateData,
@@ -89,13 +98,24 @@ export default function Reports({
     );
   }
 
-  const rows = reportList.filter((row) =>
-    range === "today" ? row.created.startsWith("26/10/2026") : true,
-  );
+  const rangeStart = (() => {
+    if (range === "today") {
+      const midnight = new Date();
+      midnight.setHours(0, 0, 0, 0);
+      return midnight.getTime();
+    }
+    const days = range === "30" ? 30 : 7;
+    return new Date().getTime() - days * 24 * 60 * 60 * 1000;
+  })();
+
+  const rows = reportList.filter((row) => {
+    const createdAt = Date.parse(row.createdAt);
+    return Number.isNaN(createdAt) || createdAt >= rangeStart;
+  });
 
   const tabCounts: Record<ReportTab, number> = {
-    candidates: reportList.length,
-    distribution: positionList.length,
+    candidates: rows.length,
+    distribution: stats.total,
     quality: positionList.length,
   };
 
@@ -143,8 +163,8 @@ export default function Reports({
     );
   };
 
-  const exportRow = (candidateId: string) => {
-    const candidate = candidateById.get(candidateId);
+  const exportRow = async (row: Report) => {
+    const candidate = candidateById.get(row.candidateId);
     if (!candidate) return;
     const content = [
       t("reports.exportMd.title", { name: candidate.name }),
@@ -173,6 +193,15 @@ export default function Reports({
       content,
       "text/markdown;charset=utf-8",
     );
+
+    if (row.status !== "exported") {
+      try {
+        await patchReportStatus(row.id, "exported");
+        refreshReports();
+      } catch {
+        // Tệp đã tải xong; trạng thái sẽ đồng bộ ở lần tải lại sau.
+      }
+    }
   };
 
   const maxStatus = Math.max(
@@ -181,7 +210,22 @@ export default function Reports({
       (status) => candidateList.filter((c) => c.status === status).length,
     ),
   );
-  const maxPosition = Math.max(0, ...positionList.map((p) => p.candidates));
+  const livePositions = positionList
+    .map((position) => ({
+      ...position,
+      liveCount: position.candidateCount ?? 0,
+    }))
+    .filter((position) => position.liveCount > 0)
+    .sort(
+      (a, b) => b.liveCount - a.liveCount || a.title.localeCompare(b.title),
+    );
+  const positionTotal = livePositions.reduce(
+    (sum, position) => sum + position.liveCount,
+    0,
+  );
+  const shownPositions = livePositions.slice(0, 6);
+  const hiddenPositions = livePositions.length - shownPositions.length;
+  const maxPosition = Math.max(0, ...shownPositions.map((p) => p.liveCount));
   const weakPositions = positionList.filter((p) => p.criteria.length < 4);
 
   return (
@@ -197,7 +241,9 @@ export default function Reports({
                 value={range}
                 onChange={(event) => setRange(event.target.value)}
               >
-                <option value="today">{t("reports.range.today")}</option>
+                <option value="today">
+                  {t("reports.range.today", { date: today })}
+                </option>
                 <option value="7">{t("reports.range.days7")}</option>
                 <option value="30">{t("reports.range.days30")}</option>
               </select>
@@ -321,7 +367,7 @@ export default function Reports({
                             aria-label={t("reports.downloadAria", {
                               name: row.candidate,
                             })}
-                            onClick={() => exportRow(row.candidateId)}
+                            onClick={() => void exportRow(row)}
                           >
                             <Download size={15} />
                           </button>
@@ -413,31 +459,44 @@ export default function Reports({
             <CardHead
               title={t("reports.distribution.positionTitle")}
               meta={t("reports.distribution.positionMeta", {
-                positions: positionList.length,
-                count: positionList.reduce((sum, p) => sum + p.candidates, 0),
+                positions: livePositions.length,
+                count: positionTotal,
               })}
             />
             <div className="bar-list">
-              {positionList.map((position) => (
-                <div className="bar-row" key={position.id}>
-                  <div className="bar-top">
-                    <span className="bar-label">{position.title}</span>
-                    <span className="bar-value num">{position.candidates}</span>
+              {shownPositions.length === 0 ? (
+                <EmptyState
+                  title={t("reports.distribution.positionEmptyTitle")}
+                  detail={t("reports.distribution.positionEmptyDetail")}
+                />
+              ) : (
+                shownPositions.map((position, index) => (
+                  <div className="bar-row" key={position.id}>
+                    <div className="bar-top">
+                      <span className="bar-label">{position.title}</span>
+                      <span className="bar-value num">{position.liveCount}</span>
+                    </div>
+                    <div className="bar-track">
+                      <span
+                        className={`bar-fill${index === 0 ? " is-lead" : ""}`}
+                        style={{
+                          width: `${(position.liveCount / maxPosition) * 100}%`,
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="bar-track">
-                    <span
-                      className="bar-fill"
-                      style={{ width: `${(position.candidates / maxPosition) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
             <div className="card-foot">
               <span className="foot-note">
-                {t("reports.distribution.positionFoot", {
-                  count: stats.total,
-                })}
+                {hiddenPositions > 0
+                  ? t("reports.distribution.positionMore", {
+                      count: hiddenPositions,
+                    })
+                  : t("reports.distribution.positionFoot", {
+                      count: positionTotal,
+                    })}
               </span>
             </div>
           </section>
@@ -478,7 +537,7 @@ export default function Reports({
                         {position.criteria.filter((c) => c.kind === "must").length}
                       </td>
                       <td className="num fig" data-label={t("reports.col.candidates")}>
-                        {position.candidates}
+                        {position.candidateCount ?? 0}
                       </td>
                     </tr>
                   ))}
@@ -505,7 +564,7 @@ export default function Reports({
                     <span className="flag-sub">
                       {t("reports.quality.weakSub", {
                         criteria: position.criteria.length,
-                        candidates: position.candidates,
+                        candidates: position.candidateCount ?? 0,
                       })}
                     </span>
                   </span>

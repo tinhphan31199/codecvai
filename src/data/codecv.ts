@@ -4,6 +4,7 @@ export type Screen =
   | "overview"
   | "upload"
   | "candidates"
+  | "market"
   | "candidate"
   | "repository"
   | "interview"

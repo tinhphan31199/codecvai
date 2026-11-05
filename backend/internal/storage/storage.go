@@ -128,6 +128,18 @@ func (c *Client) Get(ctx context.Context, key string) (Object, error) {
 	}, nil
 }
 
+// Delete gỡ object khi CV bị xoá khỏi chợ; object không tồn tại vẫn coi như thành công.
+func (c *Client) Delete(ctx context.Context, key string) error {
+	_, err := c.s3.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return fmt.Errorf("storage: delete: %w", err)
+	}
+	return nil
+}
+
 // Key tạo object key do server sinh: cv/<random>/<tên file đã làm sạch>.
 // Không dùng trực tiếp đường dẫn do client gửi lên.
 func Key(fileName string) (string, error) {

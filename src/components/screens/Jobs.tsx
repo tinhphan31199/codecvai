@@ -304,7 +304,9 @@ export default function Jobs({
                   </span>
                   <span>
                     <Users size={13} aria-hidden="true" />
-                    {t("jobs.candidates", { count: position.candidates })}
+                    {t("jobs.candidates", {
+                      count: position.candidateCount ?? 0,
+                    })}
                   </span>
                   <span>{position.open}</span>
                 </div>

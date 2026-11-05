@@ -47,6 +47,7 @@ export interface Report {
   status: "exported" | "review" | "failed";
   reviewer: string;
   created: string;
+  createdAt: string;
 }
 
 export interface TeamMember {
@@ -119,6 +120,38 @@ export interface AnalysisQueueItem {
   status: string;
   criteria: number;
   analyzedAt: string;
+}
+
+export interface MarketCV {
+  id: string;
+  name: string;
+  initials: string;
+  hue: number;
+  title: string;
+  email: string;
+  phone: string;
+  location: string;
+  years: number;
+  category: string;
+  level: string;
+  summary: string;
+  skills: string[];
+  highlights: string[];
+  fileName?: string;
+  hasCv: boolean;
+  model?: string;
+  ownerId?: string;
+  uploadedBy?: string;
+  visibility: "public" | "private";
+  saved: boolean;
+  canEdit: boolean;
+  createdAt: string;
+}
+
+export interface MarketUploadResponse {
+  cv: MarketCV;
+  provider: string;
+  durationMs: number;
 }
 
 export interface TreeNode {
@@ -454,6 +487,13 @@ export function useCandidate(id: string): QueryResult<Candidate> {
   return useQuery<Candidate>(`/api/candidates/${encodeURIComponent(id)}`);
 }
 
+export function useMarketCVs(): QueryResult<MarketCV[]> {
+  const result = useQuery<{ items: MarketCV[]; total: number }>(
+    "/api/market/cvs?limit=200",
+  );
+  return { ...result, data: result.data ? result.data.items : null };
+}
+
 export function useRepository(
   id: string,
   repo?: string,
@@ -496,6 +536,18 @@ export function usePositions(): QueryResult<Position[]> {
 export function useReports(): QueryResult<Report[]> {
   const result = useQuery<{ reports: Report[] }>("/api/reports");
   return { ...result, data: result.data ? result.data.reports : null };
+}
+
+export async function patchReportStatus(
+  id: string,
+  status: Report["status"],
+): Promise<Report> {
+  const updated = await requestJSON<Report>(
+    `/api/reports/${encodeURIComponent(id)}`,
+    { method: "PATCH", body: JSON.stringify({ status }) },
+  );
+  invalidate("/api/reports");
+  return updated;
 }
 
 export function useTeam(): QueryResult<TeamMember[]> {
@@ -650,6 +702,60 @@ export async function downloadCandidateCv(id: string): Promise<void> {
   link.download = match?.[1] ?? `CodeCV_${id}.pdf`;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+export async function downloadMarketCV(id: string): Promise<void> {
+  const token = authToken();
+  const response = await fetch(
+    `${API_BASE}/api/market/cvs/${encodeURIComponent(id)}/cv`,
+    { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+  );
+  if (response.status === 401) {
+    clearSession();
+  }
+  if (!response.ok) {
+    throw new Error(translate(getLang(), "market.downloadError"));
+  }
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const match = /filename="?([^";]+)"?/i.exec(disposition);
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = match?.[1] ?? `CodeCV_${id}.pdf`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function saveMarketCV(
+  id: string,
+  saved: boolean,
+): Promise<{ saved: boolean }> {
+  const result = await requestJSON<{ saved: boolean }>(
+    `/api/market/cvs/${encodeURIComponent(id)}/save`,
+    { method: saved ? "POST" : "DELETE" },
+  );
+  invalidate("/api/market/cvs?limit=200");
+  return result;
+}
+
+export async function setMarketCVVisibility(
+  id: string,
+  visibility: "public" | "private",
+): Promise<MarketCV> {
+  const updated = await requestJSON<MarketCV>(
+    `/api/market/cvs/${encodeURIComponent(id)}`,
+    { method: "PATCH", body: JSON.stringify({ visibility }) },
+  );
+  invalidate("/api/market/cvs?limit=200");
+  return updated;
+}
+
+export async function deleteMarketCV(id: string): Promise<void> {
+  await requestJSON<void>(`/api/market/cvs/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+  invalidate("/api/market/cvs?limit=200");
 }
 
 export async function patchCandidate(

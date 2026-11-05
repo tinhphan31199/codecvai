@@ -3,6 +3,7 @@ import type { Message } from "../types";
 const vi = {
   "nav.dashboard": "Tổng quan",
   "nav.candidates": "Ứng viên",
+  "nav.market": "Chợ CV",
   "nav.upload": "Phân tích CV",
   "nav.repository": "Phân tích repository",
   "nav.interview": "Phòng phỏng vấn",
@@ -12,6 +13,7 @@ const vi = {
 
   "screen.dashboard": "Tổng quan",
   "screen.candidates": "Ứng viên",
+  "screen.market": "Chợ CV",
   "screen.upload": "Phân tích CV",
   "screen.repository": "Phân tích repository",
   "screen.interview": "Phòng phỏng vấn",
@@ -43,6 +45,7 @@ const vi = {
 const en: Record<keyof typeof vi, Message> = {
   "nav.dashboard": "Dashboard",
   "nav.candidates": "Candidates",
+  "nav.market": "CV Market",
   "nav.upload": "CV Analysis",
   "nav.repository": "Repository Analysis",
   "nav.interview": "Interview Studio",
@@ -52,6 +55,7 @@ const en: Record<keyof typeof vi, Message> = {
 
   "screen.dashboard": "Dashboard",
   "screen.candidates": "Candidates",
+  "screen.market": "CV Market",
   "screen.upload": "CV Analysis",
   "screen.repository": "Repository Analysis",
   "screen.interview": "Interview Studio",

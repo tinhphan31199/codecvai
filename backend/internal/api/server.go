@@ -98,6 +98,14 @@ func New(cfg Config) http.Handler {
 	mux.HandleFunc("POST /api/auth/password", server.handleChangePassword)
 	mux.HandleFunc("POST /api/analyze-cv", server.handleAnalyze)
 	mux.HandleFunc("GET /api/analysis-queue", withStore(server, server.handleAnalysisQueue))
+	mux.HandleFunc("GET /api/market/cvs", withStore(server, server.handleMarketCVs))
+	mux.HandleFunc("POST /api/market/cvs", withStore(server, server.handleMarketUpload))
+	mux.HandleFunc("GET /api/market/cvs/{id}", withStore(server, server.handleMarketCV))
+	mux.HandleFunc("PATCH /api/market/cvs/{id}", withStore(server, server.handleMarketCV))
+	mux.HandleFunc("DELETE /api/market/cvs/{id}", withStore(server, server.handleMarketCV))
+	mux.HandleFunc("GET /api/market/cvs/{id}/cv", withStore(server, server.handleMarketCVFile))
+	mux.HandleFunc("POST /api/market/cvs/{id}/save", withStore(server, server.handleMarketCVSave))
+	mux.HandleFunc("DELETE /api/market/cvs/{id}/save", withStore(server, server.handleMarketCVSave))
 
 	mux.HandleFunc("GET /api/workspace", withStore(server, server.handleWorkspace))
 	mux.HandleFunc("PUT /api/workspace", withStore(server, server.handleWorkspace))
@@ -166,6 +174,70 @@ func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
+type cvUpload struct {
+	buffer   []byte
+	fileName string
+	fileType cvextract.Type
+}
+
+// readCVUpload validates the multipart CV shared by analysis and marketplace uploads.
+func (s *Server) readCVUpload(w http.ResponseWriter, r *http.Request) (cvUpload, bool) {
+	if r.ContentLength > maxFileBytes+maxOverhead {
+		s.fail(w, http.StatusRequestEntityTooLarge, "too_large", "Tệp vượt quá 10 MB. Nén hoặc xuất lại CV rồi thử lại.")
+		return cvUpload{}, false
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, maxFileBytes+maxOverhead)
+	if err := r.ParseMultipartForm(maxFileBytes); err != nil {
+		var tooLarge *http.MaxBytesError
+		if errors.As(err, &tooLarge) {
+			s.fail(w, http.StatusRequestEntityTooLarge, "too_large", "Tệp vượt quá 10 MB. Nén hoặc xuất lại CV rồi thử lại.")
+			return cvUpload{}, false
+		}
+		s.fail(w, http.StatusBadRequest, "bad_request", "Không đọc được dữ liệu gửi lên.")
+		return cvUpload{}, false
+	}
+	defer r.MultipartForm.RemoveAll()
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		s.fail(w, http.StatusBadRequest, "bad_request", "Thiếu tệp CV trong yêu cầu.")
+		return cvUpload{}, false
+	}
+	defer file.Close()
+
+	if header.Size == 0 {
+		s.fail(w, http.StatusBadRequest, "bad_request", "Tệp CV rỗng. Chọn tệp khác.")
+		return cvUpload{}, false
+	}
+	if header.Size > maxFileBytes {
+		s.fail(w, http.StatusRequestEntityTooLarge, "too_large", "Tệp vượt quá 10 MB. Nén hoặc xuất lại CV rồi thử lại.")
+		return cvUpload{}, false
+	}
+
+	buffer, err := io.ReadAll(io.LimitReader(file, maxFileBytes+1))
+	if err != nil {
+		s.fail(w, http.StatusBadRequest, "bad_request", "Không đọc được dữ liệu gửi lên.")
+		return cvUpload{}, false
+	}
+	if len(buffer) == 0 {
+		s.fail(w, http.StatusBadRequest, "bad_request", "Tệp CV rỗng. Chọn tệp khác.")
+		return cvUpload{}, false
+	}
+	if len(buffer) > maxFileBytes {
+		s.fail(w, http.StatusRequestEntityTooLarge, "too_large", "Tệp vượt quá 10 MB. Nén hoặc xuất lại CV rồi thử lại.")
+		return cvUpload{}, false
+	}
+
+	fileType, supported := cvextract.Detect(header.Filename, header.Header.Get("Content-Type"))
+	if !supported {
+		s.fail(w, http.StatusUnsupportedMediaType, "unsupported_type", "Chỉ hỗ trợ CV định dạng PDF hoặc DOCX.")
+		return cvUpload{}, false
+	}
+
+	return cvUpload{buffer: buffer, fileName: header.Filename, fileType: fileType}, true
+}
+
 func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 	startedAt := time.Now()
 
@@ -174,58 +246,13 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.ContentLength > maxFileBytes+maxOverhead {
-		s.fail(w, http.StatusRequestEntityTooLarge, "too_large", "Tệp vượt quá 10 MB. Nén hoặc xuất lại CV rồi thử lại.")
+	upload, ok := s.readCVUpload(w, r)
+	if !ok {
 		return
 	}
-
-	r.Body = http.MaxBytesReader(w, r.Body, maxFileBytes+maxOverhead)
-	if err := r.ParseMultipartForm(maxFileBytes); err != nil {
-		var tooLarge *http.MaxBytesError
-		if errors.As(err, &tooLarge) {
-			s.fail(w, http.StatusRequestEntityTooLarge, "too_large", "Tệp vượt quá 10 MB. Nén hoặc xuất lại CV rồi thử lại.")
-			return
-		}
-		s.fail(w, http.StatusBadRequest, "bad_request", "Không đọc được dữ liệu gửi lên.")
-		return
-	}
-	defer r.MultipartForm.RemoveAll()
-
-	file, header, err := r.FormFile("file")
-	if err != nil {
-		s.fail(w, http.StatusBadRequest, "bad_request", "Thiếu tệp CV trong yêu cầu.")
-		return
-	}
-	defer file.Close()
-
-	if header.Size == 0 {
-		s.fail(w, http.StatusBadRequest, "bad_request", "Tệp CV rỗng. Chọn tệp khác.")
-		return
-	}
-	if header.Size > maxFileBytes {
-		s.fail(w, http.StatusRequestEntityTooLarge, "too_large", "Tệp vượt quá 10 MB. Nén hoặc xuất lại CV rồi thử lại.")
-		return
-	}
-
-	buffer, err := io.ReadAll(io.LimitReader(file, maxFileBytes+1))
-	if err != nil {
-		s.fail(w, http.StatusBadRequest, "bad_request", "Không đọc được dữ liệu gửi lên.")
-		return
-	}
-	if len(buffer) == 0 {
-		s.fail(w, http.StatusBadRequest, "bad_request", "Tệp CV rỗng. Chọn tệp khác.")
-		return
-	}
-	if len(buffer) > maxFileBytes {
-		s.fail(w, http.StatusRequestEntityTooLarge, "too_large", "Tệp vượt quá 10 MB. Nén hoặc xuất lại CV rồi thử lại.")
-		return
-	}
-
-	fileType, supported := cvextract.Detect(header.Filename, header.Header.Get("Content-Type"))
-	if !supported {
-		s.fail(w, http.StatusUnsupportedMediaType, "unsupported_type", "Chỉ hỗ trợ CV định dạng PDF hoặc DOCX.")
-		return
-	}
+	buffer := upload.buffer
+	fileName := upload.fileName
+	fileType := upload.fileType
 
 	position, found := s.promptPosition(r.Context(), r.FormValue("positionId"))
 	if !found {
@@ -253,6 +280,7 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 	var (
 		extracted cvextract.Result
 		cvFile    []byte
+		err       error
 	)
 
 	if fileType == cvextract.TypePDF {
@@ -278,7 +306,7 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 		cvFileMime string
 	)
 	if len(extraction.Targets) == 0 && modelID != "" && len(cvFile) > 0 {
-		aiLinks, uploaded, err := s.gateway.ExtractLinks(r.Context(), modelID, cvFile, header.Filename)
+		aiLinks, uploaded, err := s.gateway.ExtractLinks(r.Context(), modelID, cvFile, fileName)
 		if err != nil {
 			log.Printf("[analyze-cv] link fallback failed: %v", err)
 		} else {
@@ -304,7 +332,7 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 		CVFile:           cvFile,
 		CVFileURI:        cvFileURI,
 		CVFileMime:       cvFileMime,
-		CVFileName:       header.Filename,
+		CVFileName:       fileName,
 		Repositories:     evidence.Repositories,
 		GithubContext:    evidence.Context,
 		Position:         position,
@@ -334,7 +362,7 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 		time.Since(startedAt).Round(time.Millisecond),
 	)
 
-	cvKey := s.storeCV(r.Context(), fileType, header.Filename, buffer)
+	cvKey := s.storeCV(r.Context(), fileType, fileName, buffer)
 
 	user, _ := userFromContext(r.Context())
 	if _, err := s.store.SaveAnalysis(r.Context(), store.SaveAnalysisInput{
@@ -342,7 +370,7 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 		Position:     position.Title,
 		Level:        level,
 		Model:        modelID,
-		FileName:     header.Filename,
+		FileName:     fileName,
 		CVKey:        cvKey,
 		Analysis:     result.Analysis,
 		Repositories: savedRepos,

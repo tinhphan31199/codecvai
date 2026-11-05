@@ -9,7 +9,7 @@ const vi = {
   "reports.sub":
     "Báo cáo ứng viên, phân bố hồ sơ và chất lượng JD · cập nhật {updated}",
   "reports.rangeLabel": "Khoảng thời gian",
-  "reports.range.today": "Hôm nay · 26/10",
+  "reports.range.today": "Hôm nay · {date}",
   "reports.range.days7": "7 ngày qua",
   "reports.range.days30": "30 ngày qua",
   "reports.export": "Xuất báo cáo",
@@ -54,6 +54,10 @@ const vi = {
   "reports.distribution.positionMeta": "{positions} vị trí · {count} hồ sơ",
   "reports.distribution.positionFoot":
     "Tổng khớp {count} hồ sơ trong workspace.",
+  "reports.distribution.positionEmptyTitle": "Chưa có hồ sơ theo vị trí",
+  "reports.distribution.positionEmptyDetail":
+    "Số hồ sơ sẽ xuất hiện sau khi CV được phân tích.",
+  "reports.distribution.positionMore": "+{count} vị trí khác có hồ sơ",
 
   "reports.quality.title": "Tiêu chí theo vị trí",
   "reports.quality.meta": "{count} JD · nguồn xác minh",
@@ -94,7 +98,7 @@ const en: Record<keyof typeof vi, Message> = {
   "reports.sub":
     "Candidate reports, distribution and JD quality · updated {updated}",
   "reports.rangeLabel": "Time range",
-  "reports.range.today": "Today · 26/10",
+  "reports.range.today": "Today · {date}",
   "reports.range.days7": "Last 7 days",
   "reports.range.days30": "Last 30 days",
   "reports.export": "Export report",
@@ -145,6 +149,13 @@ const en: Record<keyof typeof vi, Message> = {
     "{positions} positions · {count} candidates",
   "reports.distribution.positionFoot":
     "Totals match {count} candidates in the workspace.",
+  "reports.distribution.positionEmptyTitle": "No candidates by position yet",
+  "reports.distribution.positionEmptyDetail":
+    "Counts appear once a CV has been analyzed.",
+  "reports.distribution.positionMore": {
+    one: "+{count} more position with candidates",
+    other: "+{count} more positions with candidates",
+  },
 
   "reports.quality.title": "Criteria by position",
   "reports.quality.meta": {

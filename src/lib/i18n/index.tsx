@@ -7,6 +7,7 @@ import { authMessages } from "./messages/auth";
 import { shellMessages } from "./messages/shell";
 import { dashboardMessages } from "./messages/dashboard";
 import { candidatesMessages } from "./messages/candidates";
+import { marketMessages } from "./messages/market";
 import { candidateMessages } from "./messages/candidate";
 import { uploadMessages } from "./messages/upload";
 import { repositoryMessages } from "./messages/repository";
@@ -27,6 +28,7 @@ const vi = {
   ...shellMessages.vi,
   ...dashboardMessages.vi,
   ...candidatesMessages.vi,
+  ...marketMessages.vi,
   ...candidateMessages.vi,
   ...uploadMessages.vi,
   ...repositoryMessages.vi,
@@ -44,6 +46,7 @@ const en: Record<keyof typeof vi, Message> = {
   ...shellMessages.en,
   ...dashboardMessages.en,
   ...candidatesMessages.en,
+  ...marketMessages.en,
   ...candidateMessages.en,
   ...uploadMessages.en,
   ...repositoryMessages.en,

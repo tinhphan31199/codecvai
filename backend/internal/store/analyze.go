@@ -248,8 +248,18 @@ func (s *Store) insertAnalysisCandidate(ctx context.Context, ownerID string, can
 		}
 	}
 
-	if _, err := tx.Exec(ctx, `UPDATE positions SET candidates = candidates + 1 WHERE title = $1`, candidate.Position); err != nil {
-		return fmt.Errorf("store: bump position counter: %w", err)
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO reports (id, candidate_id, candidate, position, version, status, reviewer, created, created_at)
+		VALUES (
+			$1, $2, $3, $4,
+			(SELECT COALESCE(MAX(version), 0) + 1 FROM reports WHERE candidate = $3 AND position = $4),
+			'review', $5, $6, $7
+		)
+		ON CONFLICT (id) DO NOTHING`,
+		"rp-"+candidate.ID, candidate.ID, candidate.Name, candidate.Position,
+		candidate.Reviewer, analyzedAt.Format("02/01/2006 · 15:04"), analyzedAt,
+	); err != nil {
+		return fmt.Errorf("store: save report: %w", err)
 	}
 
 	return tx.Commit(ctx)

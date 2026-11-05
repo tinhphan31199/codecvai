@@ -479,6 +479,12 @@ func (s *Server) handleReport(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if patch.Status != "" {
+			switch patch.Status {
+			case "exported", "review", "failed":
+			default:
+				s.fail(w, http.StatusBadRequest, "bad_request", "Trạng thái báo cáo không hợp lệ.")
+				return
+			}
 			if err := s.store.UpdateReportStatus(r.Context(), id, patch.Status); err != nil {
 				s.storeError(w, err)
 				return

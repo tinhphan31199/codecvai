@@ -79,6 +79,47 @@ type CandidateRecord struct {
 	HasCV      bool        `json:"hasCv"`
 }
 
+// MarketProfile là phần AI đọc trực tiếp từ CV để gắn thẻ cho chợ CV.
+type MarketProfile struct {
+	Name       string   `json:"name"`
+	Title      string   `json:"title"`
+	Email      string   `json:"email"`
+	Phone      string   `json:"phone"`
+	Location   string   `json:"location"`
+	Years      int      `json:"years"`
+	Category   string   `json:"category"`
+	Level      string   `json:"level"`
+	Summary    string   `json:"summary"`
+	Skills     []string `json:"skills"`
+	Highlights []string `json:"highlights"`
+}
+
+type MarketCV struct {
+	ID         string   `json:"id"`
+	Name       string   `json:"name"`
+	Initials   string   `json:"initials"`
+	Hue        int      `json:"hue"`
+	Title      string   `json:"title"`
+	Email      string   `json:"email"`
+	Phone      string   `json:"phone"`
+	Location   string   `json:"location"`
+	Years      int      `json:"years"`
+	Category   string   `json:"category"`
+	Level      string   `json:"level"`
+	Summary    string   `json:"summary"`
+	Skills     []string `json:"skills"`
+	Highlights []string `json:"highlights"`
+	FileName   string   `json:"fileName,omitempty"`
+	HasCV      bool     `json:"hasCv"`
+	Model      string   `json:"model,omitempty"`
+	OwnerID    string   `json:"ownerId,omitempty"`
+	UploadedBy string   `json:"uploadedBy,omitempty"`
+	Visibility string   `json:"visibility"`
+	Saved      bool     `json:"saved"`
+	CanEdit    bool     `json:"canEdit"`
+	CreatedAt  string   `json:"createdAt"`
+}
+
 type PositionCriterion struct {
 	Label  string `json:"label"`
 	Kind   string `json:"kind"`
@@ -110,6 +151,7 @@ type Report struct {
 	Status      string `json:"status"`
 	Reviewer    string `json:"reviewer"`
 	Created     string `json:"created"`
+	CreatedAt   string `json:"createdAt"`
 }
 
 type TeamMember struct {

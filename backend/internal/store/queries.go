@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"codecv/backend/internal/model"
 
@@ -553,16 +554,18 @@ func (s *Store) Questions(ctx context.Context, id string) ([]model.Question, err
 	return questions, rows.Err()
 }
 
+const reportCols = `
+	r.id, r.candidate_id, r.candidate, r.position, r.version, r.status,
+	r.reviewer, r.created, COALESCE(r.created_at, now())`
+
 func (s *Store) Reports(ctx context.Context, ownerID string) ([]model.Report, error) {
-	query := `
-		SELECT r.id, r.candidate_id, r.candidate, r.position, r.version, r.status, r.reviewer, r.created
-		FROM reports r`
+	query := `SELECT ` + reportCols + ` FROM reports r`
 	args := []any{}
 	if ownerID != "" {
 		query += ` JOIN candidates c ON c.id = r.candidate_id WHERE c.owner_id = $1`
 		args = append(args, ownerID)
 	}
-	query += ` ORDER BY r.created DESC`
+	query += ` ORDER BY COALESCE(r.created_at, now()) DESC, r.id DESC`
 
 	rows, err := s.pool.Query(ctx, query, args...)
 	if err != nil {
@@ -572,10 +575,8 @@ func (s *Store) Reports(ctx context.Context, ownerID string) ([]model.Report, er
 
 	reports := make([]model.Report, 0)
 	for rows.Next() {
-		var report model.Report
-		if err := rows.Scan(&report.ID, &report.CandidateID, &report.Candidate,
-			&report.Position, &report.Version, &report.Status, &report.Reviewer,
-			&report.Created); err != nil {
+		report, err := scanReport(rows)
+		if err != nil {
 			return nil, err
 		}
 		reports = append(reports, report)
@@ -584,10 +585,7 @@ func (s *Store) Reports(ctx context.Context, ownerID string) ([]model.Report, er
 }
 
 func (s *Store) Report(ctx context.Context, id, ownerID string) (model.Report, error) {
-	var report model.Report
-	query := `
-		SELECT r.id, r.candidate_id, r.candidate, r.position, r.version, r.status, r.reviewer, r.created
-		FROM reports r`
+	query := `SELECT ` + reportCols + ` FROM reports r`
 	args := []any{id}
 	if ownerID != "" {
 		query += ` JOIN candidates c ON c.id = r.candidate_id WHERE r.id = $1 AND c.owner_id = $2`
@@ -595,15 +593,25 @@ func (s *Store) Report(ctx context.Context, id, ownerID string) (model.Report, e
 	} else {
 		query += ` WHERE r.id = $1`
 	}
-	err := s.pool.QueryRow(ctx, query, args...).
-		Scan(&report.ID, &report.CandidateID, &report.Candidate, &report.Position,
-			&report.Version, &report.Status, &report.Reviewer, &report.Created)
+	report, err := scanReport(s.pool.QueryRow(ctx, query, args...))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return model.Report{}, ErrNotFound
 		}
 		return model.Report{}, err
 	}
+	return report, nil
+}
+
+func scanReport(row pgx.Row) (model.Report, error) {
+	var report model.Report
+	var createdAt time.Time
+	if err := row.Scan(&report.ID, &report.CandidateID, &report.Candidate,
+		&report.Position, &report.Version, &report.Status, &report.Reviewer,
+		&report.Created, &createdAt); err != nil {
+		return model.Report{}, err
+	}
+	report.CreatedAt = createdAt.UTC().Format(time.RFC3339)
 	return report, nil
 }
 

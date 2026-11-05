@@ -404,6 +404,54 @@ func (c *Client) Analyze(ctx context.Context, input Input) (model.Analysis, erro
 	return analysisResult, nil
 }
 
+// Categorize đọc CV và trả hồ sơ đã gắn chuyên môn cho chợ CV.
+func (c *Client) Categorize(ctx context.Context, input analysis.MarketInput, modelID string) (model.MarketProfile, error) {
+	parts := make([]map[string]any, 0, 2)
+	if input.CVFileURI != "" {
+		parts = append(parts, map[string]any{
+			"file_data": map[string]any{
+				"mime_type": input.CVFileMime,
+				"file_uri":  input.CVFileURI,
+			},
+		})
+	}
+	parts = append(parts, map[string]any{"text": analysis.BuildMarketPrompt(input)})
+
+	payload := map[string]any{
+		"systemInstruction": map[string]any{
+			"parts": []map[string]string{{"text": analysis.MarketSystemInstruction}},
+		},
+		"contents": []map[string]any{
+			{
+				"role":  "user",
+				"parts": parts,
+			},
+		},
+		"generationConfig": map[string]any{
+			"temperature":      0.2,
+			"topP":             0.9,
+			"maxOutputTokens":  2048,
+			"responseMimeType": "application/json",
+			"responseSchema":   analysis.GeminiMarketSchema(),
+		},
+	}
+
+	text, err := c.generate(ctx, modelID, payload)
+	if err != nil {
+		return model.MarketProfile{}, err
+	}
+
+	profile, err := analysis.DecodeMarket(text, input.Levels)
+	if err != nil {
+		return model.MarketProfile{}, &Error{
+			Code:    "invalid_output",
+			Message: "Gemini trả về dữ liệu phân loại không hợp lệ. Vui lòng thử lại.",
+		}
+	}
+
+	return profile, nil
+}
+
 // ExtractLinks đọc link GitHub trực tiếp từ tệp CV đã tải lên Files API,
 // dùng khi văn bản trích xuất không còn link nào để quét.
 func (c *Client) ExtractLinks(ctx context.Context, modelID, fileURI, mimeType string) ([]string, error) {
