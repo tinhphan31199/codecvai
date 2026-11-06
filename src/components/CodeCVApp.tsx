@@ -15,6 +15,7 @@ import {
   FileText,
   Files,
   FolderGit2,
+  GitCompare,
   HelpCircle,
   LayoutDashboard,
   LogOut,
@@ -45,6 +46,7 @@ import Dashboard from "./screens/Dashboard";
 import UploadCV from "./screens/UploadCV";
 import Builder from "./screens/Builder";
 import MyCVs from "./screens/MyCVs";
+import Compare from "./screens/Compare";
 import Candidates from "./screens/Candidates";
 import Market from "./screens/Market";
 import CandidateDetail from "./screens/CandidateDetail";
@@ -62,6 +64,7 @@ const ROUTES: Screen[] = [
   "upload",
   "builder",
   "my-cvs",
+  "compare",
   "candidates",
   "market",
   "candidate",
@@ -102,6 +105,7 @@ const navItems: {
   { key: "upload", labelKey: "nav.upload", icon: UploadCloud, count: null },
   { key: "builder", labelKey: "nav.builder", icon: Sparkles, count: null },
   { key: "my-cvs", labelKey: "nav.myCvs", icon: Files, count: null },
+  { key: "compare", labelKey: "nav.compare", icon: GitCompare, count: null },
   { key: "repository", labelKey: "nav.repository", icon: FolderGit2, count: null },
   { key: "interview", labelKey: "nav.interview", icon: MessagesSquare, count: null },
   { key: "jobs", labelKey: "nav.jobs", icon: FileText, count: null },
@@ -114,6 +118,7 @@ const screenTitles: Record<Screen, MessageKey> = {
   upload: "screen.upload",
   builder: "screen.builder",
   "my-cvs": "screen.myCvs",
+  compare: "screen.compare",
   candidates: "screen.candidates",
   market: "screen.market",
   candidate: "screen.candidate",
@@ -484,6 +489,7 @@ function Shell() {
               />
             ) : null}
             {route.screen === "my-cvs" ? <MyCVs go={go} /> : null}
+            {route.screen === "compare" ? <Compare go={go} /> : null}
             {route.screen === "candidates" ? (
               <Candidates
                 go={go}

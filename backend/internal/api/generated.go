@@ -14,6 +14,8 @@ import (
 
 // handleGenerateCV viết CV từ form người dùng nhập. Endpoint chỉ sinh nội dung;
 // CV được lưu riêng khi người dùng bấm lưu ở màn hình CV của tôi.
+const maxAvatarChars = 200_000
+
 func (s *Server) handleGenerateCV(w http.ResponseWriter, r *http.Request) {
 	startedAt := time.Now()
 
@@ -102,6 +104,29 @@ func (s *Server) handleGenerateCV(w http.ResponseWriter, r *http.Request) {
 // normalizeBuilderInput giới hạn độ dài từng trường để prompt không phình to
 // và chặn form rỗng khiến AI phải bịa nội dung.
 func normalizeBuilderInput(input model.BuilderInput) (model.BuilderInput, string) {
+	normalized := clipBuilderInput(input)
+	if normalized.FullName == "" {
+		return model.BuilderInput{}, "Nhập họ tên để AI tạo CV."
+	}
+	if normalized.Position == "" {
+		return model.BuilderInput{}, "Nhập vị trí ứng tuyển để AI định hướng nội dung."
+	}
+	if len(normalized.Experiences) == 0 &&
+		len(normalized.Education) == 0 &&
+		len(normalized.Projects) == 0 &&
+		len(normalized.Skills) == 0 {
+		return model.BuilderInput{}, "Nhập ít nhất một kinh nghiệm, học vấn, dự án hoặc kỹ năng để AI có dữ kiện viết CV."
+	}
+	return normalized, ""
+}
+
+// normalizeDraftInput clips a draft the same way but accepts an unfinished
+// form, because the user saves it before generating anything.
+func normalizeDraftInput(input model.BuilderInput) model.BuilderInput {
+	return clipBuilderInput(input)
+}
+
+func clipBuilderInput(input model.BuilderInput) model.BuilderInput {
 	normalized := model.BuilderInput{
 		FullName:  clipText(input.FullName, 120),
 		Email:     clipText(input.Email, 160),
@@ -114,13 +139,8 @@ func normalizeBuilderInput(input model.BuilderInput) (model.BuilderInput, string
 		Level:     clipText(input.Level, 80),
 		Years:     input.Years,
 		Notes:     clipText(input.Notes, 2000),
+		Avatar:    clipAvatar(input.Avatar),
 		SourceID:  clipText(input.SourceID, 80),
-	}
-	if normalized.FullName == "" {
-		return model.BuilderInput{}, "Nhập họ tên để AI tạo CV."
-	}
-	if normalized.Position == "" {
-		return model.BuilderInput{}, "Nhập vị trí ứng tuyển để AI định hướng nội dung."
 	}
 	if normalized.Years < 0 {
 		normalized.Years = 0
@@ -180,13 +200,6 @@ func normalizeBuilderInput(input model.BuilderInput) (model.BuilderInput, string
 		}
 	}
 
-	if len(normalized.Experiences) == 0 &&
-		len(normalized.Education) == 0 &&
-		len(normalized.Projects) == 0 &&
-		len(normalized.Skills) == 0 {
-		return model.BuilderInput{}, "Nhập ít nhất một kinh nghiệm, học vấn, dự án hoặc kỹ năng để AI có dữ kiện viết CV."
-	}
-
 	if normalized.Experiences == nil {
 		normalized.Experiences = []model.BuilderExperience{}
 	}
@@ -197,7 +210,17 @@ func normalizeBuilderInput(input model.BuilderInput) (model.BuilderInput, string
 		normalized.Projects = []model.BuilderProject{}
 	}
 
-	return normalized, ""
+	return normalized
+}
+
+// clipAvatar keeps only a small inline image; oversized or non-image payloads
+// are dropped so every saved CV and request stays lean.
+func clipAvatar(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if !strings.HasPrefix(trimmed, "data:image/") || len(trimmed) > maxAvatarChars {
+		return ""
+	}
+	return trimmed
 }
 
 func clipText(value string, maxLength int) string {

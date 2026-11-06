@@ -70,6 +70,7 @@ type BuilderInput struct {
 	Certifications []string            `json:"certifications"`
 	Languages      []string            `json:"languages"`
 	Notes          string              `json:"notes"`
+	Avatar         string              `json:"avatar,omitempty"`
 	SourceID       string              `json:"sourceCandidateId,omitempty"`
 }
 
@@ -91,6 +92,16 @@ type BuilderProject struct {
 	Role        string `json:"role"`
 	Period      string `json:"period"`
 	Description string `json:"description"`
+}
+
+// BuilderDraft is the per-account snapshot of the builder form, kept before
+// the user generates or saves a CV.
+type BuilderDraft struct {
+	Input     BuilderInput `json:"input"`
+	Language  string       `json:"language"`
+	Template  string       `json:"template"`
+	Accent    string       `json:"accent"`
+	UpdatedAt string       `json:"updatedAt"`
 }
 
 // GeneratedCVDraft is one AI generation result before the user saves it.

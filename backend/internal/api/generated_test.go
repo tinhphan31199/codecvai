@@ -211,6 +211,31 @@ func TestHandleGenerateCVValidatesInput(t *testing.T) {
 	}
 }
 
+func TestNormalizeDraftInputKeepsAvatarAndAllowsEmptyForm(t *testing.T) {
+	draft := normalizeDraftInput(model.BuilderInput{Avatar: "data:image/jpeg;base64,AAAA"})
+	if draft.Avatar != "data:image/jpeg;base64,AAAA" {
+		t.Fatalf("avatar should survive clipping: %q", draft.Avatar)
+	}
+	if draft.Experiences == nil || draft.Education == nil || draft.Projects == nil {
+		t.Fatal("empty lists should be serialized as arrays, not null")
+	}
+	if draft.FullName != "" || draft.Position != "" {
+		t.Fatalf("draft must accept an unfinished form: %+v", draft)
+	}
+}
+
+func TestClipAvatarDropsUnsafeOrOversizedPayloads(t *testing.T) {
+	for _, avatar := range []string{
+		"https://example.com/photo.png",
+		"data:text/html;base64,AAAA",
+		"data:image/png;base64," + strings.Repeat("A", maxAvatarChars),
+	} {
+		if got := normalizeDraftInput(model.BuilderInput{Avatar: avatar}).Avatar; got != "" {
+			t.Fatalf("avatar should be dropped, got %d chars", len(got))
+		}
+	}
+}
+
 func TestHandleGenerateCVRejectsUnknownFields(t *testing.T) {
 	server := newGenerateServer(t, http.StatusOK, generatedCVUpstream)
 	body := strings.TrimSuffix(generateRequestBody(t, testBuilderInput()), "}") + `,"extra":true}`

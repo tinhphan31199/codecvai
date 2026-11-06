@@ -5,6 +5,7 @@ export type Screen =
   | "upload"
   | "builder"
   | "my-cvs"
+  | "compare"
   | "candidates"
   | "market"
   | "candidate"

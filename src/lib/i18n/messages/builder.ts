@@ -17,6 +17,7 @@ const vi = {
 
   "builder.fullName": "Họ và tên",
   "builder.position": "Vị trí ứng tuyển",
+  "builder.positionPlaceholder": "Chọn vị trí ứng tuyển…",
   "builder.email": "Email",
   "builder.phone": "Số điện thoại",
   "builder.location": "Địa điểm",
@@ -32,6 +33,13 @@ const vi = {
   "builder.skillsHint":
     "Phân tách bằng dấu phẩy. AI chỉ dùng đúng kỹ năng bạn nhập.",
   "builder.skillsPlaceholder": "React, TypeScript, PostgreSQL, Docker",
+  "builder.skillPickerPlaceholder": "Tìm và chọn kỹ năng, ngôn ngữ…",
+  "builder.skillPickerEmpty": "Không tìm thấy kỹ năng phù hợp.",
+  "builder.skillGroupLanguages": "Ngôn ngữ lập trình",
+  "builder.skillGroupFrontend": "Frontend",
+  "builder.skillGroupBackend": "Backend & dữ liệu",
+  "builder.skillGroupDevops": "DevOps & cloud",
+  "builder.skillGroupData": "Dữ liệu & thiết kế",
   "builder.certifications": "Chứng chỉ",
   "builder.certificationsHint":
     "Mỗi dòng một chứng chỉ, kèm năm hoặc tổ chức nếu có.",
@@ -39,6 +47,20 @@ const vi = {
   "builder.languagesHint":
     "Mỗi dòng một ngoại ngữ, ví dụ English — IELTS 7.0.",
   "builder.listPlaceholder": "Mỗi dòng một mục",
+  "builder.avatarLabel": "Ảnh đại diện",
+  "builder.avatarUpload": "Chọn ảnh",
+  "builder.avatarRemove": "Xoá ảnh",
+  "builder.avatarHint":
+    "Ảnh được cắt vuông và in kèm trên CV. JPG/PNG tối đa 5 MB.",
+  "builder.avatarError":
+    "Không đọc được ảnh. Chọn tệp JPG, PNG hoặc WebP dưới 5 MB.",
+  "builder.draftSave": "Lưu nháp thông tin",
+  "builder.draftSaving": "Đang lưu nháp…",
+  "builder.draftSaved":
+    "Đã lưu nháp. Mở lại Tạo CV AI sẽ khôi phục thông tin này.",
+  "builder.draftRestored":
+    "Đã khôi phục thông tin từ bản nháp đã lưu.",
+  "builder.draftError": "Không lưu được bản nháp",
 
   "builder.experienceTitle": "Kinh nghiệm làm việc",
   "builder.experienceEmpty": "Chưa có kinh nghiệm nào. Thêm mục đầu tiên.",
@@ -131,6 +153,21 @@ const vi = {
   "builder.print": "In / Tải PDF",
   "builder.printHint":
     "Trong hộp thoại in, chọn Save as PDF để lưu bản A4.",
+  "builder.analyze": "Phân tích CV",
+  "builder.analyzing": "AI đang phân tích…",
+  "builder.analyzeHint":
+    "AI đối chiếu bản nháp với tiêu chí của vị trí ứng tuyển.",
+  "builder.analyzePositionError":
+    "Nhập vị trí ứng tuyển trong biểu mẫu để phân tích CV.",
+  "builder.reviewTitle": "Kết quả phân tích CV",
+  "builder.reviewMeta": "{model} · {seconds}s",
+  "builder.reviewEvidence": "Mức độ đáp ứng",
+  "builder.reviewCriteria": "Đối chiếu tiêu chí",
+  "builder.reviewStrengths": "Điểm mạnh",
+  "builder.reviewGaps": "Cần làm rõ",
+  "builder.reviewNote":
+    "Kết quả chỉ để tham khảo cho bản nháp này; không lưu thành hồ sơ ứng viên.",
+  "builder.reviewErrorTitle": "Không phân tích được CV",
   "builder.previewFrameTitle": "Bản xem trước CV",
   "builder.resultSummary": "Tóm tắt",
   "builder.resultExperience": "Kinh nghiệm làm việc",
@@ -148,6 +185,7 @@ const vi = {
   "savedCvs.emptyDetail":
     "Tạo CV bằng AI, sau đó bấm Lưu CV để xem lại tại đây.",
   "savedCvs.noRole": "Chưa có vị trí",
+  "savedCvs.open": "Xem CV",
   "savedCvs.updated": "Cập nhật {date}",
   "savedCvs.openBuilder": "Chỉnh sửa",
   "savedCvs.saveStyle": "Lưu mẫu",
@@ -159,6 +197,14 @@ const vi = {
     "CV đã lưu sẽ bị xoá vĩnh viễn khỏi tài khoản.",
   "savedCvs.deleteError": "Không xoá được CV. Vui lòng thử lại.",
   "savedCvs.notFound": "Không tìm thấy CV hoặc bạn không có quyền truy cập.",
+  "savedCvs.evaluate": "Đánh giá CV",
+  "savedCvs.evaluating": "AI đang đánh giá…",
+  "savedCvs.evalTitle": "Kết quả đánh giá CV",
+  "savedCvs.evalNote":
+    "Kết quả chỉ để tham khảo; CV đã lưu không bị thay đổi.",
+  "savedCvs.evalErrorTitle": "Không đánh giá được CV",
+  "savedCvs.evalPosition":
+    "CV chưa có vị trí ứng tuyển. Mở Builder bổ sung vị trí rồi đánh giá.",
 };
 
 const en: Record<keyof typeof vi, Message> = {
@@ -178,6 +224,7 @@ const en: Record<keyof typeof vi, Message> = {
 
   "builder.fullName": "Full name",
   "builder.position": "Target role",
+  "builder.positionPlaceholder": "Select a target role…",
   "builder.email": "Email",
   "builder.phone": "Phone",
   "builder.location": "Location",
@@ -193,6 +240,13 @@ const en: Record<keyof typeof vi, Message> = {
   "builder.skillsHint":
     "Separate with commas. AI only uses the skills you enter.",
   "builder.skillsPlaceholder": "React, TypeScript, PostgreSQL, Docker",
+  "builder.skillPickerPlaceholder": "Search and pick skills, languages…",
+  "builder.skillPickerEmpty": "No matching skills found.",
+  "builder.skillGroupLanguages": "Programming languages",
+  "builder.skillGroupFrontend": "Frontend",
+  "builder.skillGroupBackend": "Backend & data",
+  "builder.skillGroupDevops": "DevOps & cloud",
+  "builder.skillGroupData": "Data & design",
   "builder.certifications": "Certifications",
   "builder.certificationsHint":
     "One certification per line, with year or issuer if available.",
@@ -200,6 +254,20 @@ const en: Record<keyof typeof vi, Message> = {
   "builder.languagesHint":
     "One language per line, e.g. English — IELTS 7.0.",
   "builder.listPlaceholder": "One item per line",
+  "builder.avatarLabel": "Profile photo",
+  "builder.avatarUpload": "Choose photo",
+  "builder.avatarRemove": "Remove photo",
+  "builder.avatarHint":
+    "Cropped square and printed on the CV. JPG/PNG up to 5 MB.",
+  "builder.avatarError":
+    "Could not read the image. Choose a JPG, PNG or WebP under 5 MB.",
+  "builder.draftSave": "Save draft",
+  "builder.draftSaving": "Saving draft…",
+  "builder.draftSaved":
+    "Draft saved. Reopening the AI CV Builder restores these details.",
+  "builder.draftRestored":
+    "Restored the details from your saved draft.",
+  "builder.draftError": "Could not save the draft",
 
   "builder.experienceTitle": "Work experience",
   "builder.experienceEmpty": "No experience yet. Add the first entry.",
@@ -292,6 +360,21 @@ const en: Record<keyof typeof vi, Message> = {
   "builder.print": "Print / Save PDF",
   "builder.printHint":
     "In the print dialog, choose Save as PDF to keep an A4 file.",
+  "builder.analyze": "Analyze CV",
+  "builder.analyzing": "AI is analyzing…",
+  "builder.analyzeHint":
+    "AI reviews the draft against the target role criteria.",
+  "builder.analyzePositionError":
+    "Enter a target role in the form to analyze the CV.",
+  "builder.reviewTitle": "CV analysis",
+  "builder.reviewMeta": "{model} · {seconds}s",
+  "builder.reviewEvidence": "Criteria coverage",
+  "builder.reviewCriteria": "Criteria match",
+  "builder.reviewStrengths": "Strengths",
+  "builder.reviewGaps": "To clarify",
+  "builder.reviewNote":
+    "This review is for the draft only; no candidate profile is saved.",
+  "builder.reviewErrorTitle": "Could not analyze the CV",
   "builder.previewFrameTitle": "CV preview",
   "builder.resultSummary": "Summary",
   "builder.resultExperience": "Work experience",
@@ -312,6 +395,7 @@ const en: Record<keyof typeof vi, Message> = {
   "savedCvs.emptyDetail":
     "Generate a CV with AI, then press Save CV to see it here.",
   "savedCvs.noRole": "No target role",
+  "savedCvs.open": "Open CV",
   "savedCvs.updated": "Updated {date}",
   "savedCvs.openBuilder": "Edit",
   "savedCvs.saveStyle": "Save layout",
@@ -323,6 +407,14 @@ const en: Record<keyof typeof vi, Message> = {
     "The saved CV will be permanently removed from your account.",
   "savedCvs.deleteError": "Could not delete the CV. Please try again.",
   "savedCvs.notFound": "CV not found or you don't have access to it.",
+  "savedCvs.evaluate": "Evaluate CV",
+  "savedCvs.evaluating": "AI is reviewing…",
+  "savedCvs.evalTitle": "CV evaluation",
+  "savedCvs.evalNote":
+    "For reference only; the saved CV is not changed.",
+  "savedCvs.evalErrorTitle": "Could not evaluate the CV",
+  "savedCvs.evalPosition":
+    "This CV has no target role. Add one in the Builder, then evaluate.",
 };
 
 export const builderMessages = { vi, en };

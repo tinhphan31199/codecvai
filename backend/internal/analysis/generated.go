@@ -87,6 +87,124 @@ Nguyên tắc bắt buộc:
 - Mỗi gạch đầu dòng bắt đầu bằng động từ hành động, nêu việc đã làm và kết quả nếu có; không dùng đại từ nhân xưng và không thêm emoji.
 - Chỉ trả về JSON đúng schema, không thêm văn bản ngoài JSON.`
 
+// GeneratedCVText dựng văn bản thuần từ nội dung CV đã sinh để chấm lại như
+// một CV thật; chỉ gồm những gì bản xem trước in ra, không kèm ghi chú nội bộ.
+func GeneratedCVText(input model.BuilderInput, content model.GeneratedCVContent) string {
+	var text strings.Builder
+	writeField := func(label, value string) {
+		value = strings.TrimSpace(value)
+		if value == "" {
+			return
+		}
+		fmt.Fprintf(&text, "%s: %s\n", label, value)
+	}
+
+	writeField("Họ tên", input.FullName)
+	writeField("Vị trí ứng tuyển", input.Position)
+	writeField("Cấp bậc", input.Level)
+	if input.Years > 0 {
+		fmt.Fprintf(&text, "Số năm kinh nghiệm: %d\n", input.Years)
+	}
+	writeField("Email", input.Email)
+	writeField("Điện thoại", input.Phone)
+	writeField("Địa điểm", input.Location)
+	writeField("LinkedIn", input.LinkedIn)
+	writeField("GitHub", input.GitHub)
+	writeField("Portfolio", input.Portfolio)
+
+	if summary := strings.TrimSpace(content.Summary); summary != "" {
+		fmt.Fprintf(&text, "\nTÓM TẮT\n%s\n", summary)
+	}
+
+	if len(content.Experience) > 0 {
+		text.WriteString("\nKINH NGHIỆM LÀM VIỆC\n")
+		for _, item := range content.Experience {
+			header := joinGeneratedParts(item.Company, item.Role, item.Period, item.Location)
+			if header != "" {
+				fmt.Fprintf(&text, "- %s\n", header)
+			}
+			for _, bullet := range item.Bullets {
+				if bullet = strings.TrimSpace(bullet); bullet != "" {
+					fmt.Fprintf(&text, "  + %s\n", bullet)
+				}
+			}
+		}
+	}
+
+	if len(content.Education) > 0 {
+		text.WriteString("\nHỌC VẤN\n")
+		for _, item := range content.Education {
+			header := joinGeneratedParts(item.School, item.Degree, item.Period)
+			if header != "" {
+				fmt.Fprintf(&text, "- %s\n", header)
+			}
+			if detail := strings.TrimSpace(item.Detail); detail != "" {
+				fmt.Fprintf(&text, "  + %s\n", detail)
+			}
+		}
+	}
+
+	if len(content.Projects) > 0 {
+		text.WriteString("\nDỰ ÁN\n")
+		for _, item := range content.Projects {
+			header := joinGeneratedParts(item.Name, item.Role, item.Period, item.Link)
+			if header != "" {
+				fmt.Fprintf(&text, "- %s\n", header)
+			}
+			for _, bullet := range item.Bullets {
+				if bullet = strings.TrimSpace(bullet); bullet != "" {
+					fmt.Fprintf(&text, "  + %s\n", bullet)
+				}
+			}
+		}
+	}
+
+	if len(content.Skills) > 0 {
+		text.WriteString("\nKỸ NĂNG\n")
+		for _, group := range content.Skills {
+			items := strings.TrimSpace(strings.Join(group.Items, ", "))
+			if items == "" {
+				continue
+			}
+			if group.Group != "" {
+				fmt.Fprintf(&text, "- %s: %s\n", group.Group, items)
+			} else {
+				fmt.Fprintf(&text, "- %s\n", items)
+			}
+		}
+	}
+
+	if len(content.Certifications) > 0 {
+		text.WriteString("\nCHỨNG CHỈ\n")
+		for _, item := range content.Certifications {
+			if line := joinGeneratedParts(item.Name, item.Issuer, item.Year); line != "" {
+				fmt.Fprintf(&text, "- %s\n", line)
+			}
+		}
+	}
+
+	if len(content.Languages) > 0 {
+		text.WriteString("\nNGOẠI NGỮ\n")
+		for _, item := range content.Languages {
+			if line := joinGeneratedParts(item.Name, item.Level); line != "" {
+				fmt.Fprintf(&text, "- %s\n", line)
+			}
+		}
+	}
+
+	return strings.TrimSpace(text.String())
+}
+
+func joinGeneratedParts(parts ...string) string {
+	kept := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if trimmed := strings.TrimSpace(part); trimmed != "" {
+			kept = append(kept, trimmed)
+		}
+	}
+	return strings.Join(kept, " · ")
+}
+
 func BuildGeneratedPrompt(input GenerateInput) string {
 	builder := input.Builder
 	language := "Tiếng Việt"

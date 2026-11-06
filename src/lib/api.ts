@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { Candidate, Finding, Position } from "@/data/codecv";
+import type { CvAnalysisResponse } from "@/lib/cv-analysis";
 import {
   authToken,
   clearSession,
@@ -160,6 +161,7 @@ export interface BuilderInput {
   certifications: string[];
   languages: string[];
   notes: string;
+  avatar?: string;
   sourceCandidateId?: string;
 }
 
@@ -233,6 +235,13 @@ export interface GeneratedCVResult {
   provider: string;
 }
 
+export interface AnalyzeBuilderCVPayload {
+  modelId?: string;
+  language: "vi" | "en";
+  input: BuilderInput;
+  content: GeneratedCVContent;
+}
+
 export interface GeneratedCVSummary {
   id: string;
   name: string;
@@ -261,6 +270,21 @@ export interface SaveGeneratedCVPayload {
   input: BuilderInput;
   modelId?: string;
   provider?: string;
+}
+
+export interface BuilderDraft {
+  input: BuilderInput;
+  language: "vi" | "en";
+  template: string;
+  accent: string;
+  updatedAt: string;
+}
+
+export interface SaveBuilderDraftPayload {
+  input: BuilderInput;
+  language: "vi" | "en";
+  template?: string;
+  accent?: string;
 }
 
 export interface MarketCV {
@@ -293,6 +317,47 @@ export interface MarketUploadResponse {
   cv: MarketCV;
   provider: string;
   durationMs: number;
+}
+
+export interface CompareCVProfile {
+  id: string;
+  source: "mine" | "market";
+  name: string;
+  title: string;
+  level: string;
+  years: number;
+  category?: string;
+  summary: string;
+  skills: string[];
+  highlights: string[];
+}
+
+export interface CVComparison {
+  summary: string;
+  bestCvId: string;
+  bestReasons: string[];
+  myStrengths: string[];
+  myGaps: string[];
+  marketHighlights: string[];
+}
+
+export interface CompareCVsPayload {
+  modelId?: string;
+  language: "vi" | "en";
+  myCvId: string;
+  marketCvIds: string[];
+}
+
+export interface CompareCVsResponse {
+  mine: CompareCVProfile;
+  others: CompareCVProfile[];
+  analysis: CVComparison;
+  meta: {
+    model: string;
+    provider: string;
+    durationMs: number;
+    compared: number;
+  };
 }
 
 export interface TreeNode {
@@ -800,6 +865,15 @@ export function useGeneratedCV(id: string | null): QueryResult<GeneratedCV> {
   return { ...result, data: result.data ? result.data.cv : null };
 }
 
+export function useBuilderDraft(
+  enabled = true,
+): QueryResult<BuilderDraft | null> {
+  const result = useQuery<{ draft: BuilderDraft | null }>(
+    enabled ? "/api/cv-builder/draft" : null,
+  );
+  return { ...result, data: result.data ? result.data.draft : null };
+}
+
 export function useServiceConfigs(): QueryResult<ServiceConfig[]> {
   const result = useQuery<{ configs: ServiceConfig[] }>("/api/service-configs");
   return { ...result, data: result.data ? result.data.configs : null };
@@ -1007,6 +1081,24 @@ export async function generateCV(
   });
 }
 
+export async function analyzeBuilderCV(
+  payload: AnalyzeBuilderCVPayload,
+): Promise<CvAnalysisResponse> {
+  return requestJSON<CvAnalysisResponse>("/api/cv-builder/analyze", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function compareCVs(
+  payload: CompareCVsPayload,
+): Promise<CompareCVsResponse> {
+  return requestJSON<CompareCVsResponse>("/api/cv-compare", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function createGeneratedCV(
   payload: SaveGeneratedCVPayload,
 ): Promise<GeneratedCV> {
@@ -1035,6 +1127,17 @@ export async function deleteGeneratedCV(id: string): Promise<void> {
     method: "DELETE",
   });
   invalidatePrefix("/api/cv-builder/cvs");
+}
+
+export async function saveBuilderDraft(
+  payload: SaveBuilderDraftPayload,
+): Promise<BuilderDraft> {
+  const result = await requestJSON<{ draft: BuilderDraft }>(
+    "/api/cv-builder/draft",
+    { method: "PUT", body: JSON.stringify(payload) },
+  );
+  invalidate("/api/cv-builder/draft");
+  return result.draft;
 }
 
 export async function patchCandidate(

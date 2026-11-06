@@ -15,7 +15,7 @@ interface BuildCVOptions {
   language: CVLanguage;
 }
 
-const ACCENTS: Record<GeneratedAccent, { main: string; soft: string; ink: string }> = {
+export const ACCENTS: Record<GeneratedAccent, { main: string; soft: string; ink: string }> = {
   sky: { main: "#0369a1", soft: "#e0f2fe", ink: "#0c4a6e" },
   slate: { main: "#475569", soft: "#f1f5f9", ink: "#1e293b" },
   emerald: { main: "#047857", soft: "#d1fae5", ink: "#064e3b" },
@@ -86,6 +86,14 @@ const contacts = (input: BuilderInput) =>
 const headRole = (input: BuilderInput) =>
   [input.position.trim(), input.level.trim()].filter(Boolean).join(" · ");
 
+const avatarURI = (input: BuilderInput) =>
+  input.avatar?.startsWith("data:image/") ? input.avatar : "";
+
+const photoBlock = (input: BuilderInput) =>
+  avatarURI(input)
+    ? `<div class="cv-photo"><img src="${esc(avatarURI(input))}" alt=""></div>`
+    : "";
+
 function bullets(items: string[]): string {
   const list = items.filter((item) => item.trim());
   if (!list.length) return "";
@@ -98,9 +106,12 @@ function headerBlock(input: BuilderInput): string {
   const lines = contacts(input);
   const role = headRole(input);
   return `<header class="cv-head">
-    <div class="cv-head-main">
-      <h1>${esc(input.fullName)}</h1>
-      ${role ? `<p class="cv-role">${esc(role)}</p>` : ""}
+    <div class="cv-head-id">
+      ${photoBlock(input)}
+      <div class="cv-head-main">
+        <h1>${esc(input.fullName)}</h1>
+        ${role ? `<p class="cv-role">${esc(role)}</p>` : ""}
+      </div>
     </div>
     ${
       lines.length
@@ -303,6 +314,7 @@ function sidebarLayout(
   return `<div class="cv-page">
     <aside class="cv-sidebar">
       <header class="cv-side-head">
+        ${photoBlock(input)}
         <h1>${esc(input.fullName)}</h1>
         ${role ? `<p class="cv-side-role">${esc(role)}</p>` : ""}
       </header>
@@ -382,12 +394,30 @@ ul { list-style: none; }
 .cv-contacts { display: flex; flex-wrap: wrap; }
 .cv-contacts li { font-size: 8.6pt; color: #475569; }
 .cv-contacts li + li::before { content: "·"; margin: 0 2mm; color: #94a3b8; }
+.cv-photo { flex-shrink: 0; }
+.cv-photo img {
+  display: block;
+  width: 24mm;
+  height: 24mm;
+  border: 1.2pt solid var(--accent);
+  border-radius: 50%;
+  padding: .8mm;
+  background: #fff;
+  object-fit: cover;
+}
 .t-classic .cv-page { padding: 15mm 17mm 16mm; }
 .t-classic .cv-head {
   padding-bottom: 4mm;
   border-bottom: 1.4pt solid var(--accent);
   text-align: center;
 }
+.t-classic .cv-head-id {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.4mm;
+}
+.t-classic .cv-photo img { width: 26mm; height: 26mm; }
 .t-classic .cv-head h1 { font-size: 25pt; line-height: 1.1; letter-spacing: -.01em; color: #0f172a; }
 .t-classic .cv-role { margin-top: 1.4mm; font-size: 10.5pt; font-weight: 600; color: var(--accent); }
 .t-classic .cv-contacts { margin-top: 2.4mm; justify-content: center; }
@@ -401,6 +431,13 @@ ul { list-style: none; }
   padding-bottom: 2.6mm;
   border-bottom: 1.2pt solid var(--accent);
 }
+.t-compact .cv-head-id {
+  display: flex;
+  align-items: center;
+  gap: 4mm;
+  min-width: 0;
+}
+.t-compact .cv-photo img { width: 19mm; height: 19mm; padding: .6mm; }
 .t-compact .cv-head h1 { font-size: 19pt; line-height: 1.1; color: #0f172a; }
 .t-compact .cv-role { margin-top: .8mm; font-size: 9.4pt; font-weight: 600; color: var(--accent); }
 .t-compact .cv-contacts { display: grid; grid-template-columns: auto auto; gap: .6mm 4mm; text-align: left; }
@@ -423,6 +460,12 @@ ul { list-style: none; }
 .t-compact .cv-skill-group + .cv-skill-group { margin-top: 0; }
 .t-sidebar .cv-page { display: grid; grid-template-columns: 64mm minmax(0, 1fr); padding: 0; }
 .t-sidebar .cv-sidebar { padding: 14mm 9mm 14mm 10mm; background: var(--accent-soft); }
+.t-sidebar .cv-side-head .cv-photo { margin-bottom: 3.5mm; }
+.t-sidebar .cv-side-head .cv-photo img {
+  width: 30mm;
+  height: 30mm;
+  background: rgba(255, 255, 255, .8);
+}
 .t-sidebar .cv-side-head h1 { font-size: 20pt; line-height: 1.15; color: #0f172a; }
 .t-sidebar .cv-side-role { margin-top: 1.4mm; font-size: 9.6pt; font-weight: 600; color: var(--accent-ink); }
 .t-sidebar .cv-sidebar .cv-section { margin-top: 7mm; }

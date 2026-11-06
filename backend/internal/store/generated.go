@@ -44,6 +44,14 @@ type UpdateGeneratedCVInput struct {
 	Provider       string
 }
 
+type SaveBuilderDraftInput struct {
+	OwnerID  string
+	Input    model.BuilderInput
+	Language string
+	Template string
+	Accent   string
+}
+
 const generatedCVSelect = `
 	SELECT id, name, target_position, level, language, template, accent,
 	       content, input, model_id, provider, created_at, updated_at
@@ -184,6 +192,58 @@ func (s *Store) DeleteGeneratedCV(ctx context.Context, ownerID, id string) error
 	return nil
 }
 
+// BuilderDraft returns the account's single saved builder draft.
+func (s *Store) BuilderDraft(ctx context.Context, ownerID string) (model.BuilderDraft, error) {
+	var (
+		draft     model.BuilderDraft
+		inputRaw  []byte
+		updatedAt time.Time
+	)
+	err := s.pool.QueryRow(ctx, `
+		SELECT input, language, template, accent, updated_at
+		FROM builder_drafts
+		WHERE owner_id = $1`, ownerID).Scan(
+		&inputRaw, &draft.Language, &draft.Template, &draft.Accent, &updatedAt,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.BuilderDraft{}, ErrNotFound
+	}
+	if err != nil {
+		return model.BuilderDraft{}, fmt.Errorf("store: builder draft: %w", err)
+	}
+	if err := json.Unmarshal(inputRaw, &draft.Input); err != nil {
+		return model.BuilderDraft{}, fmt.Errorf("store: decode builder draft: %w", err)
+	}
+	normalizeBuilderInputLists(&draft.Input)
+	draft.UpdatedAt = updatedAt.UTC().Format(time.RFC3339)
+	return draft, nil
+}
+
+// SaveBuilderDraft upserts the account's single draft row. Empty template and
+// accent are kept as-is because they mean "let AI choose".
+func (s *Store) SaveBuilderDraft(ctx context.Context, in SaveBuilderDraftInput) (model.BuilderDraft, error) {
+	input, err := json.Marshal(in.Input)
+	if err != nil {
+		return model.BuilderDraft{}, fmt.Errorf("store: encode builder draft: %w", err)
+	}
+	language := strings.TrimSpace(in.Language)
+	if language == "" {
+		language = "vi"
+	}
+	if _, err := s.pool.Exec(ctx, `
+		INSERT INTO builder_drafts (owner_id, input, language, template, accent, updated_at)
+		VALUES ($1, $2, $3, $4, $5, now())
+		ON CONFLICT (owner_id) DO UPDATE SET
+			input = EXCLUDED.input, language = EXCLUDED.language,
+			template = EXCLUDED.template, accent = EXCLUDED.accent,
+			updated_at = now()`,
+		in.OwnerID, input, language, strings.TrimSpace(in.Template), strings.TrimSpace(in.Accent),
+	); err != nil {
+		return model.BuilderDraft{}, fmt.Errorf("store: save builder draft: %w", err)
+	}
+	return s.BuilderDraft(ctx, in.OwnerID)
+}
+
 func generatedCVId(name, fallback string) string {
 	var suffix [4]byte
 	if _, err := rand.Read(suffix[:]); err != nil {
@@ -231,10 +291,14 @@ func normalizeGeneratedCV(cv *model.GeneratedCV) {
 	}
 	cv.Content.Certifications = nonNil(cv.Content.Certifications)
 	cv.Content.Languages = nonNil(cv.Content.Languages)
-	cv.Input.Skills = nonNil(cv.Input.Skills)
-	cv.Input.Experiences = nonNil(cv.Input.Experiences)
-	cv.Input.Education = nonNil(cv.Input.Education)
-	cv.Input.Projects = nonNil(cv.Input.Projects)
-	cv.Input.Certifications = nonNil(cv.Input.Certifications)
-	cv.Input.Languages = nonNil(cv.Input.Languages)
+	normalizeBuilderInputLists(&cv.Input)
+}
+
+func normalizeBuilderInputLists(input *model.BuilderInput) {
+	input.Skills = nonNil(input.Skills)
+	input.Experiences = nonNil(input.Experiences)
+	input.Education = nonNil(input.Education)
+	input.Projects = nonNil(input.Projects)
+	input.Certifications = nonNil(input.Certifications)
+	input.Languages = nonNil(input.Languages)
 }

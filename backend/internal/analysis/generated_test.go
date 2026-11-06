@@ -71,6 +71,75 @@ func TestBuildGeneratedPromptIncludesFacts(t *testing.T) {
 	}
 }
 
+func TestGeneratedCVTextRendersPreviewContent(t *testing.T) {
+	input := testGenerateInput().Builder
+	input.Email = "minh@example.com"
+	input.Phone = "0901234567"
+	content := model.GeneratedCVContent{
+		Summary: "Kỹ sư backend 6 năm kinh nghiệm.",
+		Experience: []model.GeneratedExperience{
+			{
+				Company:  "Acme",
+				Role:     "Senior Backend Engineer",
+				Period:   "2021 - 2024",
+				Location: "Hà Nội",
+				Bullets:  []string{"Xây API thanh toán, giảm p95 xuống 200ms."},
+			},
+		},
+		Education: []model.GeneratedEducation{
+			{School: "ĐH Bách Khoa", Degree: "Kỹ sư CNTT", Period: "2014 - 2019", Detail: "Loại giỏi"},
+		},
+		Projects: []model.GeneratedProject{
+			{Name: "CodeCV", Role: "Tech lead", Period: "2024", Link: "codecv.ai", Bullets: []string{"Thiết kế pipeline phân tích."}},
+		},
+		Skills:         []model.GeneratedSkillGroup{{Group: "Ngôn ngữ", Items: []string{"Go", "PostgreSQL"}}},
+		Certifications: []model.GeneratedCertification{{Name: "AWS Solutions Architect", Issuer: "AWS", Year: "2023"}},
+		Languages:      []model.GeneratedLanguage{{Name: "Tiếng Anh", Level: "IELTS 7.5"}},
+	}
+
+	text := GeneratedCVText(input, content)
+
+	checks := []string{
+		"Họ tên: Lê Hoàng Minh",
+		"Vị trí ứng tuyển: Backend Engineer",
+		"Cấp bậc: Senior",
+		"Số năm kinh nghiệm: 6",
+		"Email: minh@example.com",
+		"Điện thoại: 0901234567",
+		"TÓM TẮT",
+		content.Summary,
+		"KINH NGHIỆM LÀM VIỆC",
+		"- Acme · Senior Backend Engineer · 2021 - 2024 · Hà Nội",
+		"  + Xây API thanh toán, giảm p95 xuống 200ms.",
+		"HỌC VẤN",
+		"- ĐH Bách Khoa · Kỹ sư CNTT · 2014 - 2019",
+		"  + Loại giỏi",
+		"DỰ ÁN",
+		"- CodeCV · Tech lead · 2024 · codecv.ai",
+		"KỸ NĂNG",
+		"- Ngôn ngữ: Go, PostgreSQL",
+		"CHỨNG CHỈ",
+		"- AWS Solutions Architect · AWS · 2023",
+		"NGOẠI NGỮ",
+		"- Tiếng Anh · IELTS 7.5",
+	}
+	for _, expected := range checks {
+		if !strings.Contains(text, expected) {
+			t.Fatalf("text missing %q:\n%s", expected, text)
+		}
+	}
+	if strings.Contains(text, input.Notes) {
+		t.Fatal("internal notes must not be sent to the reviewer")
+	}
+}
+
+func TestGeneratedCVTextSkipsEmptySections(t *testing.T) {
+	text := GeneratedCVText(model.BuilderInput{FullName: "Lê Hoàng Minh"}, model.GeneratedCVContent{})
+	if text != "Họ tên: Lê Hoàng Minh" {
+		t.Fatalf("expected only the name line, got %q", text)
+	}
+}
+
 func TestBuildGeneratedPromptEnglishLetsAIMChoose(t *testing.T) {
 	input := testGenerateInput()
 	input.Language = "en"

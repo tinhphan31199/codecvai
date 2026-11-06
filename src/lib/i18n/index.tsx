@@ -11,6 +11,7 @@ import { marketMessages } from "./messages/market";
 import { candidateMessages } from "./messages/candidate";
 import { uploadMessages } from "./messages/upload";
 import { builderMessages } from "./messages/builder";
+import { compareMessages } from "./messages/compare";
 import { repositoryMessages } from "./messages/repository";
 import { interviewMessages } from "./messages/interview";
 import { jobsMessages } from "./messages/jobs";
@@ -33,6 +34,7 @@ const vi = {
   ...candidateMessages.vi,
   ...uploadMessages.vi,
   ...builderMessages.vi,
+  ...compareMessages.vi,
   ...repositoryMessages.vi,
   ...interviewMessages.vi,
   ...jobsMessages.vi,
@@ -52,6 +54,7 @@ const en: Record<keyof typeof vi, Message> = {
   ...candidateMessages.en,
   ...uploadMessages.en,
   ...builderMessages.en,
+  ...compareMessages.en,
   ...repositoryMessages.en,
   ...interviewMessages.en,
   ...jobsMessages.en,

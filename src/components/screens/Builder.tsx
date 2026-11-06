@@ -1,24 +1,38 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
+import {
+  Bookmark,
   CircleAlert,
+  ImagePlus,
   Loader2,
   Plus,
   Printer,
   Save,
+  ScanSearch,
   Sparkles,
   Trash2,
+  UserRound,
 } from "lucide-react";
 import type { Screen } from "@/data/codecv";
 import {
+  analyzeBuilderCV,
   createGeneratedCV,
   generateCV,
+  saveBuilderDraft,
   updateGeneratedCV,
+  useBuilderDraft,
   useCandidates,
   useGeneratedCV,
   useLevels,
   useModels,
+  usePositions,
   type BuilderEducationInput,
   type BuilderExperienceInput,
   type BuilderInput,
@@ -28,8 +42,11 @@ import {
   type GeneratedCVResult,
   type GeneratedTemplate,
 } from "@/lib/api";
+import type { CvAnalysisResponse } from "@/lib/cv-analysis";
 import { useT, type MessageKey } from "@/lib/i18n";
 import CVPreview from "../cv/CVPreview";
+import CVReview from "../cv/CVReview";
+import SkillPicker from "../cv/SkillPicker";
 import { buildCVHTML } from "../cv/templates";
 import { CardHead, EmptyState, PageHead } from "../ui";
 
@@ -92,6 +109,7 @@ interface BuilderForm {
   skills: string;
   certifications: string;
   languages: string;
+  avatar: string;
   experiences: ExperienceDraft[];
   education: EducationDraft[];
   projects: ProjectDraft[];
@@ -138,6 +156,7 @@ const formFromInput = (input: BuilderInput): BuilderForm => ({
   skills: input.skills.join(", "),
   certifications: input.certifications.join("\n"),
   languages: input.languages.join("\n"),
+  avatar: input.avatar ?? "",
   experiences: input.experiences.map((item) => ({
     key: ++entryKey,
     ...item,
@@ -168,11 +187,53 @@ const initialForm = (): BuilderForm => ({
   skills: "",
   certifications: "",
   languages: "",
+  avatar: "",
   experiences: [newExperience()],
   education: [],
   projects: [],
   sourceCandidateId: "",
 });
+
+const AVATAR_SIDE = 320;
+const MAX_AVATAR_FILE = 5 * 1024 * 1024;
+
+// Crop the chosen photo to a square and shrink it so the inline data URL stays
+// small enough to live in the form snapshot next to the generated CV.
+function readAvatarImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("read"));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error("decode"));
+      image.onload = () => {
+        const side = Math.min(image.naturalWidth, image.naturalHeight);
+        const canvas = document.createElement("canvas");
+        canvas.width = AVATAR_SIDE;
+        canvas.height = AVATAR_SIDE;
+        const context = canvas.getContext("2d");
+        if (!side || !context) {
+          reject(new Error("decode"));
+          return;
+        }
+        context.drawImage(
+          image,
+          (image.naturalWidth - side) / 2,
+          (image.naturalHeight - side) / 2,
+          side,
+          side,
+          0,
+          0,
+          AVATAR_SIDE,
+          AVATAR_SIDE,
+        );
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      image.src = typeof reader.result === "string" ? reader.result : "";
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 const splitSkills = (value: string) =>
   value
@@ -223,12 +284,24 @@ export default function Builder({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveNotice, setSaveNotice] = useState("");
+  const [review, setReview] = useState<CvAnalysisResponse | null>(null);
+  const [reviewing, setReviewing] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState("");
+  const [draftSaving, setDraftSaving] = useState(false);
+  const [draftStatus, setDraftStatus] = useState("");
+  const [draftError, setDraftError] = useState<string | null>(null);
+  const [draftRestored, setDraftRestored] = useState("");
   const loadedSavedRef = useRef<string | null>(null);
+  const loadedDraftRef = useRef(false);
+  const formTouchedRef = useRef(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLElement>(null);
   const printRef = useRef<HTMLIFrameElement>(null);
 
   const savedQuery = useGeneratedCV(savedId ?? null);
   const savedLoading = Boolean(savedId && savedQuery.loading);
+  const draftQuery = useBuilderDraft(!savedId);
 
   useEffect(() => {
     const saved = savedQuery.data;
@@ -247,11 +320,31 @@ export default function Builder({
     setDraftAccent(saved.accent);
     setDraftLanguage(saved.language === "en" ? "en" : "vi");
     setLanguage(saved.language === "en" ? "en" : "vi");
+    setReview(null);
+    setReviewError(null);
     setCvName(saved.name);
     // One-time hydration when the saved CV being edited finishes loading.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (saved.modelId) setModelChoice(saved.modelId);
   }, [savedQuery.data]);
+
+  useEffect(() => {
+    if (savedId || loadedDraftRef.current || draftQuery.loading) return;
+    loadedDraftRef.current = true;
+    // Never overwrite anything the user typed while the draft was loading.
+    if (formTouchedRef.current) return;
+    const savedDraft = draftQuery.data;
+    if (!savedDraft) return;
+    const nextForm = formFromInput(savedDraft.input);
+    if (!nextForm.experiences.length) nextForm.experiences = [newExperience()];
+    // The draft arrives after the first render, so the form must adopt it once.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setForm(nextForm);
+    setTemplate(savedDraft.template);
+    setAccent(savedDraft.accent);
+    setLanguage(savedDraft.language === "en" ? "en" : "vi");
+    setDraftRestored(t("builder.draftRestored"));
+  }, [savedId, draftQuery.loading, draftQuery.data, t]);
 
   const candidatesQuery = useCandidates();
   const candidates = candidatesQuery.data ?? [];
@@ -266,6 +359,14 @@ export default function Builder({
   const levelValue = levelOptions.includes(form.level)
     ? form.level
     : (levelOptions[0] ?? "");
+  const positionsQuery = usePositions();
+  const positionTitles = [
+    ...new Set((positionsQuery.data ?? []).map((item) => item.title)),
+  ].sort((a, b) => a.localeCompare(b));
+  const positionOptions =
+    form.position && !positionTitles.includes(form.position)
+      ? [form.position, ...positionTitles]
+      : positionTitles;
   const modelsQuery = useModels();
   const allModels = modelsQuery.data ?? [];
   const activeModels = allModels.filter((item) => item.active);
@@ -310,10 +411,12 @@ export default function Builder({
   };
 
   function update<K extends keyof BuilderForm>(key: K, value: BuilderForm[K]) {
+    formTouchedRef.current = true;
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   function updateExperience(key: number, patch: Partial<BuilderExperienceInput>) {
+    formTouchedRef.current = true;
     setForm((prev) => ({
       ...prev,
       experiences: prev.experiences.map((item) =>
@@ -323,6 +426,7 @@ export default function Builder({
   }
 
   function updateEducation(key: number, patch: Partial<BuilderEducationInput>) {
+    formTouchedRef.current = true;
     setForm((prev) => ({
       ...prev,
       education: prev.education.map((item) =>
@@ -332,6 +436,7 @@ export default function Builder({
   }
 
   function updateProject(key: number, patch: Partial<BuilderProjectInput>) {
+    formTouchedRef.current = true;
     setForm((prev) => ({
       ...prev,
       projects: prev.projects.map((item) =>
@@ -342,6 +447,7 @@ export default function Builder({
 
   const applyPrefill = () => {
     if (!prefillCandidate) return;
+    formTouchedRef.current = true;
     setForm((prev) => ({
       ...prev,
       fullName: prefillCandidate.name || prev.fullName,
@@ -396,6 +502,7 @@ export default function Builder({
     certifications: splitLines(form.certifications),
     languages: splitLines(form.languages),
     notes: form.notes.trim(),
+    avatar: form.avatar || undefined,
     sourceCandidateId: form.sourceCandidateId || undefined,
   });
 
@@ -433,6 +540,8 @@ export default function Builder({
       setDraftTemplate(result.template);
       setDraftAccent(result.accent);
       setDraftLanguage(language);
+      setReview(null);
+      setReviewError(null);
       setCvName(
         (prev) => prev || `${result.input.fullName} · ${result.input.position}`,
       );
@@ -489,6 +598,72 @@ export default function Builder({
     }
   };
 
+  const analyze = async () => {
+    if (!draft || reviewing) return;
+    if (!draft.input.position.trim()) {
+      setReviewError(t("builder.analyzePositionError"));
+      return;
+    }
+    if (!modelId) {
+      setReviewError(t("builder.noModelError"));
+      return;
+    }
+
+    setReviewing(true);
+    setReviewError(null);
+    try {
+      const result = await analyzeBuilderCV({
+        modelId,
+        language: draftLanguage,
+        input: draft.input,
+        content: draft.content,
+      });
+      setReview(result);
+    } catch (err) {
+      setReviewError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setReviewing(false);
+    }
+  };
+
+  const saveFormDraft = async () => {
+    if (draftSaving) return;
+    setDraftSaving(true);
+    setDraftStatus("");
+    setDraftError(null);
+    try {
+      await saveBuilderDraft({
+        input: toInput(),
+        language,
+        template,
+        accent,
+      });
+      setDraftStatus(t("builder.draftSaved"));
+      setDraftRestored("");
+    } catch (err) {
+      setDraftError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setDraftSaving(false);
+    }
+  };
+
+  const onAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/") || file.size > MAX_AVATAR_FILE) {
+      setAvatarError(t("builder.avatarError"));
+      return;
+    }
+    try {
+      const dataURL = await readAvatarImage(file);
+      update("avatar", dataURL);
+      setAvatarError("");
+    } catch {
+      setAvatarError(t("builder.avatarError"));
+    }
+  };
+
   return (
     <div className="screen">
       <PageHead title={t("screen.builder")} sub={t("builder.sub")} />
@@ -529,6 +704,56 @@ export default function Builder({
             meta={t("builder.profileMeta")}
           />
 
+          <div className="builder-avatar">
+            <span className="builder-avatar-preview">
+              {form.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element -- inline data URL cannot be optimized
+                <img src={form.avatar} alt="" />
+              ) : (
+                <UserRound size={26} aria-hidden="true" />
+              )}
+            </span>
+            <div className="builder-avatar-body">
+              <span className="field-label">{t("builder.avatarLabel")}</span>
+              <div className="builder-avatar-actions">
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => avatarInputRef.current?.click()}
+                >
+                  <ImagePlus size={14} aria-hidden="true" />
+                  {t("builder.avatarUpload")}
+                </button>
+                {form.avatar ? (
+                  <button
+                    type="button"
+                    className="btn btn-quiet btn-sm"
+                    onClick={() => {
+                      update("avatar", "");
+                      setAvatarError("");
+                    }}
+                  >
+                    <Trash2 size={14} aria-hidden="true" />
+                    {t("builder.avatarRemove")}
+                  </button>
+                ) : null}
+              </div>
+              <span className="field-hint">{t("builder.avatarHint")}</span>
+              {avatarError ? (
+                <p className="builder-avatar-error" role="alert">
+                  {avatarError}
+                </p>
+              ) : null}
+            </div>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              className="visually-hidden"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(event) => void onAvatarChange(event)}
+            />
+          </div>
+
           <div className="form-stack">
             <div className="builder-prefill">
               <label className="field">
@@ -564,6 +789,11 @@ export default function Builder({
                 {prefillNotice}
               </p>
             ) : null}
+            {draftRestored ? (
+              <p className="builder-prefill-note" role="status">
+                {draftRestored}
+              </p>
+            ) : null}
 
             <div className="form-grid">
               <label className="field">
@@ -579,11 +809,17 @@ export default function Builder({
               </label>
               <label className="field">
                 <span className="field-label">{t("builder.position")} *</span>
-                <input
+                <select
                   value={form.position}
-                  maxLength={160}
                   onChange={(event) => update("position", event.target.value)}
-                />
+                >
+                  <option value="">{t("builder.positionPlaceholder")}</option>
+                  {positionOptions.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label className="field">
                 <span className="field-label">{t("builder.email")}</span>
@@ -676,16 +912,21 @@ export default function Builder({
               />
             </label>
 
-            <label className="field">
+            <div className="field">
               <span className="field-label">{t("builder.skills")}</span>
+              <SkillPicker
+                value={form.skills}
+                onChange={(next) => update("skills", next)}
+              />
               <textarea
                 rows={2}
                 value={form.skills}
                 placeholder={t("builder.skillsPlaceholder")}
+                aria-label={t("builder.skills")}
                 onChange={(event) => update("skills", event.target.value)}
               />
               <span className="field-hint">{t("builder.skillsHint")}</span>
-            </label>
+            </div>
 
             <div className="builder-list-grid">
               <label className="field">
@@ -1078,6 +1319,38 @@ export default function Builder({
                 )}
                 {busy ? t("builder.generating") : t("builder.generate")}
               </button>
+              {!editingId ? (
+                <>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-block"
+                    disabled={draftSaving}
+                    onClick={() => void saveFormDraft()}
+                  >
+                    {draftSaving ? (
+                      <Loader2 className="spin" size={15} aria-hidden="true" />
+                    ) : (
+                      <Bookmark size={15} aria-hidden="true" />
+                    )}
+                    {draftSaving
+                      ? t("builder.draftSaving")
+                      : t("builder.draftSave")}
+                  </button>
+                  {draftError ? (
+                    <p className="builder-hint builder-hint-error" role="alert">
+                      {t("builder.draftError")}: {draftError}
+                    </p>
+                  ) : null}
+                  {draftStatus ? (
+                    <p
+                      className="builder-hint builder-draft-done"
+                      role="status"
+                    >
+                      {draftStatus}
+                    </p>
+                  ) : null}
+                </>
+              ) : null}
               {activeModels.length === 0 ? (
                 <p className="builder-hint builder-hint-error">
                   {t("builder.noModelError")}{" "}
@@ -1177,6 +1450,20 @@ export default function Builder({
                 </button>
                 <button
                   type="button"
+                  className="btn btn-ghost cv-print-btn"
+                  disabled={reviewing || saving}
+                  title={t("builder.analyzeHint")}
+                  onClick={() => void analyze()}
+                >
+                  {reviewing ? (
+                    <Loader2 className="spin" size={15} aria-hidden="true" />
+                  ) : (
+                    <ScanSearch size={15} aria-hidden="true" />
+                  )}
+                  {reviewing ? t("builder.analyzing") : t("builder.analyze")}
+                </button>
+                <button
+                  type="button"
                   className="btn btn-primary cv-print-btn"
                   disabled={saving}
                   onClick={() => void saveDraft()}
@@ -1211,6 +1498,29 @@ export default function Builder({
                 <p className="builder-prefill-note" role="status">
                   {saveNotice}
                 </p>
+              ) : null}
+              {reviewing ? (
+                <div className="builder-review builder-review-loading" role="status">
+                  <Loader2 className="spin" size={16} aria-hidden="true" />
+                  <span>{t("builder.analyzing")}</span>
+                </div>
+              ) : null}
+              {reviewError ? (
+                <div
+                  className="callout callout-negative builder-save-error"
+                  role="alert"
+                >
+                  <CircleAlert size={16} aria-hidden="true" />
+                  <div>
+                    <p className="callout-title">
+                      {t("builder.reviewErrorTitle")}
+                    </p>
+                    <p className="callout-body">{reviewError}</p>
+                  </div>
+                </div>
+              ) : null}
+              {review && !reviewing ? (
+                <CVReview review={review} modelName={modelName} />
               ) : null}
               <CVPreview
                 html={previewHTML}

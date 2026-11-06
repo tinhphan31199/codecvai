@@ -1,19 +1,29 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
+import {
+  ArrowUpRight,
   Check,
   CircleAlert,
+  Eye,
   FileText,
   Loader2,
   Pencil,
   Plus,
   Printer,
+  Sparkles,
   Trash2,
   X,
 } from "lucide-react";
 import type { Screen } from "@/data/codecv";
 import {
+  analyzeBuilderCV,
   deleteGeneratedCV,
   updateGeneratedCV,
   useGeneratedCV,
@@ -21,9 +31,12 @@ import {
   type GeneratedAccent,
   type GeneratedTemplate,
 } from "@/lib/api";
+import { initialsOf } from "@/lib/auth";
+import type { CvAnalysisResponse } from "@/lib/cv-analysis";
 import { localeOf, useLang, useT, type MessageKey } from "@/lib/i18n";
+import CVReview from "../cv/CVReview";
 import CVPreview from "../cv/CVPreview";
-import { buildCVHTML } from "../cv/templates";
+import { ACCENTS as ACCENT_PALETTES, buildCVHTML } from "../cv/templates";
 import { CardHead, EmptyState, PageHead } from "../ui";
 
 const templateNameKeys: Record<GeneratedTemplate, MessageKey> = {
@@ -101,10 +114,29 @@ export default function MyCVs({
         />
 
         {query.loading && !cvs.length ? (
-          <p className="saved-cv-loading">
-            <Loader2 className="spin" size={15} aria-hidden="true" />
-            {t("state.loading")}
-          </p>
+          <div className="saved-cv-grid" aria-hidden="true">
+            {[0, 1, 2].map((item) => (
+              <div className="saved-cv-card is-skeleton" key={item}>
+                <span className="saved-cv-cover">
+                  <span className="saved-cv-sheet" />
+                </span>
+                <span className="saved-cv-body">
+                  <span
+                    className="saved-cv-skel-line"
+                    style={{ width: "64%" }}
+                  />
+                  <span
+                    className="saved-cv-skel-line"
+                    style={{ width: "42%" }}
+                  />
+                  <span
+                    className="saved-cv-skel-line"
+                    style={{ width: "82%" }}
+                  />
+                </span>
+              </div>
+            ))}
+          </div>
         ) : null}
 
         {!query.loading && !query.error && cvs.length === 0 ? (
@@ -126,45 +158,88 @@ export default function MyCVs({
 
         {cvs.length ? (
           <div className="saved-cv-grid">
-            {cvs.map((cv) => (
-              <button
-                type="button"
-                className="saved-cv-card"
-                key={cv.id}
-                onClick={() => setSelectedId(cv.id)}
-              >
-                <span className="saved-cv-icon" aria-hidden="true">
-                  <FileText size={17} />
-                </span>
-                <span className="saved-cv-main">
-                  <span className="saved-cv-name">{cv.name}</span>
-                  <span className="saved-cv-role">
-                    {cv.targetPosition || t("savedCvs.noRole")}
-                  </span>
-                  <span className="saved-cv-tags">
-                    {cv.level ? (
-                      <span className="pill pill-info">{cv.level}</span>
-                    ) : null}
-                    <span className="pill">
+            {cvs.map((cv) => {
+              const palette = ACCENT_PALETTES[cv.accent];
+              return (
+                <button
+                  type="button"
+                  className="saved-cv-card"
+                  key={cv.id}
+                  data-template={cv.template}
+                  style={
+                    {
+                      "--cv-main": palette.main,
+                      "--cv-soft": palette.soft,
+                      "--cv-ink": palette.ink,
+                    } as CSSProperties
+                  }
+                  onClick={() => setSelectedId(cv.id)}
+                >
+                  <span className="saved-cv-cover" aria-hidden="true">
+                    <span className="saved-cv-sheet">
+                      <span className="saved-cv-sheet-rail" />
+                      <span className="saved-cv-sheet-head">
+                        <span className="saved-cv-sheet-avatar">
+                          {initialsOf(cv.name)}
+                        </span>
+                        <span className="saved-cv-sheet-id">
+                          <span className="saved-cv-sheet-name">
+                            {cv.name}
+                          </span>
+                          <span className="saved-cv-sheet-role">
+                            {cv.targetPosition || t("savedCvs.noRole")}
+                          </span>
+                        </span>
+                      </span>
+                      <span className="saved-cv-sheet-rule" />
+                      <span className="saved-cv-sheet-lines">
+                        <span />
+                        <span />
+                        <span />
+                      </span>
+                      <span className="saved-cv-sheet-block" />
+                    </span>
+                    <span className="saved-cv-cover-badge">
+                      <span className="saved-cv-accent-dot" />
                       {t(templateNameKeys[cv.template])}
                     </span>
-                    <span className="pill">
-                      {t(accentNameKeys[cv.accent])}
-                    </span>
-                    <span className="pill">
-                      {cv.language === "en"
-                        ? t("builder.languageEn")
-                        : t("builder.languageVi")}
+                    <span className="saved-cv-open">
+                      <Eye size={13} aria-hidden="true" />
+                      {t("savedCvs.open")}
                     </span>
                   </span>
-                </span>
-                <span className="saved-cv-date">
-                  {t("savedCvs.updated", {
-                    date: formatDate(cv.updatedAt),
-                  })}
-                </span>
-              </button>
-            ))}
+                  <span className="saved-cv-body">
+                    <span className="saved-cv-name">{cv.name}</span>
+                    <span className="saved-cv-role">
+                      {cv.targetPosition || t("savedCvs.noRole")}
+                    </span>
+                    <span className="saved-cv-tags">
+                      {cv.level ? (
+                        <span className="pill pill-info">{cv.level}</span>
+                      ) : null}
+                      <span className="pill">
+                        {cv.language === "en"
+                          ? t("builder.languageEn")
+                          : t("builder.languageVi")}
+                      </span>
+                      <span className="pill">
+                        {t(accentNameKeys[cv.accent])}
+                      </span>
+                    </span>
+                    <span className="saved-cv-foot">
+                      <span className="saved-cv-date">
+                        {t("savedCvs.updated", {
+                          date: formatDate(cv.updatedAt),
+                        })}
+                      </span>
+                      <span className="saved-cv-arrow" aria-hidden="true">
+                        <ArrowUpRight size={14} />
+                      </span>
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
           </div>
         ) : null}
       </section>
@@ -206,8 +281,12 @@ function SavedCVDetail({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const [confirming, setConfirming] = useState(false);
+  const [evaluating, setEvaluating] = useState(false);
+  const [evaluation, setEvaluation] = useState<CvAnalysisResponse | null>(null);
+  const [evalError, setEvalError] = useState<string | null>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const evalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -227,6 +306,11 @@ function SavedCVDetail({
       previous?.focus();
     };
   }, []);
+
+  useEffect(() => {
+    if (!evaluation) return;
+    evalRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }, [evaluation]);
 
   const html = useMemo(() => {
     if (!cv || !styleTemplate || !styleAccent) return "";
@@ -278,6 +362,30 @@ function SavedCVDetail({
       );
     } finally {
       setBusy(null);
+    }
+  };
+
+  const evaluate = async () => {
+    if (!cv || evaluating) return;
+    const position =
+      cv.input.position.trim() || cv.targetPosition.trim();
+    if (!position) {
+      setEvalError(t("savedCvs.evalPosition"));
+      return;
+    }
+    setEvaluating(true);
+    setEvalError(null);
+    try {
+      const result = await analyzeBuilderCV({
+        language: cv.language,
+        input: { ...cv.input, position },
+        content: cv.content,
+      });
+      setEvaluation(result);
+    } catch (err) {
+      setEvalError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setEvaluating(false);
     }
   };
 
@@ -457,6 +565,35 @@ function SavedCVDetail({
                   {notice}
                 </p>
               ) : null}
+              {evaluating ? (
+                <div
+                  className="builder-review builder-review-loading"
+                  role="status"
+                >
+                  <Loader2 className="spin" size={16} aria-hidden="true" />
+                  <span>{t("savedCvs.evaluating")}</span>
+                </div>
+              ) : null}
+              {evalError ? (
+                <div className="callout callout-negative" role="alert">
+                  <CircleAlert size={16} aria-hidden="true" />
+                  <div>
+                    <p className="callout-title">
+                      {t("savedCvs.evalErrorTitle")}
+                    </p>
+                    <p className="callout-body">{evalError}</p>
+                  </div>
+                </div>
+              ) : null}
+              {evaluation && !evaluating ? (
+                <div ref={evalRef}>
+                  <CVReview
+                    review={evaluation}
+                    title={t("savedCvs.evalTitle")}
+                    note={t("savedCvs.evalNote")}
+                  />
+                </div>
+              ) : null}
               <CVPreview
                 html={html}
                 title={t("builder.previewFrameTitle")}
@@ -516,6 +653,21 @@ function SavedCVDetail({
                   </button>
                 </div>
                 <div className="market-detail-foot-right">
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    disabled={busy !== null || evaluating}
+                    onClick={() => void evaluate()}
+                  >
+                    {evaluating ? (
+                      <Loader2 className="spin" size={14} aria-hidden="true" />
+                    ) : (
+                      <Sparkles size={14} aria-hidden="true" />
+                    )}
+                    {evaluating
+                      ? t("savedCvs.evaluating")
+                      : t("savedCvs.evaluate")}
+                  </button>
                   <button
                     type="button"
                     className="btn btn-ghost btn-sm"
