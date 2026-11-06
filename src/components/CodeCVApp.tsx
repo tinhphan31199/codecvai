@@ -13,6 +13,7 @@ import {
   Bell,
   ChevronDown,
   FileText,
+  Files,
   FolderGit2,
   HelpCircle,
   LayoutDashboard,
@@ -21,6 +22,7 @@ import {
   MessagesSquare,
   Search,
   Settings as SettingsIcon,
+  Sparkles,
   Store,
   UploadCloud,
   Users,
@@ -41,6 +43,8 @@ import { Avatar, LogoMark } from "./ui";
 import Login from "./screens/Login";
 import Dashboard from "./screens/Dashboard";
 import UploadCV from "./screens/UploadCV";
+import Builder from "./screens/Builder";
+import MyCVs from "./screens/MyCVs";
 import Candidates from "./screens/Candidates";
 import Market from "./screens/Market";
 import CandidateDetail from "./screens/CandidateDetail";
@@ -56,6 +60,8 @@ type Route = { screen: Screen; id?: string };
 const ROUTES: Screen[] = [
   "overview",
   "upload",
+  "builder",
+  "my-cvs",
   "candidates",
   "market",
   "candidate",
@@ -94,6 +100,8 @@ const navItems: {
   { key: "candidates", labelKey: "nav.candidates", icon: Users, count: 0 },
   { key: "market", labelKey: "nav.market", icon: Store, count: null },
   { key: "upload", labelKey: "nav.upload", icon: UploadCloud, count: null },
+  { key: "builder", labelKey: "nav.builder", icon: Sparkles, count: null },
+  { key: "my-cvs", labelKey: "nav.myCvs", icon: Files, count: null },
   { key: "repository", labelKey: "nav.repository", icon: FolderGit2, count: null },
   { key: "interview", labelKey: "nav.interview", icon: MessagesSquare, count: null },
   { key: "jobs", labelKey: "nav.jobs", icon: FileText, count: null },
@@ -104,6 +112,8 @@ const navItems: {
 const screenTitles: Record<Screen, MessageKey> = {
   overview: "screen.dashboard",
   upload: "screen.upload",
+  builder: "screen.builder",
+  "my-cvs": "screen.myCvs",
   candidates: "screen.candidates",
   market: "screen.market",
   candidate: "screen.candidate",
@@ -466,6 +476,14 @@ function Shell() {
           <div className="canvas">
             {route.screen === "overview" ? <Dashboard go={go} teamName={teamName} /> : null}
             {route.screen === "upload" ? <UploadCV go={go} /> : null}
+            {route.screen === "builder" ? (
+              <Builder
+                key={route.id ?? "new"}
+                go={go}
+                savedId={route.id}
+              />
+            ) : null}
+            {route.screen === "my-cvs" ? <MyCVs go={go} /> : null}
             {route.screen === "candidates" ? (
               <Candidates
                 go={go}

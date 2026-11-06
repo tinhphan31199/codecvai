@@ -88,18 +88,58 @@ func (s *Server) handleCandidates(w http.ResponseWriter, r *http.Request) {
 		Query:    r.URL.Query().Get("q"),
 		Status:   r.URL.Query().Get("status"),
 		Position: r.URL.Query().Get("position"),
+		Evidence: r.URL.Query().Get("evidence"),
 		Sort:     r.URL.Query().Get("sort"),
 		OwnerID:  ownerFilter(r),
 	}
-	filter.Limit = queryInt(r, "limit", 100)
-	filter.Offset = queryInt(r, "offset", 0)
+
+	pageSize := queryInt(r, "pageSize", 20)
+	if pageSize < 1 {
+		pageSize = 20
+	}
+	if pageSize > 200 {
+		pageSize = 200
+	}
+	page := queryInt(r, "page", 1)
+	if page <= 0 {
+		page = 1
+	}
+
+	total, err := s.store.CountCandidates(r.Context(), filter)
+	if err != nil {
+		s.storeError(w, err)
+		return
+	}
+	pages := 1
+	if total > 0 {
+		pages = (total + pageSize - 1) / pageSize
+	}
+	if page > pages {
+		page = pages
+	}
+
+	filter.Limit = pageSize
+	filter.Offset = (page - 1) * pageSize
 
 	candidates, err := s.store.ListCandidates(r.Context(), filter)
 	if err != nil {
 		s.storeError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"candidates": candidates, "total": len(candidates)})
+	counts, positions, err := s.store.CandidateFacets(r.Context(), filter.OwnerID)
+	if err != nil {
+		s.storeError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"candidates": candidates,
+		"total":      total,
+		"page":       page,
+		"pageSize":   pageSize,
+		"counts":     counts,
+		"positions":  positions,
+	})
 }
 
 func (s *Server) handleCandidate(w http.ResponseWriter, r *http.Request) {

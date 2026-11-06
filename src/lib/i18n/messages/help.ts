@@ -12,6 +12,7 @@ const vi = {
   "help.toc.evidence": "Mức bằng chứng",
   "help.toc.repo": "Đọc repository",
   "help.toc.interview": "Phỏng vấn & rubric",
+  "help.toc.cv": "Tạo CV AI",
   "help.toc.roles": "Vai trò & quyền",
   "help.toc.settings": "Cấu hình",
   "help.toc.faq": "Câu hỏi thường gặp",
@@ -89,6 +90,20 @@ const vi = {
     "Xuất phiếu phỏng vấn PDF: xem trước bản in rồi lưu tệp gồm điểm rubric, câu đã hỏi và ghi chú.",
   "help.interview.action": "Mở phỏng vấn",
 
+  "help.cv.title": "Tạo CV AI",
+  "help.cv.meta": "Nhập thông tin, AI viết, bạn xuất PDF",
+  "help.cv.b1":
+    "Nhập thông tin cơ bản, kinh nghiệm, học vấn, dự án và kỹ năng; hoặc nạp nhanh từ một hồ sơ đã phân tích.",
+  "help.cv.b2":
+    "Chọn model, ngôn ngữ CV, mẫu và màu nhấn — hoặc để AI tự chọn giữa Classic, Sidebar và Compact.",
+  "help.cv.b3":
+    "AI chỉ viết lại và sắp xếp dữ liệu bạn nhập, không bịa công ty, chức danh, thời gian hay số liệu.",
+  "help.cv.b4":
+    "Bấm Lưu CV để giữ bản nháp trong CV của tôi; mở lại để đổi mẫu, sửa hoặc xuất PDF.",
+  "help.cv.callout":
+    "Xuất PDF bằng hộp thoại in của trình duyệt: chọn Save as PDF để giữ đúng khổ A4.",
+  "help.cv.action": "Mở Tạo CV AI",
+
   "help.roles.title": "Vai trò & quyền",
   "help.roles.meta": "Admin và member",
   "help.roles.admin.title": "Admin",
@@ -128,6 +143,12 @@ const vi = {
   "help.faq.q6": "Đổi ngôn ngữ giao diện thế nào?",
   "help.faq.a6":
     "Dùng nút VI/EN ở chân sidebar. Nội dung do AI tạo và dữ liệu trong DB giữ nguyên ngôn ngữ gốc.",
+  "help.faq.q7": "CV do AI tạo có bịa thông tin không?",
+  "help.faq.a7":
+    "Không. AI chỉ dùng đúng dữ liệu bạn nhập hoặc nạp từ hồ sơ đã phân tích; hãy kiểm tra lại bản nháp trước khi gửi cho nhà tuyển dụng.",
+  "help.faq.q8": "CV đã lưu nằm ở đâu và xuất PDF thế nào?",
+  "help.faq.a8":
+    "CV lưu riêng cho tài khoản của bạn tại CV của tôi. Mở CV, chọn In / Tải PDF rồi chọn Save as PDF trong hộp thoại in.",
   "help.foot": "Cần hỗ trợ thêm? Liên hệ quản trị viên workspace của bạn.",
 } satisfies Record<string, Message>;
 
@@ -143,6 +164,7 @@ const en: Record<keyof typeof vi, Message> = {
   "help.toc.evidence": "Evidence levels",
   "help.toc.repo": "Repository reading",
   "help.toc.interview": "Interview & rubric",
+  "help.toc.cv": "AI CV builder",
   "help.toc.roles": "Roles & permissions",
   "help.toc.settings": "Configuration",
   "help.toc.faq": "FAQ",
@@ -220,6 +242,20 @@ const en: Record<keyof typeof vi, Message> = {
     "Export a PDF interview sheet — preview the print layout first, then save rubric scores, questions asked and notes.",
   "help.interview.action": "Open interview studio",
 
+  "help.cv.title": "AI CV builder",
+  "help.cv.meta": "Fill the form, AI writes, you export a PDF",
+  "help.cv.b1":
+    "Enter the basics, experience, education, projects and skills — or prefill from an analyzed candidate.",
+  "help.cv.b2":
+    "Pick the model, CV language, template and accent — or let AI choose between Classic, Sidebar and Compact.",
+  "help.cv.b3":
+    "AI only rewrites and organizes what you provide; it never invents companies, titles, dates or metrics.",
+  "help.cv.b4":
+    "Press Save CV to keep the draft under My CVs; reopen it to change the template, edit or export a PDF.",
+  "help.cv.callout":
+    "Export a PDF through the browser print dialog: choose Save as PDF to keep the A4 layout.",
+  "help.cv.action": "Open AI CV builder",
+
   "help.roles.title": "Roles & permissions",
   "help.roles.meta": "Admin and member",
   "help.roles.admin.title": "Admin",
@@ -259,6 +295,12 @@ const en: Record<keyof typeof vi, Message> = {
   "help.faq.q6": "How do I change the interface language?",
   "help.faq.a6":
     "Use the VI/EN buttons at the bottom of the sidebar. AI-generated content and database records keep their original language.",
+  "help.faq.q7": "Does the AI invent details in my CV?",
+  "help.faq.a7":
+    "No. It only uses what you entered or prefilled from an analyzed candidate; review the draft before sending it to a recruiter.",
+  "help.faq.q8": "Where are saved CVs stored and how do I export a PDF?",
+  "help.faq.a8":
+    "Each CV is stored privately for your account under My CVs. Open it, choose Print / Save PDF and pick Save as PDF in the print dialog.",
   "help.foot": "Need more help? Contact your workspace administrator.",
 };
 

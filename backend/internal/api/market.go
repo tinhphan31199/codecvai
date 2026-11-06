@@ -23,24 +23,24 @@ import (
 // The marketplace is a shared CV pool: every signed-in account can browse and
 // add CVs, unlike the per-owner candidate pipeline.
 func (s *Server) handleMarketCVs(w http.ResponseWriter, r *http.Request) {
-	limit := 200
-	if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
-		if parsed, err := strconv.Atoi(raw); err == nil && parsed > 0 && parsed <= 500 {
-			limit = parsed
-		}
-	}
-
-	cvs, err := s.store.MarketCVs(r.Context(), marketViewer(r), limit)
+	query := r.URL.Query()
+	page, err := s.store.MarketCVs(r.Context(), marketViewer(r), store.MarketQuery{
+		Query:    query.Get("q"),
+		Category: query.Get("category"),
+		Level:    query.Get("level"),
+		Years:    query.Get("years"),
+		Sort:     query.Get("sort"),
+		Scope:    query.Get("scope"),
+		Page:     queryInt(r, "page", 1),
+		PageSize: queryInt(r, "pageSize", 12),
+	})
 	if err != nil {
 		log.Printf("[market] list failed: %v", err)
 		s.fail(w, http.StatusInternalServerError, "store_error", "Không tải được chợ CV. Vui lòng thử lại.")
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
-		"items": cvs,
-		"total": len(cvs),
-	})
+	writeJSON(w, http.StatusOK, page)
 }
 
 func (s *Server) handleMarketUpload(w http.ResponseWriter, r *http.Request) {

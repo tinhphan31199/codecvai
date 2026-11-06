@@ -452,6 +452,31 @@ func (c *Client) Categorize(ctx context.Context, input analysis.MarketInput, mod
 	return profile, nil
 }
 
+// Generate viết nội dung CV từ thông tin người dùng nhập và chọn template, accent.
+func (c *Client) Generate(ctx context.Context, input analysis.GenerateInput, modelID string) (model.GeneratedCVDraft, error) {
+	text, err := c.GenerateJSON(
+		ctx,
+		modelID,
+		analysis.GeneratedSystemInstruction,
+		analysis.BuildGeneratedPrompt(input),
+		analysis.GeminiGeneratedSchema(),
+		8192,
+	)
+	if err != nil {
+		return model.GeneratedCVDraft{}, err
+	}
+
+	draft, err := analysis.DecodeGenerated(text)
+	if err != nil {
+		return model.GeneratedCVDraft{}, &Error{
+			Code:    "invalid_output",
+			Message: "Gemini trả về nội dung CV không hợp lệ. Vui lòng thử lại.",
+		}
+	}
+
+	return draft, nil
+}
+
 // ExtractLinks đọc link GitHub trực tiếp từ tệp CV đã tải lên Files API,
 // dùng khi văn bản trích xuất không còn link nào để quét.
 func (c *Client) ExtractLinks(ctx context.Context, modelID, fileURI, mimeType string) ([]string, error) {

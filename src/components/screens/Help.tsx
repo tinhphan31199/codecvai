@@ -15,6 +15,7 @@ import {
   Rocket,
   ShieldCheck,
   SlidersHorizontal,
+  Sparkles,
   UploadCloud,
   UserRound,
   Users,
@@ -31,6 +32,7 @@ const TOC: { id: string; key: MessageKey; icon: typeof Rocket }[] = [
   { id: "help-evidence", key: "help.toc.evidence", icon: BadgeCheck },
   { id: "help-repo", key: "help.toc.repo", icon: GitBranch },
   { id: "help-interview", key: "help.toc.interview", icon: MessagesSquare },
+  { id: "help-cv", key: "help.toc.cv", icon: Sparkles },
   { id: "help-roles", key: "help.toc.roles", icon: ShieldCheck },
   { id: "help-settings", key: "help.toc.settings", icon: SlidersHorizontal },
   { id: "help-faq", key: "help.toc.faq", icon: HelpCircle },
@@ -98,6 +100,13 @@ const INTERVIEW_POINTS: MessageKey[] = [
   "help.interview.b2",
   "help.interview.b3",
   "help.interview.b4",
+];
+
+const CV_POINTS: MessageKey[] = [
+  "help.cv.b1",
+  "help.cv.b2",
+  "help.cv.b3",
+  "help.cv.b4",
 ];
 
 const SETTINGS_LINKS: {
@@ -169,6 +178,8 @@ const FAQ: { q: MessageKey; a: MessageKey }[] = [
   { q: "help.faq.q4", a: "help.faq.a4" },
   { q: "help.faq.q5", a: "help.faq.a5" },
   { q: "help.faq.q6", a: "help.faq.a6" },
+  { q: "help.faq.q7", a: "help.faq.a7" },
+  { q: "help.faq.q8", a: "help.faq.a8" },
 ];
 
 export default function Help({
@@ -326,6 +337,27 @@ export default function Help({
                 <li key={key}>{t(key)}</li>
               ))}
             </ul>
+          </section>
+
+          <section id="help-cv" className="card anchor-section">
+            <CardHead
+              title={t("help.cv.title")}
+              meta={t("help.cv.meta")}
+              action={
+                <ArrowLink onClick={() => go("builder")}>
+                  {t("help.cv.action")}
+                </ArrowLink>
+              }
+            />
+            <ul className="help-list">
+              {CV_POINTS.map((key) => (
+                <li key={key}>{t(key)}</li>
+              ))}
+            </ul>
+            <div className="help-callout">
+              <Info size={15} aria-hidden="true" />
+              <span>{t("help.cv.callout")}</span>
+            </div>
           </section>
 
           <section id="help-roles" className="card anchor-section">

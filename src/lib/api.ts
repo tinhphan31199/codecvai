@@ -122,6 +122,147 @@ export interface AnalysisQueueItem {
   analyzedAt: string;
 }
 
+export interface BuilderExperienceInput {
+  company: string;
+  role: string;
+  period: string;
+  description: string;
+}
+
+export interface BuilderEducationInput {
+  school: string;
+  degree: string;
+  period: string;
+}
+
+export interface BuilderProjectInput {
+  name: string;
+  role: string;
+  period: string;
+  description: string;
+}
+
+export interface BuilderInput {
+  fullName: string;
+  email: string;
+  phone: string;
+  location: string;
+  linkedin: string;
+  github: string;
+  portfolio: string;
+  position: string;
+  level: string;
+  years: number;
+  skills: string[];
+  experiences: BuilderExperienceInput[];
+  education: BuilderEducationInput[];
+  projects: BuilderProjectInput[];
+  certifications: string[];
+  languages: string[];
+  notes: string;
+  sourceCandidateId?: string;
+}
+
+export interface GeneratedExperience {
+  company: string;
+  role: string;
+  period: string;
+  location?: string;
+  bullets: string[];
+}
+
+export interface GeneratedEducation {
+  school: string;
+  degree?: string;
+  period?: string;
+  detail?: string;
+}
+
+export interface GeneratedProject {
+  name: string;
+  role?: string;
+  period?: string;
+  link?: string;
+  bullets: string[];
+}
+
+export interface GeneratedSkillGroup {
+  group: string;
+  items: string[];
+}
+
+export interface GeneratedCertification {
+  name: string;
+  issuer?: string;
+  year?: string;
+}
+
+export interface GeneratedLanguage {
+  name: string;
+  level?: string;
+}
+
+export interface GeneratedCVContent {
+  summary: string;
+  experience: GeneratedExperience[];
+  education: GeneratedEducation[];
+  projects: GeneratedProject[];
+  skills: GeneratedSkillGroup[];
+  certifications: GeneratedCertification[];
+  languages: GeneratedLanguage[];
+}
+
+export type GeneratedTemplate = "classic" | "sidebar" | "compact";
+export type GeneratedAccent = "sky" | "slate" | "emerald" | "amber";
+
+export interface GenerateCVPayload {
+  modelId?: string;
+  language: "vi" | "en";
+  template?: string;
+  accent?: string;
+  feedback?: string;
+  input: BuilderInput;
+}
+
+export interface GeneratedCVResult {
+  input: BuilderInput;
+  content: GeneratedCVContent;
+  template: GeneratedTemplate;
+  accent: GeneratedAccent;
+  modelId: string;
+  provider: string;
+}
+
+export interface GeneratedCVSummary {
+  id: string;
+  name: string;
+  targetPosition: string;
+  level: string;
+  language: "vi" | "en";
+  template: GeneratedTemplate;
+  accent: GeneratedAccent;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GeneratedCV extends GeneratedCVSummary {
+  content: GeneratedCVContent;
+  input: BuilderInput;
+  modelId?: string;
+  provider?: string;
+}
+
+export interface SaveGeneratedCVPayload {
+  name?: string;
+  language: "vi" | "en";
+  template?: string;
+  accent?: string;
+  content: GeneratedCVContent;
+  input: BuilderInput;
+  modelId?: string;
+  provider?: string;
+}
+
 export interface MarketCV {
   id: string;
   name: string;
@@ -318,6 +459,26 @@ function invalidate(path: string) {
   inflight.delete(path);
 }
 
+// Paginated hooks key the cache by their full query string, so mutations need
+// to drop every variant under the same endpoint prefix.
+function invalidatePrefix(prefix: string) {
+  for (const key of Array.from(cache.keys())) {
+    if (key.startsWith(prefix)) cache.delete(key);
+  }
+  for (const key of Array.from(inflight.keys())) {
+    if (key.startsWith(prefix)) inflight.delete(key);
+  }
+}
+
+export function useDebouncedValue<T>(value: T, delay = 300): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
 async function requestJSON<T>(
   path: string,
   init?: RequestInit,
@@ -476,10 +637,45 @@ export function useDashboard(): QueryResult<Dashboard> {
   return useQuery<Dashboard>("/api/dashboard");
 }
 
+export interface CandidateQuery {
+  q?: string;
+  status?: string;
+  position?: string;
+  evidence?: string;
+  sort?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface CandidatePage {
+  candidates: Candidate[];
+  total: number;
+  page: number;
+  pageSize: number;
+  counts: { all: number; verified: number; gap: number };
+  positions: string[];
+}
+
+export function useCandidatesPage(
+  query: CandidateQuery = {},
+): QueryResult<CandidatePage> {
+  const params = new URLSearchParams();
+  if (query.q?.trim()) params.set("q", query.q.trim());
+  if (query.status && query.status !== "all") params.set("status", query.status);
+  if (query.position && query.position !== "all")
+    params.set("position", query.position);
+  if (query.evidence && query.evidence !== "all")
+    params.set("evidence", query.evidence);
+  if (query.sort && query.sort !== "recent") params.set("sort", query.sort);
+  if (query.page && query.page > 1) params.set("page", String(query.page));
+  params.set("pageSize", String(query.pageSize ?? 8));
+  return useQuery<CandidatePage>(`/api/candidates?${params.toString()}`);
+}
+
+// Screens that only need a picker (Reports, Interview, Repository) keep the
+// flat list; the table uses useCandidatesPage instead.
 export function useCandidates(): QueryResult<Candidate[]> {
-  const result = useQuery<{ candidates: Candidate[]; total: number }>(
-    "/api/candidates?limit=200",
-  );
+  const result = useQuery<CandidatePage>("/api/candidates?pageSize=200");
   return { ...result, data: result.data ? result.data.candidates : null };
 }
 
@@ -487,11 +683,41 @@ export function useCandidate(id: string): QueryResult<Candidate> {
   return useQuery<Candidate>(`/api/candidates/${encodeURIComponent(id)}`);
 }
 
-export function useMarketCVs(): QueryResult<MarketCV[]> {
-  const result = useQuery<{ items: MarketCV[]; total: number }>(
-    "/api/market/cvs?limit=200",
-  );
-  return { ...result, data: result.data ? result.data.items : null };
+export interface MarketCVQuery {
+  q?: string;
+  category?: string;
+  level?: string;
+  years?: string;
+  sort?: string;
+  scope?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface MarketCVPage {
+  items: MarketCV[];
+  total: number;
+  page: number;
+  pageSize: number;
+  scopeCounts: { all: number; saved: number; mine: number };
+  categoryCounts: Record<string, number>;
+  levels: string[];
+}
+
+export function useMarketCVs(
+  query: MarketCVQuery = {},
+): QueryResult<MarketCVPage> {
+  const params = new URLSearchParams();
+  if (query.q?.trim()) params.set("q", query.q.trim());
+  if (query.category && query.category !== "all")
+    params.set("category", query.category);
+  if (query.level && query.level !== "all") params.set("level", query.level);
+  if (query.years && query.years !== "all") params.set("years", query.years);
+  if (query.sort && query.sort !== "recent") params.set("sort", query.sort);
+  if (query.scope && query.scope !== "all") params.set("scope", query.scope);
+  if (query.page && query.page > 1) params.set("page", String(query.page));
+  params.set("pageSize", String(query.pageSize ?? 12));
+  return useQuery<MarketCVPage>(`/api/market/cvs?${params.toString()}`);
 }
 
 export function useRepository(
@@ -558,6 +784,20 @@ export function useTeam(): QueryResult<TeamMember[]> {
 export function useModels(): QueryResult<AIModel[]> {
   const result = useQuery<{ models: AIModel[] }>("/api/models");
   return { ...result, data: result.data ? result.data.models : null };
+}
+
+export function useGeneratedCVs(): QueryResult<GeneratedCVSummary[]> {
+  const result = useQuery<{ cvs: GeneratedCVSummary[] }>(
+    "/api/cv-builder/cvs",
+  );
+  return { ...result, data: result.data ? result.data.cvs : null };
+}
+
+export function useGeneratedCV(id: string | null): QueryResult<GeneratedCV> {
+  const result = useQuery<{ cv: GeneratedCV }>(
+    id ? `/api/cv-builder/cvs/${encodeURIComponent(id)}` : null,
+  );
+  return { ...result, data: result.data ? result.data.cv : null };
 }
 
 export function useServiceConfigs(): QueryResult<ServiceConfig[]> {
@@ -735,7 +975,7 @@ export async function saveMarketCV(
     `/api/market/cvs/${encodeURIComponent(id)}/save`,
     { method: saved ? "POST" : "DELETE" },
   );
-  invalidate("/api/market/cvs?limit=200");
+  invalidatePrefix("/api/market/cvs?");
   return result;
 }
 
@@ -747,7 +987,7 @@ export async function setMarketCVVisibility(
     `/api/market/cvs/${encodeURIComponent(id)}`,
     { method: "PATCH", body: JSON.stringify({ visibility }) },
   );
-  invalidate("/api/market/cvs?limit=200");
+  invalidatePrefix("/api/market/cvs?");
   return updated;
 }
 
@@ -755,7 +995,46 @@ export async function deleteMarketCV(id: string): Promise<void> {
   await requestJSON<void>(`/api/market/cvs/${encodeURIComponent(id)}`, {
     method: "DELETE",
   });
-  invalidate("/api/market/cvs?limit=200");
+  invalidatePrefix("/api/market/cvs?");
+}
+
+export async function generateCV(
+  payload: GenerateCVPayload,
+): Promise<GeneratedCVResult> {
+  return requestJSON<GeneratedCVResult>("/api/cv-builder/generate", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function createGeneratedCV(
+  payload: SaveGeneratedCVPayload,
+): Promise<GeneratedCV> {
+  const result = await requestJSON<{ cv: GeneratedCV }>("/api/cv-builder/cvs", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  invalidatePrefix("/api/cv-builder/cvs");
+  return result.cv;
+}
+
+export async function updateGeneratedCV(
+  id: string,
+  payload: SaveGeneratedCVPayload,
+): Promise<GeneratedCV> {
+  const result = await requestJSON<{ cv: GeneratedCV }>(
+    `/api/cv-builder/cvs/${encodeURIComponent(id)}`,
+    { method: "PUT", body: JSON.stringify(payload) },
+  );
+  invalidatePrefix("/api/cv-builder/cvs");
+  return result.cv;
+}
+
+export async function deleteGeneratedCV(id: string): Promise<void> {
+  await requestJSON<void>(`/api/cv-builder/cvs/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+  invalidatePrefix("/api/cv-builder/cvs");
 }
 
 export async function patchCandidate(
@@ -767,7 +1046,7 @@ export async function patchCandidate(
     { method: "PATCH", body: JSON.stringify(patch) },
   );
   invalidate(`/api/candidates/${encodeURIComponent(id)}`);
-  invalidate("/api/candidates?limit=200");
+  invalidatePrefix("/api/candidates?");
   invalidate("/api/dashboard");
   return updated;
 }
@@ -925,7 +1204,7 @@ export async function updateLevel(
   );
   invalidate("/api/levels");
   invalidate("/api/positions");
-  invalidate("/api/candidates?limit=200");
+  invalidatePrefix("/api/candidates?");
   invalidate("/api/dashboard");
   return updated;
 }

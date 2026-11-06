@@ -31,6 +31,34 @@ type SaveMarketCVInput struct {
 	Profile    model.MarketProfile
 }
 
+// MarketQuery carries the server-side filters for the shared CV pool.
+type MarketQuery struct {
+	Query    string
+	Category string
+	Level    string
+	Years    string
+	Sort     string
+	Scope    string
+	Page     int
+	PageSize int
+}
+
+type MarketScopeCounts struct {
+	All   int `json:"all"`
+	Saved int `json:"saved"`
+	Mine  int `json:"mine"`
+}
+
+type MarketPage struct {
+	Items          []model.MarketCV  `json:"items"`
+	Total          int               `json:"total"`
+	Page           int               `json:"page"`
+	PageSize       int               `json:"pageSize"`
+	ScopeCounts    MarketScopeCounts `json:"scopeCounts"`
+	CategoryCounts map[string]int    `json:"categoryCounts"`
+	Levels         []string          `json:"levels"`
+}
+
 const marketCVSelect = `
 	SELECT m.id, m.name, m.title, m.email, m.phone, m.location, m.years,
 	       m.category, m.level, m.summary, m.skills, m.highlights, m.file_name,
@@ -103,29 +131,177 @@ func (s *Store) MarketCV(ctx context.Context, id string, viewer MarketViewer) (m
 	return s.marketCV(ctx, id, viewer)
 }
 
-// MarketCVs lists the shared CV pool, newest first, hiding other people's private CVs.
-func (s *Store) MarketCVs(ctx context.Context, viewer MarketViewer, limit int) ([]model.MarketCV, error) {
-	if limit <= 0 {
-		limit = 200
+// MarketCVs returns one page of the shared pool plus the facet counts the
+// browser needs, hiding other people's private CVs in every query.
+func (s *Store) MarketCVs(ctx context.Context, viewer MarketViewer, q MarketQuery) (MarketPage, error) {
+	pageSize := q.PageSize
+	if pageSize <= 0 {
+		pageSize = 12
 	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	const visibility = `(m.visibility = 'public' OR m.owner_id = $1 OR $2)`
+	args := []any{viewer.UserID, viewer.Admin}
+	argn := 3
+
+	base := []string{visibility}
+	switch strings.ToLower(strings.TrimSpace(q.Scope)) {
+	case "saved":
+		base = append(base, `EXISTS (SELECT 1 FROM market_cv_saves s WHERE s.cv_id = m.id AND s.user_id = $1)`)
+	case "mine":
+		base = append(base, `m.owner_id = $1`)
+	}
+
+	filtered := append([]string{}, base...)
+	if text := strings.TrimSpace(q.Query); text != "" {
+		filtered = append(filtered, fmt.Sprintf(
+			`(m.name ILIKE '%%' || $%d || '%%' OR m.title ILIKE '%%' || $%d || '%%' OR m.location ILIKE '%%' || $%d || '%%' OR m.summary ILIKE '%%' || $%d || '%%' OR m.skills::text ILIKE '%%' || $%d || '%%')`,
+			argn, argn, argn, argn, argn))
+		args = append(args, text)
+		argn++
+	}
+	if level := strings.TrimSpace(q.Level); level != "" && level != "all" {
+		filtered = append(filtered, fmt.Sprintf(`m.level = $%d`, argn))
+		args = append(args, level)
+		argn++
+	}
+	switch strings.TrimSpace(q.Years) {
+	case "0-1":
+		filtered = append(filtered, `m.years <= 1`)
+	case "2-3":
+		filtered = append(filtered, `m.years BETWEEN 2 AND 3`)
+	case "4-5":
+		filtered = append(filtered, `m.years BETWEEN 4 AND 5`)
+	case "6":
+		filtered = append(filtered, `m.years >= 6`)
+	}
+
+	facetArgs := append([]any{}, args...)
+	where := append([]string{}, filtered...)
+	if category := strings.TrimSpace(q.Category); category != "" && category != "all" {
+		where = append(where, fmt.Sprintf(`m.category = $%d`, argn))
+		args = append(args, category)
+		argn++
+	}
+
+	var total int
+	if err := s.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM market_cvs m WHERE `+strings.Join(where, " AND "), args...,
+	).Scan(&total); err != nil {
+		return MarketPage{}, fmt.Errorf("store: count market cvs: %w", err)
+	}
+
+	pages := 1
+	if total > 0 {
+		pages = (total + pageSize - 1) / pageSize
+	}
+	page := q.Page
+	if page <= 0 {
+		page = 1
+	}
+	if page > pages {
+		page = pages
+	}
+	offset := (page - 1) * pageSize
+
+	orderBy := "m.created_at DESC"
+	switch strings.TrimSpace(q.Sort) {
+	case "experience":
+		orderBy = "m.years DESC, m.created_at DESC"
+	case "name":
+		orderBy = "m.name ASC, m.created_at DESC"
+	}
+
 	rows, err := s.pool.Query(ctx, marketCVSelect+`
-		WHERE m.visibility = 'public' OR m.owner_id = $1 OR $2
-		ORDER BY m.created_at DESC
-		LIMIT $3`, viewer.UserID, viewer.Admin, limit)
+		WHERE `+strings.Join(where, " AND ")+`
+		ORDER BY `+orderBy+fmt.Sprintf(`
+		LIMIT $%d OFFSET $%d`, argn, argn+1),
+		append(args, pageSize, offset)...)
 	if err != nil {
-		return nil, fmt.Errorf("store: market cvs: %w", err)
+		return MarketPage{}, fmt.Errorf("store: market cvs: %w", err)
 	}
 	defer rows.Close()
 
-	cvs := make([]model.MarketCV, 0, limit)
+	items := make([]model.MarketCV, 0, pageSize)
 	for rows.Next() {
 		cv, err := scanMarketCV(rows, viewer)
 		if err != nil {
-			return nil, err
+			return MarketPage{}, err
 		}
-		cvs = append(cvs, cv)
+		items = append(items, cv)
 	}
-	return cvs, rows.Err()
+	if err := rows.Err(); err != nil {
+		return MarketPage{}, err
+	}
+
+	var counts MarketScopeCounts
+	if err := s.pool.QueryRow(ctx, `
+		SELECT COUNT(*),
+		       COUNT(*) FILTER (WHERE EXISTS (
+		           SELECT 1 FROM market_cv_saves s WHERE s.cv_id = m.id AND s.user_id = $1
+		       )),
+		       COUNT(*) FILTER (WHERE m.owner_id = $1)
+		FROM market_cvs m WHERE `+visibility, viewer.UserID, viewer.Admin,
+	).Scan(&counts.All, &counts.Saved, &counts.Mine); err != nil {
+		return MarketPage{}, fmt.Errorf("store: count market scopes: %w", err)
+	}
+
+	categoryCounts := map[string]int{}
+	categoryRows, err := s.pool.Query(ctx, `
+		SELECT m.category, COUNT(*) FROM market_cvs m
+		WHERE `+strings.Join(filtered, " AND ")+`
+		GROUP BY m.category`, facetArgs...)
+	if err != nil {
+		return MarketPage{}, fmt.Errorf("store: market category counts: %w", err)
+	}
+	for categoryRows.Next() {
+		var slug string
+		var count int
+		if err := categoryRows.Scan(&slug, &count); err != nil {
+			categoryRows.Close()
+			return MarketPage{}, err
+		}
+		categoryCounts[slug] = count
+	}
+	if err := categoryRows.Err(); err != nil {
+		categoryRows.Close()
+		return MarketPage{}, err
+	}
+	categoryRows.Close()
+
+	levels := make([]string, 0, 8)
+	levelRows, err := s.pool.Query(ctx, `
+		SELECT DISTINCT m.level FROM market_cvs m
+		WHERE `+visibility+` AND m.level <> ''
+		ORDER BY m.level`, viewer.UserID, viewer.Admin)
+	if err != nil {
+		return MarketPage{}, fmt.Errorf("store: market levels: %w", err)
+	}
+	for levelRows.Next() {
+		var level string
+		if err := levelRows.Scan(&level); err != nil {
+			levelRows.Close()
+			return MarketPage{}, err
+		}
+		levels = append(levels, level)
+	}
+	if err := levelRows.Err(); err != nil {
+		levelRows.Close()
+		return MarketPage{}, err
+	}
+	levelRows.Close()
+
+	return MarketPage{
+		Items:          items,
+		Total:          total,
+		Page:           page,
+		PageSize:       pageSize,
+		ScopeCounts:    counts,
+		CategoryCounts: categoryCounts,
+		Levels:         levels,
+	}, nil
 }
 
 // MarketCVFile returns the stored object key and the original file name after

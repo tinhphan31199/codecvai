@@ -106,6 +106,12 @@ func New(cfg Config) http.Handler {
 	mux.HandleFunc("GET /api/market/cvs/{id}/cv", withStore(server, server.handleMarketCVFile))
 	mux.HandleFunc("POST /api/market/cvs/{id}/save", withStore(server, server.handleMarketCVSave))
 	mux.HandleFunc("DELETE /api/market/cvs/{id}/save", withStore(server, server.handleMarketCVSave))
+	mux.HandleFunc("POST /api/cv-builder/generate", withStore(server, server.handleGenerateCV))
+	mux.HandleFunc("GET /api/cv-builder/cvs", withStore(server, server.handleGeneratedCVs))
+	mux.HandleFunc("POST /api/cv-builder/cvs", withStore(server, server.handleGeneratedCVs))
+	mux.HandleFunc("GET /api/cv-builder/cvs/{id}", withStore(server, server.handleGeneratedCV))
+	mux.HandleFunc("PUT /api/cv-builder/cvs/{id}", withStore(server, server.handleGeneratedCV))
+	mux.HandleFunc("DELETE /api/cv-builder/cvs/{id}", withStore(server, server.handleGeneratedCV))
 
 	mux.HandleFunc("GET /api/workspace", withStore(server, server.handleWorkspace))
 	mux.HandleFunc("PUT /api/workspace", withStore(server, server.handleWorkspace))

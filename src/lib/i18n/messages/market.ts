@@ -53,6 +53,9 @@ const vi = {
     one: "{count} CV",
     other: "{count} CV",
   },
+  "market.pageInfo": "Hiển thị {from}–{to} trên {total} CV",
+  "market.prev": "Trước",
+  "market.next": "Sau",
   "market.experience": {
     one: "{count} năm kinh nghiệm",
     other: "{count} năm kinh nghiệm",
@@ -181,6 +184,9 @@ const en: Record<keyof typeof vi, Message> = {
     one: "{count} CV",
     other: "{count} CVs",
   },
+  "market.pageInfo": "Showing {from}–{to} of {total} CVs",
+  "market.prev": "Previous",
+  "market.next": "Next",
   "market.experience": {
     one: "{count} year",
     other: "{count} years",

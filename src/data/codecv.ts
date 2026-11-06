@@ -3,6 +3,8 @@ import type { MessageKey } from "@/lib/i18n";
 export type Screen =
   | "overview"
   | "upload"
+  | "builder"
+  | "my-cvs"
   | "candidates"
   | "market"
   | "candidate"

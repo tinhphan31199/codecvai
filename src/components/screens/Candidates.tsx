@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
-  ChevronLeft,
   ChevronRight,
   Search,
   UploadCloud,
@@ -10,7 +9,11 @@ import {
 } from "lucide-react";
 import type { CandidateStatus, Screen } from "@/data/codecv";
 import { candidateEvidence, statusMeta } from "@/data/codecv";
-import { useCandidates, useStats } from "@/lib/api";
+import {
+  useCandidatesPage,
+  useDebouncedValue,
+  useStats,
+} from "@/lib/api";
 import { useT, type MessageKey } from "@/lib/i18n";
 import {
   Avatar,
@@ -18,6 +21,7 @@ import {
   EvidenceMeter,
   LoadError,
   PageHead,
+  Pager,
   ScreenLoader,
   StatusPill,
 } from "../ui";
@@ -43,9 +47,7 @@ export default function Candidates({
   setQuery: (value: string) => void;
 }) {
   const stats = useStats();
-  const { data: candidates, loading, error, refetch } = useCandidates();
   const t = useT();
-  const list = useMemo(() => candidates ?? [], [candidates]);
 
   const search = query;
   const [status, setStatus] = useState<CandidateStatus | "all">("all");
@@ -53,48 +55,25 @@ export default function Candidates({
   const [evidence, setEvidence] = useState<"all" | "verified" | "gap">("all");
   const [sort, setSort] = useState("recent");
   const [page, setPage] = useState(1);
+  const debouncedSearch = useDebouncedValue(search, 300);
 
-  const positions = useMemo(
-    () => Array.from(new Set(list.map((c) => c.position))),
-    [list],
-  );
+  const { data: pageData, loading, error, refetch } = useCandidatesPage({
+    q: debouncedSearch,
+    status,
+    position,
+    evidence,
+    sort,
+    page,
+    pageSize: PAGE_SIZE,
+  });
 
-  const rows = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const filtered = list.filter((candidate) => {
-      const ev = candidateEvidence(candidate);
-      if (status !== "all" && candidate.status !== status) return false;
-      if (position !== "all" && candidate.position !== position) return false;
-      if (evidence === "verified" && ev.verified < 2) return false;
-      if (evidence === "gap" && ev.missing === 0) return false;
-      if (!q) return true;
-      return `${candidate.name} ${candidate.email} ${candidate.position} ${candidate.role}`
-        .toLowerCase()
-        .includes(q);
-    });
-    if (sort === "evidence") {
-      return [...filtered].sort(
-        (a, b) =>
-          candidateEvidence(b).covered - candidateEvidence(a).covered,
-      );
-    }
-    if (sort === "name") {
-      return [...filtered].sort((a, b) => a.name.localeCompare(b.name, "vi"));
-    }
-    return filtered;
-  }, [list, query, status, position, evidence, sort]);
-
-  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
-  const safePage = Math.min(page, pages);
-  const start = (safePage - 1) * PAGE_SIZE;
-  const visible = rows.slice(start, start + PAGE_SIZE);
-
-  const verifiedCount = list.filter(
-    (c) => candidateEvidence(c).verified >= 2,
-  ).length;
-  const gapCount = list.filter(
-    (c) => candidateEvidence(c).missing > 0,
-  ).length;
+  const rows = pageData?.candidates ?? [];
+  const total = pageData?.total ?? 0;
+  const counts = pageData?.counts ?? { all: 0, verified: 0, gap: 0 };
+  const positions = pageData?.positions ?? [];
+  const currentPage = pageData?.page ?? 1;
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const start = (currentPage - 1) * PAGE_SIZE;
 
   const reset = () => {
     setQuery("");
@@ -107,7 +86,7 @@ export default function Candidates({
     search || status !== "all" || position !== "all" || evidence !== "all",
   );
 
-  if (loading) {
+  if (loading && !pageData) {
     return (
       <ScreenLoader
         title={t("screen.candidates")}
@@ -131,7 +110,7 @@ export default function Candidates({
         title={t("screen.candidates")}
         sub={t("candidates.sub", {
           total: stats.total,
-          shown: list.length,
+          shown: rows.length,
         })}
         actions={
           <button
@@ -166,6 +145,7 @@ export default function Candidates({
                 aria-label={t("candidates.clearSearchAria")}
                 onClick={() => {
                   setQuery("");
+                  setPage(1);
                 }}
               >
                 <X size={14} />
@@ -216,7 +196,10 @@ export default function Candidates({
             <span className="visually-hidden">{t("candidates.sortAria")}</span>
             <select
               value={sort}
-              onChange={(event) => setSort(event.target.value)}
+              onChange={(event) => {
+                setSort(event.target.value);
+                setPage(1);
+              }}
             >
               <option value="recent">{t("candidates.sortRecent")}</option>
               <option value="evidence">{t("candidates.sortEvidence")}</option>
@@ -241,7 +224,7 @@ export default function Candidates({
               }}
             >
               {t("candidates.evidenceAll")}{" "}
-              <span className="num">{list.length}</span>
+              <span className="num">{counts.all}</span>
             </button>
             <button
               type="button"
@@ -253,7 +236,7 @@ export default function Candidates({
               }}
             >
               {t("candidates.evidenceVerified")}{" "}
-              <span className="num">{verifiedCount}</span>
+              <span className="num">{counts.verified}</span>
             </button>
             <button
               type="button"
@@ -265,7 +248,7 @@ export default function Candidates({
               }}
             >
               {t("candidates.evidenceGap")}{" "}
-              <span className="num">{gapCount}</span>
+              <span className="num">{counts.gap}</span>
             </button>
           </div>
           <div className="filter-summary">
@@ -275,12 +258,12 @@ export default function Candidates({
               </button>
             ) : null}
             <span className="result-count">
-              {t("candidates.resultCount", { count: rows.length })}
+              {t("candidates.resultCount", { count: total })}
             </span>
           </div>
         </div>
 
-        {visible.length ? (
+        {rows.length ? (
           <>
             <div className="table-wrap">
               <table className="table table-candidates">
@@ -296,7 +279,7 @@ export default function Candidates({
                   </tr>
                 </thead>
                 <tbody>
-                  {visible.map((candidate) => {
+                  {rows.map((candidate) => {
                     const ev = candidateEvidence(candidate);
                     return (
                       <tr key={candidate.id}>
@@ -400,38 +383,18 @@ export default function Candidates({
               </table>
             </div>
 
-            <div className="pagination">
-              <span className="page-info">
-                {t("candidates.pageInfo", {
-                  from: start + 1,
-                  to: Math.min(start + PAGE_SIZE, rows.length),
-                  total: rows.length,
-                })}
-              </span>
-              <div className="page-controls">
-                <button
-                  type="button"
-                  className="btn btn-quiet"
-                  disabled={safePage === 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  <ChevronLeft size={14} aria-hidden="true" />
-                  {t("candidates.prev")}
-                </button>
-                <span className="page-current num">
-                  {safePage}/{pages}
-                </span>
-                <button
-                  type="button"
-                  className="btn btn-quiet"
-                  disabled={safePage === pages}
-                  onClick={() => setPage((p) => Math.min(pages, p + 1))}
-                >
-                  {t("candidates.next")}
-                  <ChevronRight size={14} aria-hidden="true" />
-                </button>
-              </div>
-            </div>
+            <Pager
+              page={currentPage}
+              pages={pages}
+              info={t("candidates.pageInfo", {
+                from: start + 1,
+                to: Math.min(start + PAGE_SIZE, total),
+                total,
+              })}
+              prev={t("candidates.prev")}
+              next={t("candidates.next")}
+              onPage={setPage}
+            />
           </>
         ) : (
           <EmptyState
@@ -450,7 +413,7 @@ export default function Candidates({
             {t("candidates.footReview", {
               status: t(statusMeta.review.labelKey),
               review: stats.review,
-              shown: list.length,
+              shown: total,
             })}
           </span>
           <span className="foot-note">

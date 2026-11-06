@@ -18,10 +18,56 @@ type CandidateFilter struct {
 	Query    string
 	Status   string
 	Position string
+	Evidence string // "verified" (2+ verified criteria) or "gap" (at least one missing)
 	Sort     string
 	OwnerID  string // empty lists every profile (admin); otherwise only rows owned by this account
 	Limit    int
 	Offset   int
+}
+
+type CandidateCounts struct {
+	All      int `json:"all"`
+	Verified int `json:"verified"`
+	Gap      int `json:"gap"`
+}
+
+func candidateWhere(filter CandidateFilter) (string, []any) {
+	where := []string{}
+	args := []any{}
+	argn := 1
+
+	if strings.TrimSpace(filter.Query) != "" {
+		where = append(where, fmt.Sprintf(`(name ILIKE '%%' || $%d || '%%' OR email ILIKE '%%' || $%d || '%%' OR position ILIKE '%%' || $%d || '%%')`, argn, argn, argn))
+		args = append(args, strings.TrimSpace(filter.Query))
+		argn++
+	}
+	if filter.Status != "" {
+		where = append(where, fmt.Sprintf(`status = $%d`, argn))
+		args = append(args, filter.Status)
+		argn++
+	}
+	if filter.Position != "" {
+		where = append(where, fmt.Sprintf(`position = $%d`, argn))
+		args = append(args, filter.Position)
+		argn++
+	}
+	switch filter.Evidence {
+	case "verified":
+		where = append(where, `(SELECT COUNT(*) FROM criteria WHERE candidate_id = candidates.id AND state = 'verified') >= 2`)
+	case "gap":
+		where = append(where, `EXISTS (SELECT 1 FROM criteria WHERE candidate_id = candidates.id AND state = 'missing')`)
+	}
+	if filter.OwnerID != "" {
+		where = append(where, fmt.Sprintf(`owner_id = $%d`, argn))
+		args = append(args, filter.OwnerID)
+		argn++
+	}
+
+	clause := ""
+	if len(where) > 0 {
+		clause = " WHERE " + strings.Join(where, " AND ")
+	}
+	return clause, args
 }
 
 const candidateCols = `
@@ -257,30 +303,7 @@ func (s *Store) DeletePosition(ctx context.Context, id string) error {
 }
 
 func (s *Store) ListCandidates(ctx context.Context, filter CandidateFilter) ([]model.CandidateRecord, error) {
-	where := []string{}
-	args := []any{}
-	argn := 1
-
-	if strings.TrimSpace(filter.Query) != "" {
-		where = append(where, fmt.Sprintf(`(name ILIKE '%%' || $%d || '%%' OR email ILIKE '%%' || $%d || '%%' OR position ILIKE '%%' || $%d || '%%')`, argn, argn, argn))
-		args = append(args, strings.TrimSpace(filter.Query))
-		argn++
-	}
-	if filter.Status != "" {
-		where = append(where, fmt.Sprintf(`status = $%d`, argn))
-		args = append(args, filter.Status)
-		argn++
-	}
-	if filter.Position != "" {
-		where = append(where, fmt.Sprintf(`position = $%d`, argn))
-		args = append(args, filter.Position)
-		argn++
-	}
-	if filter.OwnerID != "" {
-		where = append(where, fmt.Sprintf(`owner_id = $%d`, argn))
-		args = append(args, filter.OwnerID)
-		argn++
-	}
+	clause, args := candidateWhere(filter)
 
 	orderBy := "updated_at DESC"
 	switch filter.Sort {
@@ -299,11 +322,9 @@ func (s *Store) ListCandidates(ctx context.Context, filter CandidateFilter) ([]m
 		limit = 100
 	}
 
-	query := `SELECT ` + candidateCols + ` FROM candidates`
-	if len(where) > 0 {
-		query += " WHERE " + strings.Join(where, " AND ")
-	}
-	query += " ORDER BY " + orderBy + fmt.Sprintf(" LIMIT $%d OFFSET $%d", argn, argn+1)
+	argn := len(args) + 1
+	query := `SELECT ` + candidateCols + ` FROM candidates` + clause +
+		" ORDER BY " + orderBy + fmt.Sprintf(" LIMIT $%d OFFSET $%d", argn, argn+1)
 	args = append(args, limit, offset)
 
 	rows, err := s.pool.Query(ctx, query, args...)
@@ -330,6 +351,67 @@ func (s *Store) ListCandidates(ctx context.Context, filter CandidateFilter) ([]m
 		}
 	}
 	return candidates, nil
+}
+
+func (s *Store) CountCandidates(ctx context.Context, filter CandidateFilter) (int, error) {
+	clause, args := candidateWhere(filter)
+	var total int
+	if err := s.pool.QueryRow(ctx, `SELECT COUNT(*) FROM candidates`+clause, args...).Scan(&total); err != nil {
+		return 0, fmt.Errorf("store: count candidates: %w", err)
+	}
+	return total, nil
+}
+
+// CandidateFacets feeds the evidence chips and the position dropdown, scoped by
+// the same owner rule as the list.
+func (s *Store) CandidateFacets(ctx context.Context, ownerID string) (CandidateCounts, []string, error) {
+	counts := CandidateCounts{}
+	ownerWhere := ""
+	args := []any{}
+	if ownerID != "" {
+		ownerWhere = ` WHERE owner_id = $1`
+		args = append(args, ownerID)
+	}
+	if err := s.pool.QueryRow(ctx, `
+		SELECT COUNT(*),
+		       COUNT(*) FILTER (WHERE (
+		           SELECT COUNT(*) FROM criteria c
+		           WHERE c.candidate_id = candidates.id AND c.state = 'verified'
+		       ) >= 2),
+		       COUNT(*) FILTER (WHERE EXISTS (
+		           SELECT 1 FROM criteria c
+		           WHERE c.candidate_id = candidates.id AND c.state = 'missing'
+		       ))
+		FROM candidates`+ownerWhere, args...,
+	).Scan(&counts.All, &counts.Verified, &counts.Gap); err != nil {
+		return CandidateCounts{}, nil, fmt.Errorf("store: candidate counts: %w", err)
+	}
+
+	positionWhere := ""
+	if ownerID != "" {
+		positionWhere = `owner_id = $1 AND `
+	}
+	rows, err := s.pool.Query(ctx, `
+		SELECT DISTINCT position FROM candidates
+		WHERE `+positionWhere+`position <> ''
+		ORDER BY position`, args...)
+	if err != nil {
+		return CandidateCounts{}, nil, fmt.Errorf("store: candidate positions: %w", err)
+	}
+	defer rows.Close()
+
+	positions := make([]string, 0, 16)
+	for rows.Next() {
+		var position string
+		if err := rows.Scan(&position); err != nil {
+			return CandidateCounts{}, nil, err
+		}
+		positions = append(positions, position)
+	}
+	if err := rows.Err(); err != nil {
+		return CandidateCounts{}, nil, err
+	}
+	return counts, positions, nil
 }
 
 func (s *Store) RecentCandidates(ctx context.Context, ownerID string, limit int) ([]model.CandidateRecord, error) {

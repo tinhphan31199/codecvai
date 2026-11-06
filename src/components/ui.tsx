@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Image from "next/image";
 import {
   Check,
+  ChevronLeft,
   ChevronRight,
   CircleAlert,
   Loader2,
@@ -311,6 +312,52 @@ export function ScreenLoader({
     <div className="screen">
       <PageHead title={title} />
       <Loading label={label} />
+    </div>
+  );
+}
+
+export function Pager({
+  page,
+  pages,
+  info,
+  prev,
+  next,
+  onPage,
+}: {
+  page: number;
+  pages: number;
+  info: string;
+  prev: string;
+  next: string;
+  onPage: (page: number) => void;
+}) {
+  if (pages <= 1) return null;
+  return (
+    <div className="pagination">
+      <span className="page-info">{info}</span>
+      <div className="page-controls">
+        <button
+          type="button"
+          className="btn btn-quiet"
+          disabled={page <= 1}
+          onClick={() => onPage(page - 1)}
+        >
+          <ChevronLeft size={14} aria-hidden="true" />
+          {prev}
+        </button>
+        <span className="page-current num">
+          {page}/{pages}
+        </span>
+        <button
+          type="button"
+          className="btn btn-quiet"
+          disabled={page >= pages}
+          onClick={() => onPage(page + 1)}
+        >
+          {next}
+          <ChevronRight size={14} aria-hidden="true" />
+        </button>
+      </div>
     </div>
   );
 }

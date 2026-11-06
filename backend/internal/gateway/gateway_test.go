@@ -67,13 +67,13 @@ func newFakeProvider(t *testing.T) *fakeProvider {
 			_, _ = w.Write([]byte(`{"error":{"message":"boom"}}`))
 			return
 		}
+		if fake.payload != "" {
+			_, _ = w.Write([]byte(fake.payload))
+			return
+		}
 
 		switch {
 		case strings.HasSuffix(r.URL.Path, ":generateContent"):
-			if fake.payload != "" {
-				_, _ = w.Write([]byte(fake.payload))
-				return
-			}
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"candidates": []any{map[string]any{
 					"content":      map[string]any{"parts": []any{map[string]any{"text": analysisJSON}}},

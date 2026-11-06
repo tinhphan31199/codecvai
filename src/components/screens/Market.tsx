@@ -19,6 +19,7 @@ import {
 import {
   downloadMarketCV,
   saveMarketCV,
+  useDebouncedValue,
   useLevels,
   useMarketCVs,
   useModels,
@@ -40,6 +41,7 @@ import {
   EmptyState,
   LoadError,
   PageHead,
+  Pager,
   ScreenLoader,
 } from "../ui";
 import MarketDetail from "./MarketDetail";
@@ -74,6 +76,10 @@ const MARKET_CATEGORIES = [
 
 type CategorySlug = (typeof MARKET_CATEGORIES)[number];
 
+const PAGE_SIZE = 12;
+const EMPTY_SCOPE_COUNTS = { all: 0, saved: 0, mine: 0 };
+const EMPTY_CATEGORY_COUNTS: Record<string, number> = {};
+
 const formatSize = (bytes: number, locale: string) => {
   const kb = bytes / 1024;
   const value = kb < 1000 ? kb : kb / 1024;
@@ -85,23 +91,7 @@ const formatSize = (bytes: number, locale: string) => {
   }).format(value)} ${unit}`;
 };
 
-const matchesYears = (years: number, bucket: YearsFilter) => {
-  switch (bucket) {
-    case "0-1":
-      return years <= 1;
-    case "2-3":
-      return years >= 2 && years <= 3;
-    case "4-5":
-      return years >= 4 && years <= 5;
-    case "6":
-      return years >= 6;
-    default:
-      return true;
-  }
-};
-
 export default function Market() {
-  const { data: cvs, loading, error: loadError, refetch, refresh } = useMarketCVs();
   const { data: models } = useModels();
   const { data: levelCatalog } = useLevels();
   const session = useAuthSession();
@@ -110,7 +100,6 @@ export default function Market() {
   const locale = localeOf(lang);
   const myId = session?.user.id ?? "";
 
-  const list = useMemo(() => cvs ?? [], [cvs]);
   const activeModels = useMemo(
     () => (models ?? []).filter((item) => item.active),
     [models],
@@ -126,6 +115,34 @@ export default function Market() {
   const [years, setYears] = useState<YearsFilter>("all");
   const [sort, setSort] = useState<SortKey>("recent");
   const [scope, setScope] = useState<Scope>("all");
+  const [page, setPage] = useState(1);
+  const debouncedQuery = useDebouncedValue(query, 300);
+
+  const {
+    data: pageData,
+    loading,
+    error: loadError,
+    refetch,
+    refresh,
+  } = useMarketCVs({
+    q: debouncedQuery,
+    category,
+    level,
+    years,
+    sort,
+    scope,
+    page,
+    pageSize: PAGE_SIZE,
+  });
+
+  const items = pageData?.items ?? [];
+  const total = pageData?.total ?? 0;
+  const scopeCounts = pageData?.scopeCounts ?? EMPTY_SCOPE_COUNTS;
+  const categoryCounts = pageData?.categoryCounts ?? EMPTY_CATEGORY_COUNTS;
+  const serverLevels = pageData?.levels;
+  const currentPage = pageData?.page ?? 1;
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
   const [selected, setSelected] = useState<MarketCV | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -152,60 +169,24 @@ export default function Market() {
     return t(`market.category.${known ? slug : "other"}` as MessageKey);
   };
 
-  const categoryCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const cv of list) {
-      counts.set(cv.category, (counts.get(cv.category) ?? 0) + 1);
-    }
-    return counts;
-  }, [list]);
-
-  const savedCount = useMemo(
-    () => list.filter((cv) => cv.saved).length,
-    [list],
-  );
-  const mineCount = useMemo(
-    () => (myId ? list.filter((cv) => cv.ownerId === myId).length : 0),
-    [list, myId],
-  );
-
   const visibleCategories = useMemo(
-    () => MARKET_CATEGORIES.filter((slug) => (categoryCounts.get(slug) ?? 0) > 0),
+    () => MARKET_CATEGORIES.filter((slug) => (categoryCounts[slug] ?? 0) > 0),
+    [categoryCounts],
+  );
+
+  const allCategoryCount = useMemo(
+    () => Object.values(categoryCounts).reduce((sum, count) => sum + count, 0),
     [categoryCounts],
   );
 
   const levels = useMemo(() => {
-    const present = new Set(
-      list.map((cv) => cv.level).filter((value) => value !== ""),
-    );
+    const present = new Set(serverLevels ?? []);
     const ordered = levelOrder.filter((name) => present.has(name));
     const extra = Array.from(present)
       .filter((name) => !levelOrder.includes(name))
       .sort((a, b) => a.localeCompare(b, "vi"));
     return [...ordered, ...extra];
-  }, [levelOrder, list]);
-
-  const rows = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const filtered = list.filter((cv) => {
-      if (scope === "saved" && !cv.saved) return false;
-      if (scope === "mine" && (!myId || cv.ownerId !== myId)) return false;
-      if (category !== "all" && cv.category !== category) return false;
-      if (level !== "all" && cv.level !== level) return false;
-      if (!matchesYears(cv.years, years)) return false;
-      if (!q) return true;
-      return `${cv.name} ${cv.title} ${cv.location} ${cv.summary} ${cv.skills.join(" ")}`
-        .toLowerCase()
-        .includes(q);
-    });
-    if (sort === "experience") {
-      return [...filtered].sort((a, b) => b.years - a.years);
-    }
-    if (sort === "name") {
-      return [...filtered].sort((a, b) => a.name.localeCompare(b.name, "vi"));
-    }
-    return filtered;
-  }, [category, level, list, myId, query, scope, sort, years]);
+  }, [levelOrder, serverLevels]);
 
   const filtered = Boolean(
     query || category !== "all" || level !== "all" || years !== "all",
@@ -216,6 +197,7 @@ export default function Market() {
     setCategory("all");
     setLevel("all");
     setYears("all");
+    setPage(1);
   };
 
   const scrollToList = () => {
@@ -224,6 +206,11 @@ export default function Market() {
       behavior: reduce ? "auto" : "smooth",
       block: "start",
     });
+  };
+
+  const changePage = (next: number) => {
+    setPage(next);
+    scrollToList();
   };
 
   const toggleSaved = async (cv: MarketCV) => {
@@ -374,7 +361,7 @@ export default function Market() {
           ? t("market.fileUploading")
           : t("market.fileIdle");
 
-  if (loading && !cvs) {
+  if (loading && !pageData) {
     return (
       <ScreenLoader
         title={t("screen.market")}
@@ -383,7 +370,7 @@ export default function Market() {
     );
   }
 
-  if (loadError && !cvs) {
+  if (loadError && !pageData) {
     return (
       <div className="screen">
         <PageHead title={t("screen.market")} />
@@ -563,7 +550,7 @@ export default function Market() {
       <section className="card market-browser" ref={listRef}>
         <CardHead
           title={t("market.browseTitle")}
-          meta={t("market.total", { count: list.length })}
+          meta={t("market.total", { count: scopeCounts.all })}
         />
 
         <div
@@ -575,26 +562,38 @@ export default function Market() {
             type="button"
             className={`chip${scope === "all" ? " is-on" : ""}`}
             aria-pressed={scope === "all"}
-            onClick={() => setScope("all")}
+            onClick={() => {
+              setScope("all");
+              setPage(1);
+            }}
           >
-            {t("market.scopeAll")} <span className="num">{list.length}</span>
+            {t("market.scopeAll")}{" "}
+            <span className="num">{scopeCounts.all}</span>
           </button>
           <button
             type="button"
             className={`chip${scope === "saved" ? " is-on" : ""}`}
             aria-pressed={scope === "saved"}
-            onClick={() => setScope("saved")}
+            onClick={() => {
+              setScope("saved");
+              setPage(1);
+            }}
           >
-            {t("market.scopeSaved")} <span className="num">{savedCount}</span>
+            {t("market.scopeSaved")}{" "}
+            <span className="num">{scopeCounts.saved}</span>
           </button>
           <button
             type="button"
             className={`chip${scope === "mine" ? " is-on" : ""}`}
             aria-pressed={scope === "mine"}
             disabled={!myId}
-            onClick={() => setScope("mine")}
+            onClick={() => {
+              setScope("mine");
+              setPage(1);
+            }}
           >
-            {t("market.scopeMine")} <span className="num">{mineCount}</span>
+            {t("market.scopeMine")}{" "}
+            <span className="num">{scopeCounts.mine}</span>
           </button>
         </div>
 
@@ -625,7 +624,10 @@ export default function Market() {
             <input
               type="search"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(1);
+              }}
               placeholder={t("market.searchPlaceholder")}
               aria-label={t("market.searchAria")}
             />
@@ -634,7 +636,10 @@ export default function Market() {
                 type="button"
                 className="filter-clear"
                 aria-label={t("market.clearFilters")}
-                onClick={() => setQuery("")}
+                onClick={() => {
+                  setQuery("");
+                  setPage(1);
+                }}
               >
                 <X size={14} />
               </button>
@@ -645,7 +650,10 @@ export default function Market() {
             <span className="visually-hidden">{t("market.levelAria")}</span>
             <select
               value={level}
-              onChange={(event) => setLevel(event.target.value)}
+              onChange={(event) => {
+                setLevel(event.target.value);
+                setPage(1);
+              }}
               aria-label={t("market.levelAria")}
             >
               <option value="all">{t("market.allLevels")}</option>
@@ -661,9 +669,10 @@ export default function Market() {
             <span className="visually-hidden">{t("market.yearsAria")}</span>
             <select
               value={years}
-              onChange={(event) =>
-                setYears(event.target.value as YearsFilter)
-              }
+              onChange={(event) => {
+                setYears(event.target.value as YearsFilter);
+                setPage(1);
+              }}
               aria-label={t("market.yearsAria")}
             >
               <option value="all">{t("market.allYears")}</option>
@@ -678,7 +687,10 @@ export default function Market() {
             <span className="visually-hidden">{t("market.sortAria")}</span>
             <select
               value={sort}
-              onChange={(event) => setSort(event.target.value as SortKey)}
+              onChange={(event) => {
+                setSort(event.target.value as SortKey);
+                setPage(1);
+              }}
               aria-label={t("market.sortAria")}
             >
               <option value="recent">{t("market.sortRecent")}</option>
@@ -698,10 +710,13 @@ export default function Market() {
               type="button"
               className={`chip${category === "all" ? " is-on" : ""}`}
               aria-pressed={category === "all"}
-              onClick={() => setCategory("all")}
+              onClick={() => {
+                setCategory("all");
+                setPage(1);
+              }}
             >
               {t("market.allCategories")}{" "}
-              <span className="num">{list.length}</span>
+              <span className="num">{allCategoryCount}</span>
             </button>
             {visibleCategories.map((slug) => (
               <button
@@ -709,10 +724,13 @@ export default function Market() {
                 type="button"
                 className={`chip${category === slug ? " is-on" : ""}`}
                 aria-pressed={category === slug}
-                onClick={() => setCategory(slug)}
+                onClick={() => {
+                  setCategory(slug);
+                  setPage(1);
+                }}
               >
                 {categoryLabel(slug)}{" "}
-                <span className="num">{categoryCounts.get(slug) ?? 0}</span>
+                <span className="num">{categoryCounts[slug] ?? 0}</span>
               </button>
             ))}
           </div>
@@ -727,14 +745,14 @@ export default function Market() {
               </button>
             ) : null}
             <span className="result-count">
-              {t("market.resultCount", { count: rows.length })}
+              {t("market.resultCount", { count: total })}
             </span>
           </div>
         </div>
 
-        {rows.length ? (
+        {items.length ? (
           <div className="market-grid">
-            {rows.map((cv) => (
+            {items.map((cv) => (
               <article className="market-card" key={cv.id}>
                 <div className="market-card-top">
                   <Avatar
@@ -871,52 +889,7 @@ export default function Market() {
               </article>
             ))}
           </div>
-        ) : list.length ? (
-          scope === "saved" ? (
-            <EmptyState
-              title={t("market.savedEmptyTitle")}
-              detail={t("market.savedEmptyDetail")}
-              action={
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => setScope("all")}
-                >
-                  {t("market.scopeAll")}
-                </button>
-              }
-            />
-          ) : scope === "mine" ? (
-            <EmptyState
-              title={t("market.mineEmptyTitle")}
-              detail={t("market.mineEmptyDetail")}
-              action={
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  onClick={() => inputRef.current?.click()}
-                >
-                  <UploadCloud size={14} aria-hidden="true" />
-                  {t("market.uploadPick")}
-                </button>
-              }
-            />
-          ) : (
-            <EmptyState
-              title={t("market.noMatchTitle")}
-              detail={t("market.noMatchDetail")}
-              action={
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={resetFilters}
-                >
-                  {t("market.clearFilters")}
-                </button>
-              }
-            />
-          )
-        ) : (
+        ) : scopeCounts.all === 0 ? (
           <EmptyState
             title={t("market.emptyTitle")}
             detail={t("market.emptyDetail")}
@@ -931,7 +904,66 @@ export default function Market() {
               </button>
             }
           />
+        ) : scope === "saved" && scopeCounts.saved === 0 ? (
+          <EmptyState
+            title={t("market.savedEmptyTitle")}
+            detail={t("market.savedEmptyDetail")}
+            action={
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => {
+                  setScope("all");
+                  setPage(1);
+                }}
+              >
+                {t("market.scopeAll")}
+              </button>
+            }
+          />
+        ) : scope === "mine" && scopeCounts.mine === 0 ? (
+          <EmptyState
+            title={t("market.mineEmptyTitle")}
+            detail={t("market.mineEmptyDetail")}
+            action={
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => inputRef.current?.click()}
+              >
+                <UploadCloud size={14} aria-hidden="true" />
+                {t("market.uploadPick")}
+              </button>
+            }
+          />
+        ) : (
+          <EmptyState
+            title={t("market.noMatchTitle")}
+            detail={t("market.noMatchDetail")}
+            action={
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={resetFilters}
+              >
+                {t("market.clearFilters")}
+              </button>
+            }
+          />
         )}
+
+        <Pager
+          page={currentPage}
+          pages={pages}
+          info={t("market.pageInfo", {
+            from: (currentPage - 1) * PAGE_SIZE + 1,
+            to: Math.min(currentPage * PAGE_SIZE, total),
+            total,
+          })}
+          prev={t("market.prev")}
+          next={t("market.next")}
+          onPage={changePage}
+        />
       </section>
 
       {selected ? (
